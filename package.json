@@ -1,0 +1,21 @@
+{
+  "name": "@forgesworn/bark",
+  "version": "0.1.0",
+  "description": "Heartwood-aware NIP-07 browser extension. Signs through your Heartwood device via NIP-46.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "nostr-tools": "^2.23.0"
+  }
+}
