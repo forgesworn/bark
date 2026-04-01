@@ -3,10 +3,295 @@
 <head>
   <meta charset="UTF-8">
   <title>Bark</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 320px;
+      min-height: 200px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: #16213e;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff4444;
+      flex-shrink: 0;
+    }
+
+    .status-dot.connected {
+      background: #339933;
+    }
+
+    /* ---- Screens ---- */
+    .screen {
+      display: none;
+      padding: 16px;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* ---- Setup screen ---- */
+    #setup-screen label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    #bunker-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #2a2a4a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    #bunker-input:focus {
+      border-color: #339933;
+    }
+
+    #bunker-input::placeholder {
+      color: #666;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover {
+      opacity: 0.85;
+    }
+
+    .btn:active {
+      opacity: 0.7;
+    }
+
+    .btn-primary {
+      background: #339933;
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: #662222;
+      color: #ff8888;
+    }
+
+    /* ---- Main screen ---- */
+    .section-label {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .active-persona {
+      background: #16213e;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+
+    .persona-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .persona-npub {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    /* ---- Persona list ---- */
+    .persona-list {
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      border: 1px solid #2a2a4a;
+    }
+
+    .persona-list:empty {
+      display: none;
+    }
+
+    .persona-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #2a2a4a;
+      transition: background 0.1s;
+    }
+
+    .persona-item:last-child {
+      border-bottom: none;
+    }
+
+    .persona-item:hover {
+      background: #2a2a4a;
+    }
+
+    .persona-item.active {
+      background: #1a3a5a;
+    }
+
+    .persona-item .persona-name {
+      font-size: 14px;
+    }
+
+    .persona-item .persona-npub {
+      font-size: 11px;
+    }
+
+    /* ---- Derive row ---- */
+    .derive-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .derive-row input {
+      flex: 1;
+      padding: 9px 12px;
+      background: #2a2a4a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .derive-row input:focus {
+      border-color: #339933;
+    }
+
+    .derive-row input::placeholder {
+      color: #666;
+    }
+
+    .derive-row .btn {
+      width: auto;
+      flex-shrink: 0;
+      padding: 9px 14px;
+      font-size: 13px;
+    }
+
+    /* ---- Error area ---- */
+    .error-msg {
+      display: none;
+      background: #3a1111;
+      border: 1px solid #ff4444;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-top: 12px;
+      color: #ff4444;
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    /* ---- Scrollbar ---- */
+    .persona-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .persona-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .persona-list::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Bark</h1>
-  <p>Heartwood NIP-07 signer</p>
+
+  <!-- Setup screen: shown when no bunker URI is configured -->
+  <div id="setup-screen" class="screen active">
+    <div class="header">
+      <h1>Bark</h1>
+    </div>
+    <div style="padding: 16px;">
+      <label for="bunker-input">Paste your Heartwood bunker URI:</label>
+      <input id="bunker-input" type="text" placeholder="bunker://..." spellcheck="false" autocomplete="off">
+      <button id="connect-btn" class="btn btn-primary">Connect</button>
+    </div>
+  </div>
+
+  <!-- Main screen: shown when connected -->
+  <div id="main-screen" class="screen">
+    <div class="header">
+      <div id="status-dot" class="status-dot"></div>
+      <h1>Bark</h1>
+    </div>
+    <div style="padding: 16px;">
+      <div class="section-label">Active persona</div>
+      <div class="active-persona">
+        <div id="active-name" class="persona-name">--</div>
+        <div id="active-npub" class="persona-npub">--</div>
+      </div>
+
+      <div class="section-label">Personas</div>
+      <div id="persona-list" class="persona-list"></div>
+
+      <div class="derive-row">
+        <input id="derive-input" type="text" placeholder="purpose name" spellcheck="false">
+        <button id="derive-btn" class="btn btn-primary">Derive</button>
+      </div>
+
+      <button id="disconnect-btn" class="btn btn-danger">Disconnect</button>
+
+      <div id="error-msg" class="error-msg"></div>
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
