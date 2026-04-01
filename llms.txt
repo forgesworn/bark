@@ -1,0 +1,55 @@
+# Bark — NIP-07 Nostr Signer with NIP-46 Remote Signing
+
+> Bark is a Chrome browser extension that implements NIP-07 (window.nostr) and
+> bridges all signing to a remote NIP-46 signer. No keys in the browser.
+
+## What Bark does
+
+Bark provides the standard `window.nostr` interface that Nostr web apps expect:
+- `window.nostr.getPublicKey()` — returns the active public key
+- `window.nostr.signEvent(event)` — signs a Nostr event
+- `window.nostr.nip44.encrypt(pubkey, plaintext)` — NIP-44 encryption
+- `window.nostr.nip44.decrypt(pubkey, ciphertext)` — NIP-44 decryption
+
+All signing is delegated to a remote NIP-46 bunker. Bark itself stores zero key
+material.
+
+## Works with any NIP-46 bunker
+
+Paste a `bunker://` URI from nsecBunker, Amber, or any NIP-46-compliant signer.
+Standard signing works out of the box.
+
+## Heartwood persona extensions
+
+When connected to a Heartwood signer, Bark enables persona management via custom
+NIP-46 RPC methods:
+
+- `heartwood_list_identities` — list all derived identities
+- `heartwood_derive(purpose, index)` — derive a new identity from mnemonic
+- `heartwood_switch(pubkey)` — switch the active signing identity
+
+These methods are sent as standard NIP-46 requests via `BunkerSigner.sendRequest()`.
+
+## Architecture
+
+Five source files, one dependency (nostr-tools):
+
+- `provider.js` — injects `window.nostr` into pages
+- `content-script.js` — bridges page ↔ extension messaging
+- `background.js` — NIP-46 connection, request routing, validation
+- `popup.js` — UI for connection, personas, relay health
+- `popup.html` — markup and styles
+
+## How Bark differs from other NIP-07 signers
+
+- **No local keys** — unlike nos2x or Alby, keys never exist in the browser
+- **NIP-46 remote signing** — like Remote NIP-07, but works with any bunker
+- **Persona derivation** — unique to Bark+Heartwood, no other extension does this
+- **Minimal** — 5 files, ~800 lines, 1 dependency
+
+## Links
+
+- Source: https://github.com/forgesworn/bark
+- Heartwood: https://github.com/forgesworn/heartwood
+- NIP-07: https://github.com/nostr-protocol/nips/blob/master/07.md
+- NIP-46: https://github.com/nostr-protocol/nips/blob/master/46.md
