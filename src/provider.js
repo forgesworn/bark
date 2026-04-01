@@ -8,12 +8,14 @@
     return new Promise((resolve, reject) => {
       const id = ++idCounter
       pending.set(id, { resolve, reject })
-      window.postMessage({ type: 'bark-request', id, method, params }, '*')
+      window.postMessage({ type: 'bark-request', id, method, params }, window.location.origin)
     })
   }
 
   window.addEventListener('message', (event) => {
-    if (event.source !== window || event.data?.type !== 'bark-response') return
+    if (event.source !== window) return
+    if (event.origin !== window.location.origin) return
+    if (event.data?.type !== 'bark-response') return
     const { id, result, error } = event.data
     const p = pending.get(id)
     if (!p) return
