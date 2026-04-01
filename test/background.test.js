@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -153,5 +153,80 @@ describe('isValidPurpose', () => {
     expect(isValidPurpose(null)).toBe(false)
     expect(isValidPurpose(undefined)).toBe(false)
     expect(isValidPurpose(123)).toBe(false)
+  })
+})
+
+describe('sanitiseError', () => {
+  it('passes through known safe error prefixes', () => {
+    expect(sanitiseError(new Error('No bunker URI configured. Open the Bark popup to connect.'))).toBe(
+      'No bunker URI configured. Open the Bark popup to connect.',
+    )
+    expect(sanitiseError(new Error('Connection timed out.'))).toBe('Connection timed out.')
+    expect(sanitiseError(new Error('Invalid method.'))).toBe('Invalid method.')
+    expect(sanitiseError(new Error('Unknown method: foo'))).toBe('Unknown method: foo')
+  })
+
+  it('passes through heartwood_ prefixed errors', () => {
+    expect(sanitiseError(new Error('heartwood_derive requires a valid purpose (alphanumeric, 1-64 chars).'))).toBe(
+      'heartwood_derive requires a valid purpose (alphanumeric, 1-64 chars).',
+    )
+  })
+
+  it('passes through nip44. prefixed errors', () => {
+    expect(sanitiseError(new Error('nip44.encrypt requires pubkey and plaintext.'))).toBe(
+      'nip44.encrypt requires pubkey and plaintext.',
+    )
+  })
+
+  it('redacts unknown internal errors', () => {
+    expect(sanitiseError(new Error('Cannot read property x of undefined'))).toBe('Request failed.')
+    expect(sanitiseError(new Error('WebSocket connection failed at wss://relay.example.com'))).toBe('Request failed.')
+    expect(sanitiseError(new Error('ECONNREFUSED 127.0.0.1:443'))).toBe('Request failed.')
+  })
+
+  it('handles missing or malformed error objects', () => {
+    expect(sanitiseError(null)).toBe('Request failed.')
+    expect(sanitiseError(undefined)).toBe('Request failed.')
+    expect(sanitiseError({})).toBe('Request failed.')
+    expect(sanitiseError({ message: '' })).toBe('Request failed.')
+  })
+})
+
+describe('buildHeartwoodArgs', () => {
+  it('returns empty array for heartwood_list_identities', () => {
+    expect(buildHeartwoodArgs('heartwood_list_identities', {})).toEqual([])
+    expect(buildHeartwoodArgs('heartwood_list_identities', null)).toEqual([])
+  })
+
+  it('returns [purpose, index] for heartwood_derive', () => {
+    expect(buildHeartwoodArgs('heartwood_derive', { purpose: 'nostr', index: 0 })).toEqual(['nostr', '0'])
+    expect(buildHeartwoodArgs('heartwood_derive', { purpose: 'my-key', index: 5 })).toEqual(['my-key', '5'])
+  })
+
+  it('returns [pubkey] for heartwood_switch', () => {
+    const pk = 'a'.repeat(64)
+    expect(buildHeartwoodArgs('heartwood_switch', { pubkey: pk })).toEqual([pk])
+  })
+
+  it('throws on invalid purpose for heartwood_derive', () => {
+    expect(() => buildHeartwoodArgs('heartwood_derive', { purpose: '', index: 0 })).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_derive', { purpose: '../etc', index: 0 })).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_derive', null)).toThrow()
+  })
+
+  it('throws on invalid index for heartwood_derive', () => {
+    expect(() => buildHeartwoodArgs('heartwood_derive', { purpose: 'nostr', index: -1 })).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_derive', { purpose: 'nostr', index: 1001 })).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_derive', { purpose: 'nostr', index: 'abc' })).toThrow()
+  })
+
+  it('throws on invalid pubkey for heartwood_switch', () => {
+    expect(() => buildHeartwoodArgs('heartwood_switch', { pubkey: 'short' })).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_switch', { pubkey: 'G'.repeat(64) })).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_switch', null)).toThrow()
+  })
+
+  it('throws on unknown heartwood method', () => {
+    expect(() => buildHeartwoodArgs('heartwood_evil', {})).toThrow()
   })
 })
