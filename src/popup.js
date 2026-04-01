@@ -175,10 +175,20 @@ function showConnectStatus(msg, connecting = false) {
   connectStatus.classList.toggle('connecting', connecting)
 }
 
+/** Validate that a string looks like a valid bunker URI. */
+function isValidBunkerUri(value) {
+  return typeof value === 'string' && /^bunker:\/\/[0-9a-f]{64}\??[?/\w:.=&%-]*$/.test(value)
+}
+
 /** Save the bunker URI, reset the connection, and refresh. */
 async function connect() {
   const uri = bunkerInput.value.trim()
   if (!uri) return
+
+  if (!isValidBunkerUri(uri)) {
+    showError('Invalid bunker URI. Expected format: bunker://<64-hex-pubkey>?relay=...')
+    return
+  }
 
   connectBtn.disabled = true
   connectBtn.textContent = 'Connecting...'
