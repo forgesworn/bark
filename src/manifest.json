@@ -13,7 +13,7 @@
   },
   "content_scripts": [
     {
-      "run_at": "document_end",
+      "run_at": "document_start",
       "matches": ["https://*/*", "http://localhost:*/*"],
       "js": ["content-script.js"],
       "all_frames": false
