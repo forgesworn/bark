@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Bark",
-  "version": "0.1.0",
-  "description": "Sign Nostr events through your Heartwood device. Derived identities, hardware-backed, one click.",
+  "version": "1.0.0",
+  "description": "Sign Nostr events through your self-hosted Heartwood device. Derived identities, one click.",
   "permissions": ["storage"],
   "host_permissions": ["wss://*/*"],
   "background": {

@@ -1,7 +1,8 @@
 import esbuild from 'esbuild'
-import { cpSync, mkdirSync } from 'node:fs'
+import { cpSync, mkdirSync, readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { execSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const isWatch = process.argv.includes('--watch')
@@ -45,10 +46,19 @@ const buildOptions = {
   ],
 }
 
+const isPackage = process.argv.includes('--package')
+
 if (isWatch) {
   const ctx = await esbuild.context(buildOptions)
   await ctx.watch()
   console.log('Watching for changes...')
 } else {
   await esbuild.build(buildOptions)
+
+  if (isPackage) {
+    const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8'))
+    const zipName = `bark-v${pkg.version}.zip`
+    execSync(`cd "${distDir}" && zip -r "../${zipName}" .`)
+    console.log(`Packaged: ${zipName}`)
+  }
 }
