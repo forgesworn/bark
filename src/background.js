@@ -363,7 +363,10 @@ const SAFE_ERROR_PREFIXES = [
 ]
 
 export function sanitiseError(err) {
-  const msg = err?.message || 'Unknown error'
+  // Handle both Error objects and plain strings (nostr-tools rejects NIP-46
+  // errors as bare strings, not Error instances).
+  const msg = typeof err === 'string' ? err : (err?.message || '')
+  if (!msg) return 'Request failed.'
   for (const prefix of SAFE_ERROR_PREFIXES) {
     if (msg.startsWith(prefix)) return msg
   }
