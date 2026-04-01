@@ -179,7 +179,13 @@ async function doConnect() {
     await chrome.storage.local.set({ clientSecret: bytesToHex(clientSk) })
   }
 
-  signer = BunkerSigner.fromBunker(clientSk, bp)
+  signer = BunkerSigner.fromBunker(clientSk, bp, {
+    onauth(authUrl) {
+      connectionState.status = 'awaiting-approval'
+      connectionState.lastError = 'Approve this client on your Heartwood device.'
+      connectionState.authUrl = authUrl || null
+    },
+  })
 
   try {
     await Promise.race([
@@ -360,6 +366,7 @@ const SAFE_ERROR_PREFIXES = [
   'heartwood_',
   'Unknown method',
   'Corrupted client',
+  'Approve this client',
 ]
 
 export function sanitiseError(err) {
