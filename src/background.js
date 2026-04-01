@@ -82,6 +82,39 @@ export function isValidPurpose(value) {
 /** @type {BunkerSigner|null} */
 let signer = null
 
+// ---------------------------------------------------------------------------
+// Connection state — queried by popup via bark-status
+// ---------------------------------------------------------------------------
+
+/** @type {{ status: string, lastError: string|null, relays: Array<{url: string, connected: boolean}>, isHeartwood: boolean }} */
+let connectionState = {
+  status: 'disconnected',
+  lastError: null,
+  relays: [],
+  isHeartwood: false,
+}
+
+/**
+ * Probe each relay URL to determine which are currently reachable.
+ * Uses the BunkerSigner's internal pool to check connection state.
+ */
+async function probeRelays(relayUrls) {
+  if (!signer || relayUrls.length === 0) {
+    connectionState.relays = relayUrls.map((url) => ({ url, connected: false }))
+    return
+  }
+  connectionState.relays = await Promise.all(
+    relayUrls.map(async (url) => {
+      try {
+        await signer.pool.ensureRelay(url, { connectionTimeout: 5000 })
+        return { url, connected: true }
+      } catch {
+        return { url, connected: false }
+      }
+    }),
+  )
+}
+
 /**
  * Load persisted bunker URI and client secret from chrome.storage.local,
  * then establish the NIP-46 connection to Heartwood.
@@ -89,31 +122,41 @@ let signer = null
 async function ensureConnected() {
   if (signer) return signer
 
+  connectionState.status = 'connecting'
+  connectionState.lastError = null
+
   const { bunkerUri, clientSecret } = await chrome.storage.local.get([
     'bunkerUri',
     'clientSecret',
   ])
 
   if (!bunkerUri) {
+    connectionState.status = 'disconnected'
     throw new Error('No bunker URI configured. Open the Bark popup to connect.')
   }
 
-  // Validate stored URI before parsing — guards against storage tampering.
   if (!isValidBunkerUri(bunkerUri)) {
+    connectionState.status = 'disconnected'
     throw new Error('Invalid bunker URI in storage.')
   }
 
-  const bp = await parseBunkerInput(bunkerUri)
+  let bp
+  try {
+    bp = await parseBunkerInput(bunkerUri)
+  } catch {
+    connectionState.status = 'disconnected'
+    throw new Error('Invalid bunker URI in storage.')
+  }
 
   if (!bp || !bp.relays || bp.relays.length === 0) {
+    connectionState.status = 'disconnected'
     throw new Error('Bunker URI must include at least one relay.')
   }
 
-  // Re-use a persisted client secret so the bunker recognises us across
-  // restarts, or generate a fresh one on first connection.
   let clientSk
   if (clientSecret) {
     if (typeof clientSecret !== 'string' || !/^[0-9a-f]{64}$/.test(clientSecret)) {
+      connectionState.status = 'disconnected'
       throw new Error('Corrupted client secret in storage.')
     }
     clientSk = hexToBytes(clientSecret)
@@ -124,13 +167,35 @@ async function ensureConnected() {
 
   signer = BunkerSigner.fromBunker(clientSk, bp)
 
-  // Connect with a timeout to avoid hanging indefinitely.
-  await Promise.race([
-    signer.connect(),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Connection timed out.')), CONNECT_TIMEOUT_MS),
-    ),
-  ])
+  try {
+    await Promise.race([
+      signer.connect(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timed out.')), CONNECT_TIMEOUT_MS),
+      ),
+    ])
+  } catch (err) {
+    signer = null
+    connectionState.status = 'disconnected'
+    connectionState.lastError = sanitiseError(err)
+    await probeRelays(bp.relays)
+    throw err
+  }
+
+  connectionState.status = 'connected'
+  connectionState.lastError = null
+
+  // Probe relay health
+  await probeRelays(bp.relays)
+
+  // Detect Heartwood mode
+  try {
+    await signer.sendRequest('heartwood_list_identities', [])
+    connectionState.isHeartwood = true
+  } catch {
+    connectionState.isHeartwood = false
+  }
+  await chrome.storage.local.set({ isHeartwood: connectionState.isHeartwood })
 
   return signer
 }
@@ -140,6 +205,10 @@ async function ensureConnected() {
  */
 async function resetConnection() {
   signer = null
+  connectionState.status = 'disconnected'
+  connectionState.lastError = null
+  connectionState.relays = []
+  connectionState.isHeartwood = false
 }
 
 // ---------------------------------------------------------------------------
@@ -286,6 +355,11 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     // and the popup). Reject messages from other extensions or external
     // sources.
     if (sender.id !== chrome.runtime.id) return
+
+    if (message.type === 'bark-status') {
+      sendResponse({ ...connectionState })
+      return true
+    }
 
     if (message.type === 'bark-reset') {
       resetConnection()
