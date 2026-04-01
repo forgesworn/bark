@@ -21,8 +21,12 @@ window.addEventListener('message', async (event) => {
     const result = await chrome.runtime.sendMessage({ type: 'bark-request', method, params })
     window.postMessage({ type: 'bark-response', id, result }, window.location.origin)
   } catch (err) {
+    // "Extension context invalidated" means the service worker was killed
+    // after an extension update/reload. The page must be refreshed.
+    const msg = String(err?.message || '')
+    const stale = msg.includes('context invalidated') || msg.includes('does not exist')
     window.postMessage(
-      { type: 'bark-response', id, error: 'Request failed' },
+      { type: 'bark-response', id, error: stale ? 'Bark was updated. Please refresh the page.' : 'Request failed' },
       window.location.origin,
     )
   }
