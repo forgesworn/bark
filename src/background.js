@@ -208,19 +208,25 @@ async function doConnect() {
   // Probe relay health
   await probeRelays(bp.relays)
 
-  // Detect Heartwood mode — only mark as non-Heartwood if the bunker
-  // explicitly rejects the method. Transient errors (timeout, relay failure)
-  // should not cause silent fallback to standard bunker mode.
+  // Detect Heartwood mode and approval status.
   try {
     await signer.sendRequest('heartwood_list_identities', [])
     connectionState.isHeartwood = true
   } catch (err) {
     const msg = String(err?.message || err || '')
-    const isMethodRejection = msg.includes('unknown method')
-      || msg.includes('not supported')
-      || msg.includes('unrecognised')
-      || msg.includes('unrecognized')
-    connectionState.isHeartwood = !isMethodRejection
+    if (msg.includes('not approved')) {
+      // Connected to Heartwood but client needs approval
+      connectionState.isHeartwood = true
+      connectionState.status = 'awaiting-approval'
+      connectionState.lastError = 'Approve this client on your Heartwood device.'
+    } else {
+      // Only mark as non-Heartwood if the bunker explicitly rejects the method
+      const isMethodRejection = msg.includes('unknown method')
+        || msg.includes('not supported')
+        || msg.includes('unrecognised')
+        || msg.includes('unrecognized')
+      connectionState.isHeartwood = !isMethodRejection
+    }
   }
   await chrome.storage.local.set({ isHeartwood: connectionState.isHeartwood })
 
@@ -367,6 +373,7 @@ const SAFE_ERROR_PREFIXES = [
   'Unknown method',
   'Corrupted client',
   'Approve this client',
+  'client not approved',
 ]
 
 export function sanitiseError(err) {
