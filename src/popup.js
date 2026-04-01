@@ -224,8 +224,8 @@ async function refreshState() {
     try {
       const result = await rpc('heartwood_list_identities')
       if (Array.isArray(result)) identities = result
-    } catch {
-      // Heartwood detected at connect time but list failed — show empty
+    } catch (err) {
+      showError('Could not load personas: ' + err.message)
     }
 
     let activeLabel = 'default'
