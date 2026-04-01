@@ -276,6 +276,118 @@
       background: #444;
       border-radius: 3px;
     }
+
+    /* ---- Heartwood badge ---- */
+    .heartwood-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      background: #1a3a2a;
+      color: #66cc66;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    /* ---- Relay info ---- */
+    .relay-info {
+      margin: 0 0 12px 0;
+    }
+
+    .relay-summary {
+      font-size: 12px;
+      color: #888;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .relay-summary::before {
+      content: '\25B6';
+      font-size: 8px;
+      transition: transform 0.15s;
+    }
+
+    .relay-info.expanded .relay-summary::before {
+      transform: rotate(90deg);
+    }
+
+    .relay-details {
+      display: none;
+      margin-top: 6px;
+    }
+
+    .relay-info.expanded .relay-details {
+      display: block;
+    }
+
+    .relay-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 0;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      color: #999;
+    }
+
+    .relay-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: #ff4444;
+    }
+
+    .relay-dot.up {
+      background: #339933;
+    }
+
+    /* ---- Standard bunker card ---- */
+    .standard-bunker-card {
+      background: #1a1a2e;
+      border: 1px dashed #2a2a4a;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 16px;
+      color: #666;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .standard-bunker-card a {
+      color: #66cc66;
+      text-decoration: none;
+    }
+
+    .standard-bunker-card a:hover {
+      text-decoration: underline;
+    }
+
+    /* ---- Status dot states ---- */
+    .status-dot.reconnecting {
+      background: #cc8833;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* ---- Reconnect area ---- */
+    .reconnect-status {
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    .reconnect-msg {
+      font-size: 13px;
+      color: #888;
+    }
+
+    .reconnect-msg.active {
+      color: #cc8833;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
   </style>
 </head>
 <body>
@@ -298,23 +410,43 @@
     <div class="header">
       <div id="status-dot" class="status-dot"></div>
       <h1>Bark</h1>
+      <span id="heartwood-badge" class="heartwood-badge" style="display:none">Heartwood</span>
     </div>
     <div style="padding: 16px;">
-      <div class="section-label">Active persona</div>
-      <div class="active-persona">
-        <div id="active-name" class="persona-name">--</div>
-        <div id="active-npub" class="persona-npub">--</div>
+      <div id="reconnect-status" class="reconnect-status" style="display:none">
+        <div id="reconnect-msg" class="reconnect-msg"></div>
+        <button id="retry-btn" class="btn btn-primary" style="margin-top:8px;display:none">Retry</button>
       </div>
 
-      <div class="section-label">Personas</div>
-      <div id="persona-list" class="persona-list"></div>
+      <div id="connected-content" style="display:none">
+        <div class="section-label">Active persona</div>
+        <div class="active-persona">
+          <div id="active-name" class="persona-name">--</div>
+          <div id="active-npub" class="persona-npub">--</div>
+        </div>
 
-      <div class="derive-row">
-        <input id="derive-input" type="text" placeholder="purpose name" spellcheck="false">
-        <button id="derive-btn" class="btn btn-primary">Derive</button>
+        <div id="relay-info" class="relay-info">
+          <div class="relay-summary" id="relay-summary">0 relays</div>
+          <div class="relay-details" id="relay-details"></div>
+        </div>
+
+        <div id="persona-section">
+          <div class="section-label">Personas</div>
+          <div id="persona-list" class="persona-list"></div>
+
+          <div id="derive-row" class="derive-row">
+            <input id="derive-input" type="text" placeholder="purpose name" spellcheck="false">
+            <button id="derive-btn" class="btn btn-primary">Derive</button>
+          </div>
+        </div>
+
+        <div id="standard-bunker-card" class="standard-bunker-card" style="display:none">
+          <div class="section-label">Personas</div>
+          <p style="margin-top:6px">Persona management requires <a href="https://github.com/forgesworn/heartwood" target="_blank" rel="noopener">Heartwood</a></p>
+        </div>
+
+        <button id="disconnect-btn" class="btn btn-danger">Disconnect</button>
       </div>
-
-      <button id="disconnect-btn" class="btn btn-danger">Disconnect</button>
 
       <div id="error-msg" class="error-msg"></div>
     </div>
