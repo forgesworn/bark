@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "Sign Nostr events through your Heartwood device. Derived identities, hardware-backed, one click.",
   "permissions": ["storage"],
+  "host_permissions": ["wss://*/*", "https://*/*"],
   "background": {
     "service_worker": "background.js"
   },

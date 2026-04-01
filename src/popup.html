@@ -108,6 +108,11 @@
       opacity: 0.7;
     }
 
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .btn-primary {
       background: #339933;
       color: #fff;
@@ -236,6 +241,28 @@
       display: block;
     }
 
+    .connect-status {
+      display: none;
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    .connect-status.visible {
+      display: block;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .connect-status.connecting {
+      animation: pulse 1.5s ease-in-out infinite;
+      color: #339933;
+    }
+
     /* ---- Scrollbar ---- */
     .persona-list::-webkit-scrollbar {
       width: 6px;
@@ -262,6 +289,7 @@
       <label for="bunker-input">Paste your Heartwood bunker URI:</label>
       <input id="bunker-input" type="text" placeholder="bunker://..." spellcheck="false" autocomplete="off">
       <button id="connect-btn" class="btn btn-primary">Connect</button>
+      <div id="connect-status" class="connect-status"></div>
     </div>
   </div>
 

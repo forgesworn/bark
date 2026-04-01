@@ -16,6 +16,7 @@ const deriveInput = document.getElementById('derive-input')
 const deriveBtn = document.getElementById('derive-btn')
 const disconnectBtn = document.getElementById('disconnect-btn')
 const errorMsg = document.getElementById('error-msg')
+const connectStatus = document.getElementById('connect-status')
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -167,10 +168,21 @@ async function derivePersona() {
   }
 }
 
+/** Show/hide connection status feedback. */
+function showConnectStatus(msg, connecting = false) {
+  connectStatus.textContent = msg
+  connectStatus.classList.toggle('visible', !!msg)
+  connectStatus.classList.toggle('connecting', connecting)
+}
+
 /** Save the bunker URI, reset the connection, and refresh. */
 async function connect() {
   const uri = bunkerInput.value.trim()
   if (!uri) return
+
+  connectBtn.disabled = true
+  connectBtn.textContent = 'Connecting...'
+  showConnectStatus('Reaching Heartwood via relays...', true)
 
   try {
     await chrome.storage.local.set({ bunkerUri: uri })
@@ -180,9 +192,15 @@ async function connect() {
       chrome.runtime.sendMessage({ type: 'bark-reset' }, resolve)
     })
 
+    showConnectStatus('Verifying identity...', true)
     await refreshState()
+    showConnectStatus('')
   } catch (err) {
     showError(err.message)
+    showConnectStatus('')
+  } finally {
+    connectBtn.disabled = false
+    connectBtn.textContent = 'Connect'
   }
 }
 
