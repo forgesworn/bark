@@ -221,7 +221,7 @@ async function handleMessage(method, params) {
  * Map heartwood method params objects to the positional array that
  * BunkerSigner.sendRequest expects.
  */
-function buildHeartwoodArgs(method, params) {
+export function buildHeartwoodArgs(method, params) {
   switch (method) {
     case 'heartwood_list_identities':
       return []
@@ -268,7 +268,7 @@ const SAFE_ERROR_PREFIXES = [
   'Corrupted client',
 ]
 
-function sanitiseError(err) {
+export function sanitiseError(err) {
   const msg = err?.message || 'Unknown error'
   for (const prefix of SAFE_ERROR_PREFIXES) {
     if (msg.startsWith(prefix)) return msg
