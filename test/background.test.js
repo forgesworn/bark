@@ -184,6 +184,14 @@ describe('sanitiseError', () => {
     expect(sanitiseError(new Error('ECONNREFUSED 127.0.0.1:443'))).toBe('Request failed.')
   })
 
+  it('handles plain string errors from nostr-tools NIP-46', () => {
+    expect(sanitiseError('heartwood_derive requires a valid purpose')).toBe(
+      'heartwood_derive requires a valid purpose',
+    )
+    expect(sanitiseError('Connection timed out.')).toBe('Connection timed out.')
+    expect(sanitiseError('some internal nostr-tools error')).toBe('Request failed.')
+  })
+
   it('handles missing or malformed error objects', () => {
     expect(sanitiseError(null)).toBe('Request failed.')
     expect(sanitiseError(undefined)).toBe('Request failed.')
