@@ -187,9 +187,18 @@ async function refreshState() {
       clearRetryState()
       return
     }
+    // Check if we're awaiting approval rather than truly disconnected
+    const status = await queryStatus()
+    if (status.status === 'awaiting-approval') {
+      showScreen(mainScreen)
+      showReconnecting('Approve this client on your Heartwood device.', false)
+      retryBtn.textContent = 'Check again'
+      retryBtn.style.display = ''
+      renderRelays(status.relays)
+      return
+    }
     // Connection failed — show reconnection UI
     showScreen(mainScreen)
-    const status = await queryStatus()
     renderRelays(status.relays)
     await scheduleRetry()
     return
@@ -337,7 +346,9 @@ async function connect() {
 
 async function disconnect() {
   try {
-    await chrome.storage.local.remove(['bunkerUri', 'clientSecret', 'isHeartwood'])
+    // Keep clientSecret so Bark reuses the same identity with the bunker.
+    // Clearing it would create a new pending client on every reconnect.
+    await chrome.storage.local.remove(['bunkerUri', 'isHeartwood'])
     await new Promise((resolve) => {
       chrome.runtime.sendMessage({ type: 'bark-reset' }, resolve)
     })
@@ -359,6 +370,7 @@ disconnectBtn.addEventListener('click', disconnect)
 deriveBtn.addEventListener('click', derivePersona)
 retryBtn.addEventListener('click', () => {
   clearRetryState()
+  retryBtn.textContent = 'Retry'
   refreshState()
 })
 
