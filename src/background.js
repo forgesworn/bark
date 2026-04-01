@@ -82,6 +82,9 @@ export function isValidPurpose(value) {
 /** @type {BunkerSigner|null} */
 let signer = null
 
+/** @type {Promise<BunkerSigner>|null} Mutex to prevent concurrent connect attempts. */
+let connectPromise = null
+
 // ---------------------------------------------------------------------------
 // Connection state — queried by popup via bark-status
 // ---------------------------------------------------------------------------
@@ -118,9 +121,20 @@ async function probeRelays(relayUrls) {
 /**
  * Load persisted bunker URI and client secret from chrome.storage.local,
  * then establish the NIP-46 connection to Heartwood.
+ * Uses connectPromise as a mutex to prevent concurrent connection attempts.
  */
 async function ensureConnected() {
   if (signer) return signer
+  if (connectPromise) return connectPromise
+  connectPromise = doConnect()
+  try {
+    return await connectPromise
+  } finally {
+    connectPromise = null
+  }
+}
+
+async function doConnect() {
 
   connectionState.status = 'connecting'
   connectionState.lastError = null
@@ -211,7 +225,11 @@ async function ensureConnected() {
  * Tear down the current connection (used by bark-reset).
  */
 async function resetConnection() {
+  if (signer) {
+    try { signer.close() } catch { /* ignore */ }
+  }
   signer = null
+  connectPromise = null
   connectionState.status = 'disconnected'
   connectionState.lastError = null
   connectionState.relays = []
