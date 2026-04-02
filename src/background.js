@@ -1,7 +1,7 @@
 // Background service worker — handles NIP-46 relay communication with Heartwood.
 
 import { BunkerSigner, parseBunkerInput } from 'nostr-tools/nip46'
-import { generateSecretKey } from 'nostr-tools/pure'
+import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
 
 // ---------------------------------------------------------------------------
@@ -26,6 +26,51 @@ const HEARTWOOD_METHODS = new Set([
 
 /** Regex for validating a bunker URI (bunker://<64-hex-chars>?<params>). */
 const BUNKER_URI_RE = /^bunker:\/\/[0-9a-f]{64}\??[?/\w:.=&%-]*$/
+
+// ---------------------------------------------------------------------------
+// Multi-instance storage helpers
+// ---------------------------------------------------------------------------
+
+/** Extract the bunker pubkey (first 8 hex chars) from a bunker URI. */
+function bunkerPubkeyPrefix(uri) {
+  const match = uri.match(/^bunker:\/\/([0-9a-f]{8})/)
+  return match ? match[1] : 'unknown'
+}
+
+/** Build a stable instance ID from a name and bunker URI. */
+export function makeInstanceId(name, bunkerUri) {
+  return `${name}-${bunkerPubkeyPrefix(bunkerUri)}`
+}
+
+/**
+ * Migrate legacy single-connection storage to multi-instance format.
+ * Returns { instances, activeInstanceId, removeKeys } or null if no migration needed.
+ */
+export function migrateStorage(stored) {
+  if (stored.instances || !stored.bunkerUri) return null
+  const id = makeInstanceId('legacy', stored.bunkerUri)
+  return {
+    instances: [{
+      id,
+      name: 'legacy',
+      address: '',
+      bunkerUri: stored.bunkerUri,
+      clientSecret: stored.clientSecret || '',
+      npub: '',
+      signingPubkey: '',
+      isHeartwood: stored.isHeartwood || false,
+    }],
+    activeInstanceId: id,
+    removeKeys: ['bunkerUri', 'clientSecret', 'isHeartwood'],
+  }
+}
+
+/** Normalise a Heartwood address: ensure scheme, strip trailing slash. */
+export function normaliseAddress(addr) {
+  let url = addr.trim()
+  if (!/^https?:\/\//.test(url)) url = `http://${url}`
+  return url.replace(/\/+$/, '')
+}
 
 /** Event kinds that require user approval before signing. */
 const PROTECTED_KINDS = new Set([0])
@@ -226,15 +271,31 @@ async function doConnect() {
   connectionState.status = 'connecting'
   connectionState.lastError = null
 
-  const { bunkerUri, clientSecret } = await chrome.storage.local.get([
-    'bunkerUri',
-    'clientSecret',
-  ])
-
-  if (!bunkerUri) {
-    connectionState.status = 'disconnected'
-    throw new Error('No bunker URI configured. Open the Bark popup to connect.')
+  // Migrate legacy single-connection storage on first run
+  const stored = await chrome.storage.local.get(null)
+  const migration = migrateStorage(stored)
+  if (migration) {
+    await chrome.storage.local.set({
+      instances: migration.instances,
+      activeInstanceId: migration.activeInstanceId,
+    })
+    await chrome.storage.local.remove(migration.removeKeys)
+    console.log('[bark] Migrated legacy storage to multi-instance format')
   }
+
+  // Read multi-instance state
+  const { instances = [], activeInstanceId } = await chrome.storage.local.get([
+    'instances',
+    'activeInstanceId',
+  ])
+  const active = instances.find(i => i.id === activeInstanceId)
+  if (!active) {
+    connectionState.status = 'disconnected'
+    throw new Error('No Heartwood instance configured. Open the Bark popup to connect.')
+  }
+
+  const bunkerUri = active.bunkerUri
+  const clientSecret = active.clientSecret
 
   if (!isValidBunkerUri(bunkerUri)) {
     connectionState.status = 'disconnected'
@@ -515,6 +576,121 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         .then(() => sendResponse({ ok: true }))
         .catch((err) => sendResponse({ error: sanitiseError(err) }))
       return true // keep channel open for async response
+    }
+
+    if (message.type === 'bark-pair') {
+      const { address } = message;
+      (async () => {
+        try {
+          const url = normaliseAddress(address)
+          const clientSk = generateSecretKey()
+          const clientPk = bytesToHex(getPublicKey(clientSk))
+
+          const res = await fetch(`${url}/api/pair`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'bark', pubkey: clientPk }),
+          })
+
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}))
+            throw new Error(body.error || `HTTP ${res.status}`)
+          }
+
+          const data = await res.json()
+          const id = makeInstanceId(data.instance || 'heartwood', data.bunkerUri)
+
+          // Check for duplicate
+          const { instances = [] } = await chrome.storage.local.get('instances')
+          if (instances.some(i => i.id === id)) {
+            throw new Error('Already paired with this instance.')
+          }
+
+          const instance = {
+            id,
+            name: data.instance || 'heartwood',
+            address: url,
+            bunkerUri: data.bunkerUri,
+            clientSecret: bytesToHex(clientSk),
+            npub: data.npub || '',
+            signingPubkey: '',
+            isHeartwood: true,
+          }
+
+          instances.push(instance)
+          await chrome.storage.local.set({ instances, activeInstanceId: id })
+
+          // Reset the signer so it reconnects with the new active instance
+          signer = null
+          connectPromise = null
+          await ensureConnected()
+
+          sendResponse({ ok: true, instance })
+        } catch (err) {
+          sendResponse({ ok: false, error: err.message })
+        }
+      })()
+      return true
+    }
+
+    if (message.type === 'bark-switch') {
+      const { instanceId } = message;
+      (async () => {
+        try {
+          const { instances = [] } = await chrome.storage.local.get('instances')
+          const target = instances.find(i => i.id === instanceId)
+          if (!target) throw new Error('Instance not found.')
+
+          if (signer) {
+            try { signer.close() } catch {}
+            signer = null
+          }
+          connectPromise = null
+          connectionState.status = 'connecting'
+
+          await chrome.storage.local.set({ activeInstanceId: instanceId })
+          await ensureConnected()
+
+          sendResponse({ ok: true })
+        } catch (err) {
+          sendResponse({ ok: false, error: err.message })
+        }
+      })()
+      return true
+    }
+
+    if (message.type === 'bark-remove') {
+      const { instanceId } = message;
+      (async () => {
+        try {
+          let { instances = [], activeInstanceId } = await chrome.storage.local.get([
+            'instances',
+            'activeInstanceId',
+          ])
+          instances = instances.filter(i => i.id !== instanceId)
+
+          if (activeInstanceId === instanceId) {
+            if (signer) {
+              try { signer.close() } catch {}
+              signer = null
+            }
+            connectPromise = null
+            activeInstanceId = instances.length > 0 ? instances[0].id : null
+            connectionState.status = instances.length > 0 ? 'connecting' : 'disconnected'
+          }
+
+          await chrome.storage.local.set({ instances, activeInstanceId })
+
+          if (instances.length > 0 && activeInstanceId) {
+            await ensureConnected()
+          }
+
+          sendResponse({ ok: true, remaining: instances.length })
+        } catch (err) {
+          sendResponse({ ok: false, error: err.message })
+        }
+      })()
+      return true
     }
 
     if (message.type === 'bark-approval-query') {
