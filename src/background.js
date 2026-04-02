@@ -584,7 +584,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         try {
           const url = normaliseAddress(address)
           const clientSk = generateSecretKey()
-          const clientPk = bytesToHex(getPublicKey(clientSk))
+          const clientPk = getPublicKey(clientSk)
 
           const res = await fetch(`${url}/api/pair`, {
             method: 'POST',
