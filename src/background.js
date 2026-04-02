@@ -310,6 +310,11 @@ async function handleMessage(method, params) {
     case 'heartwood': {
       const args = buildHeartwoodArgs(parsed.method, params)
       const raw = await bunker.sendRequest(parsed.method, args)
+      // After a switch, clear the cached pubkey so getPublicKey() fetches
+      // the new active identity from the bunker.
+      if (parsed.method === 'heartwood_switch') {
+        bunker.cachedPubKey = null
+      }
       // sendRequest returns a JSON string; parse it for the caller.
       try {
         return JSON.parse(raw)
@@ -342,10 +347,10 @@ export function buildHeartwoodArgs(method, params) {
       return [params.purpose, String(index)]
     }
     case 'heartwood_switch': {
-      if (!params || !isValidHexPubkey(params.pubkey)) {
-        throw new Error('heartwood_switch requires a valid hex pubkey.')
+      if (!params || typeof params.target !== 'string' || params.target.length === 0 || params.target.length > 256) {
+        throw new Error('heartwood_switch requires a target (npub, persona name, purpose, or "master").')
       }
-      return [params.pubkey]
+      return [params.target]
     }
     default:
       throw new Error(`Unknown heartwood method: ${method}`)
