@@ -1,5 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Bark — Approve</title></head>
-<body><div id="root"></div><script src="approve.js"></script></body>
+<head>
+  <meta charset="UTF-8">
+  <title>Bark — Approve</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 400px;
+      min-height: 300px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .origin {
+      background: #16213e;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .origin strong {
+      color: #66cc66;
+    }
+
+    .persona {
+      background: #16213e;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+
+    .persona-name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .persona-npub {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .profile-fields {
+      background: #16213e;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+    }
+
+    .profile-field {
+      padding: 4px 0;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .profile-field:last-child {
+      border-bottom: none;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .field-value {
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover {
+      opacity: 0.85;
+    }
+
+    .btn-allow {
+      background: #339933;
+      color: #fff;
+    }
+
+    .btn-deny {
+      background: #662222;
+      color: #ff8888;
+    }
+
+    .error {
+      background: #3a1111;
+      border: 1px solid #ff4444;
+      border-radius: 6px;
+      padding: 10px 14px;
+      color: #ff4444;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .error.visible {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      color: #888;
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading">Loading request...</div>
+
+  <div id="content" style="display:none">
+    <div class="header">
+      <h1 id="title">Bark</h1>
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <div class="origin">
+      <span id="origin-text"></span>
+    </div>
+
+    <div class="section-label">Active persona</div>
+    <div class="persona">
+      <div id="persona-name" class="persona-name">--</div>
+      <div id="persona-npub" class="persona-npub">--</div>
+    </div>
+
+    <div id="profile-section" style="display:none">
+      <div class="section-label">Proposed profile</div>
+      <div id="profile-fields" class="profile-fields"></div>
+    </div>
+
+    <div class="buttons">
+      <button id="deny-btn" class="btn btn-deny">Deny</button>
+      <button id="allow-btn" class="btn btn-allow">Allow</button>
+    </div>
+  </div>
+
+  <script src="approve.js"></script>
+</body>
 </html>
