@@ -545,7 +545,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     }
 
     if (message.type === 'bark-request') {
-      if (requiresApproval(message.method, message.params)) {
+      if (sender.tab && requiresApproval(message.method, message.params)) {
         // Guard: only one approval at a time
         if (activeApprovalId) {
           sendResponse({ error: 'An approval request is already in progress.' })
