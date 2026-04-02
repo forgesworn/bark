@@ -211,9 +211,12 @@ describe('buildHeartwoodArgs', () => {
     expect(buildHeartwoodArgs('heartwood_derive', { purpose: 'my-key', index: 5 })).toEqual(['my-key', '5'])
   })
 
-  it('returns [pubkey] for heartwood_switch', () => {
+  it('returns [target] for heartwood_switch', () => {
     const pk = 'a'.repeat(64)
-    expect(buildHeartwoodArgs('heartwood_switch', { pubkey: pk })).toEqual([pk])
+    expect(buildHeartwoodArgs('heartwood_switch', { target: pk })).toEqual([pk])
+    expect(buildHeartwoodArgs('heartwood_switch', { target: 'npub1abc123' })).toEqual(['npub1abc123'])
+    expect(buildHeartwoodArgs('heartwood_switch', { target: 'master' })).toEqual(['master'])
+    expect(buildHeartwoodArgs('heartwood_switch', { target: 'social' })).toEqual(['social'])
   })
 
   it('throws on invalid purpose for heartwood_derive', () => {
@@ -228,10 +231,11 @@ describe('buildHeartwoodArgs', () => {
     expect(() => buildHeartwoodArgs('heartwood_derive', { purpose: 'nostr', index: 'abc' })).toThrow()
   })
 
-  it('throws on invalid pubkey for heartwood_switch', () => {
-    expect(() => buildHeartwoodArgs('heartwood_switch', { pubkey: 'short' })).toThrow()
-    expect(() => buildHeartwoodArgs('heartwood_switch', { pubkey: 'G'.repeat(64) })).toThrow()
+  it('throws on invalid target for heartwood_switch', () => {
+    expect(() => buildHeartwoodArgs('heartwood_switch', { target: '' })).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_switch', { target: 'a'.repeat(257) })).toThrow()
     expect(() => buildHeartwoodArgs('heartwood_switch', null)).toThrow()
+    expect(() => buildHeartwoodArgs('heartwood_switch', { target: 123 })).toThrow()
   })
 
   it('throws on unknown heartwood method', () => {

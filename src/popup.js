@@ -239,28 +239,29 @@ async function refreshState() {
 
     let activeLabel = 'default'
     if (identities.length > 0) {
-      const match = identities.find((id) => id.pubkey === pubkey)
-      activeLabel = match?.name || match?.purpose || 'default'
+      const match = identities.find((id) => (id.pubkey || id.npub) === pubkey)
+      activeLabel = match?.name || match?.personaName || match?.purpose || 'default'
     }
     activeName.textContent = activeLabel
 
     // Render persona list
     personaList.innerHTML = ''
     for (const id of identities) {
+      const pk = id.pubkey || id.npub
       const item = document.createElement('div')
-      item.className = 'persona-item' + (id.pubkey === pubkey ? ' active' : '')
+      item.className = 'persona-item' + (pk === pubkey ? ' active' : '')
 
       const name = document.createElement('div')
       name.className = 'persona-name'
-      name.textContent = id.name || id.purpose || 'unnamed'
+      name.textContent = id.name || id.personaName || id.purpose || 'unnamed'
       item.appendChild(name)
 
       const npub = document.createElement('div')
       npub.className = 'persona-npub'
-      npub.textContent = truncateNpub(id.pubkey)
+      npub.textContent = truncateNpub(pk)
       item.appendChild(npub)
 
-      item.addEventListener('click', () => switchPersona(id.pubkey))
+      item.addEventListener('click', () => switchPersona(pk))
       personaList.appendChild(item)
     }
   } else {
@@ -275,9 +276,9 @@ async function refreshState() {
 // Actions
 // ---------------------------------------------------------------------------
 
-async function switchPersona(pubkey) {
+async function switchPersona(target) {
   try {
-    await rpc('heartwood_switch', { pubkey })
+    await rpc('heartwood_switch', { target })
     await refreshState()
   } catch (err) {
     showError(err.message)
@@ -292,11 +293,11 @@ async function derivePersona() {
     await rpc('heartwood_derive', { purpose, index: 0 })
     const identities = await rpc('heartwood_list_identities')
     const derived = Array.isArray(identities)
-      ? identities.find((id) => id.purpose === purpose || id.name === purpose)
+      ? identities.find((id) => id.purpose === purpose || id.name === purpose || id.personaName === purpose)
       : null
 
     if (derived) {
-      await rpc('heartwood_switch', { pubkey: derived.pubkey })
+      await rpc('heartwood_switch', { target: derived.pubkey || derived.npub })
     }
 
     deriveInput.value = ''
