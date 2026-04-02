@@ -27,6 +27,22 @@ const HEARTWOOD_METHODS = new Set([
 /** Regex for validating a bunker URI (bunker://<64-hex-chars>?<params>). */
 const BUNKER_URI_RE = /^bunker:\/\/[0-9a-f]{64}\??[?/\w:.=&%-]*$/
 
+/** Event kinds that require user approval before signing. */
+const PROTECTED_KINDS = new Set([0])
+
+/**
+ * Determine whether a request method + params combination requires user
+ * approval before proceeding.
+ * @param {string} method
+ * @param {*} params
+ * @returns {boolean}
+ */
+export function requiresApproval(method, params) {
+  if (method === 'getPublicKey') return true
+  if (method === 'signEvent' && params && typeof params === 'object' && PROTECTED_KINDS.has(params.kind)) return true
+  return false
+}
+
 // ---------------------------------------------------------------------------
 // Method parser — exported for unit testing
 // ---------------------------------------------------------------------------

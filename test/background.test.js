@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, requiresApproval } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -240,5 +240,38 @@ describe('buildHeartwoodArgs', () => {
 
   it('throws on unknown heartwood method', () => {
     expect(() => buildHeartwoodArgs('heartwood_evil', {})).toThrow()
+  })
+})
+
+describe('requiresApproval', () => {
+  it('requires approval for getPublicKey', () => {
+    expect(requiresApproval('getPublicKey', undefined)).toBe(true)
+  })
+
+  it('requires approval for signEvent with kind 0', () => {
+    expect(requiresApproval('signEvent', { kind: 0, content: '{}' })).toBe(true)
+  })
+
+  it('does not require approval for signEvent with kind 1', () => {
+    expect(requiresApproval('signEvent', { kind: 1, content: 'hello' })).toBe(false)
+  })
+
+  it('does not require approval for signEvent with kind 7', () => {
+    expect(requiresApproval('signEvent', { kind: 7, content: '+' })).toBe(false)
+  })
+
+  it('does not require approval for nip44 methods', () => {
+    expect(requiresApproval('nip44.encrypt', { pubkey: 'a'.repeat(64), plaintext: 'hi' })).toBe(false)
+    expect(requiresApproval('nip44.decrypt', { pubkey: 'a'.repeat(64), ciphertext: 'x' })).toBe(false)
+  })
+
+  it('does not require approval for heartwood methods', () => {
+    expect(requiresApproval('heartwood_list_identities', {})).toBe(false)
+    expect(requiresApproval('heartwood_switch', { target: 'master' })).toBe(false)
+  })
+
+  it('does not require approval for signEvent with missing params', () => {
+    expect(requiresApproval('signEvent', null)).toBe(false)
+    expect(requiresApproval('signEvent', 'not-an-object')).toBe(false)
   })
 })
