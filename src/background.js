@@ -584,7 +584,15 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       (async () => {
         try {
           const url = normaliseAddress(address)
-          const clientSk = generateSecretKey()
+          const { instances = [] } = await chrome.storage.local.get('instances')
+
+          // Reuse existing client key if we've paired with this address before,
+          // otherwise generate a fresh one. This prevents orphaned keys when
+          // re-pairing after a bunker restart or client clear.
+          const existing = instances.find(i => i.address === url)
+          const clientSk = existing
+            ? hexToBytes(existing.clientSecret)
+            : generateSecretKey()
           const clientPk = getPublicKey(clientSk)
 
           const res = await fetch(`${url}/api/pair`, {
@@ -601,24 +609,25 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           const data = await res.json()
           const id = makeInstanceId(data.instance || 'heartwood', data.bunkerUri)
 
-          // Check for duplicate
-          const { instances = [] } = await chrome.storage.local.get('instances')
-          if (instances.some(i => i.id === id)) {
-            throw new Error('Already paired with this instance.')
+          if (existing) {
+            // Update existing instance (re-pair with same key)
+            existing.bunkerUri = data.bunkerUri
+            existing.npub = data.npub || existing.npub
+            existing.name = data.instance || existing.name
+            existing.id = id
+          } else {
+            instances.push({
+              id,
+              name: data.instance || 'heartwood',
+              address: url,
+              bunkerUri: data.bunkerUri,
+              clientSecret: bytesToHex(clientSk),
+              npub: data.npub || '',
+              signingPubkey: '',
+              isHeartwood: true,
+            })
           }
 
-          const instance = {
-            id,
-            name: data.instance || 'heartwood',
-            address: url,
-            bunkerUri: data.bunkerUri,
-            clientSecret: bytesToHex(clientSk),
-            npub: data.npub || '',
-            signingPubkey: '',
-            isHeartwood: true,
-          }
-
-          instances.push(instance)
           await chrome.storage.local.set({ instances, activeInstanceId: id })
 
           // Respond immediately — connect in the background
