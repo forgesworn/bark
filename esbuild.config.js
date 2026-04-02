@@ -20,6 +20,7 @@ function copyStatic() {
   // Copy unbundled scripts (they run in page/content context)
   cpSync(resolve(srcDir, 'provider.js'), resolve(distDir, 'provider.js'))
   cpSync(resolve(srcDir, 'content-script.js'), resolve(distDir, 'content-script.js'))
+  cpSync(resolve(srcDir, 'approve.html'), resolve(distDir, 'approve.html'))
 }
 
 copyStatic()
@@ -29,6 +30,7 @@ const buildOptions = {
   entryPoints: [
     resolve(srcDir, 'background.js'),
     resolve(srcDir, 'popup.js'),
+    resolve(srcDir, 'approve.js'),
   ],
   bundle: true,
   format: 'iife',
