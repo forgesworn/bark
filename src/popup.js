@@ -159,7 +159,11 @@ async function renderInstances() {
 }
 
 async function pairHeartwood(address) {
-  if (!address) return
+  if (!address) {
+    pairError.textContent = 'Enter a Heartwood address (e.g. heartwood.local:3000)'
+    pairError.classList.remove('hidden')
+    return
+  }
   pairError.classList.add('hidden')
   const btn = document.activeElement === addPairBtn ? addPairBtn : pairBtn
   const origText = btn.textContent
@@ -167,10 +171,19 @@ async function pairHeartwood(address) {
   btn.textContent = 'Connecting...'
 
   try {
-    const result = await new Promise((resolve) => {
-      chrome.runtime.sendMessage({ type: 'bark-pair', address }, resolve)
+    const result = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: 'bark-pair', address }, (resp) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message))
+        } else if (!resp) {
+          reject(new Error('No response from background — try reloading the extension'))
+        } else if (!resp.ok) {
+          reject(new Error(resp.error || 'Pairing failed'))
+        } else {
+          resolve(resp)
+        }
+      })
     })
-    if (!result.ok) throw new Error(result.error)
 
     await renderInstances()
     await refreshState()
