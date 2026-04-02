@@ -43,6 +43,77 @@ export function requiresApproval(method, params) {
   return false
 }
 
+/** Timeout for approval requests (ms). */
+const APPROVAL_TIMEOUT_MS = 60_000
+
+// ---------------------------------------------------------------------------
+// Approval system — pending requests awaiting user decision
+// ---------------------------------------------------------------------------
+
+/** @type {Map<string, { method: string, params: any, event?: object, pubkey: string, personaName: string, origin: string, sendResponse: Function, timeoutId: number, windowId?: number }>} */
+const pendingApprovals = new Map()
+
+/** @type {string|null} Currently active approval request ID, if any. */
+let activeApprovalId = null
+
+let approvalCounter = 0
+
+/**
+ * Open the approval popup window and store the pending request.
+ */
+async function openApprovalWindow(requestId, details) {
+  const timeoutId = setTimeout(() => {
+    denyApproval(requestId, 'Approval timed out.')
+  }, APPROVAL_TIMEOUT_MS)
+
+  pendingApprovals.set(requestId, { ...details, timeoutId })
+  activeApprovalId = requestId
+
+  try {
+    const win = await chrome.windows.create({
+      url: chrome.runtime.getURL(`approve.html?requestId=${requestId}`),
+      type: 'popup',
+      width: 420,
+      height: 520,
+      focused: true,
+    })
+    const entry = pendingApprovals.get(requestId)
+    if (entry) entry.windowId = win.id
+  } catch (err) {
+    denyApproval(requestId, 'Could not open approval window.')
+  }
+}
+
+/**
+ * Deny a pending approval — resolve the original request with an error.
+ */
+function denyApproval(requestId, reason) {
+  const entry = pendingApprovals.get(requestId)
+  if (!entry) return
+  clearTimeout(entry.timeoutId)
+  pendingApprovals.delete(requestId)
+  if (activeApprovalId === requestId) activeApprovalId = null
+  entry.sendResponse({ error: reason || 'Request denied by user.' })
+}
+
+/**
+ * Allow a pending approval — execute the original request.
+ */
+async function allowApproval(requestId) {
+  const entry = pendingApprovals.get(requestId)
+  if (!entry) return
+  clearTimeout(entry.timeoutId)
+  pendingApprovals.delete(requestId)
+  if (activeApprovalId === requestId) activeApprovalId = null
+
+  try {
+    const result = await handleMessage(entry.method, entry.params)
+    entry.sendResponse(result)
+  } catch (err) {
+    entry.sendResponse({ error: sanitiseError(err) })
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Method parser — exported for unit testing
 // ---------------------------------------------------------------------------
@@ -395,6 +466,10 @@ const SAFE_ERROR_PREFIXES = [
   'Corrupted client',
   'Approve this client',
   'client not approved',
+  'Request denied',
+  'An approval request',
+  'Approval timed out',
+  'Could not open approval',
 ]
 
 export function sanitiseError(err) {
@@ -411,6 +486,17 @@ export function sanitiseError(err) {
 // ---------------------------------------------------------------------------
 // Chrome message listener — guarded so vitest can import this module
 // ---------------------------------------------------------------------------
+
+if (typeof chrome !== 'undefined' && chrome.windows?.onRemoved) {
+  chrome.windows.onRemoved.addListener((windowId) => {
+    for (const [requestId, entry] of pendingApprovals) {
+      if (entry.windowId === windowId) {
+        denyApproval(requestId, 'Request denied by user.')
+        break
+      }
+    }
+  })
+}
 
 if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -431,7 +517,78 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       return true // keep channel open for async response
     }
 
+    if (message.type === 'bark-approval-query') {
+      const entry = pendingApprovals.get(message.requestId)
+      if (!entry) {
+        sendResponse(null)
+        return true
+      }
+      sendResponse({
+        method: entry.method,
+        event: entry.event || null,
+        pubkey: entry.pubkey,
+        personaName: entry.personaName,
+        origin: entry.origin,
+      })
+      return true
+    }
+
+    if (message.type === 'bark-approval-response') {
+      const { requestId: rid, decision } = message
+      if (decision === 'allow') {
+        allowApproval(rid)
+      } else {
+        denyApproval(rid, 'Request denied by user.')
+      }
+      sendResponse({ ok: true })
+      return true
+    }
+
     if (message.type === 'bark-request') {
+      if (requiresApproval(message.method, message.params)) {
+        // Guard: only one approval at a time
+        if (activeApprovalId) {
+          sendResponse({ error: 'An approval request is already in progress.' })
+          return true
+        }
+
+        const requestId = `approval-${++approvalCounter}`
+
+        // Connect first to get persona info for the approval UI
+        ensureConnected()
+          .then(async (bunker) => {
+            const pubkey = await bunker.getPublicKey()
+
+            // For Heartwood, try to get the active persona name
+            let personaName = 'default'
+            if (connectionState.isHeartwood) {
+              try {
+                const raw = await bunker.sendRequest('heartwood_list_identities', [])
+                const identities = JSON.parse(raw)
+                if (Array.isArray(identities)) {
+                  const match = identities.find((id) => (id.pubkey || id.npub) === pubkey)
+                  personaName = match?.name || match?.personaName || match?.purpose || 'default'
+                }
+              } catch { /* use default */ }
+            }
+
+            const origin = sender.origin || 'Unknown'
+
+            await openApprovalWindow(requestId, {
+              method: message.method,
+              params: message.params,
+              event: message.method === 'signEvent' ? message.params : undefined,
+              pubkey,
+              personaName,
+              origin,
+              sendResponse,
+            })
+          })
+          .catch((err) => sendResponse({ error: sanitiseError(err) }))
+
+        return true // keep channel open
+      }
+
       handleMessage(message.method, message.params)
         .then((result) => sendResponse(result))
         .catch((err) => sendResponse({ error: sanitiseError(err) }))
