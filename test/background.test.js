@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, requiresApproval } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, requiresApproval, migrateStorage, makeInstanceId, normaliseAddress } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -273,5 +273,56 @@ describe('requiresApproval', () => {
   it('does not require approval for signEvent with missing params', () => {
     expect(requiresApproval('signEvent', null)).toBe(false)
     expect(requiresApproval('signEvent', 'not-an-object')).toBe(false)
+  })
+})
+
+describe('makeInstanceId', () => {
+  it('builds id from name and bunker pubkey', () => {
+    const uri = 'bunker://abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890?relay=wss://r.com'
+    expect(makeInstanceId('personal', uri)).toBe('personal-abcdef12')
+  })
+})
+
+describe('migrateStorage', () => {
+  it('converts legacy single-connection fields to instances array', () => {
+    const legacy = {
+      bunkerUri: 'bunker://abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890?relay=wss://r.com',
+      clientSecret: 'ff'.repeat(32),
+      isHeartwood: true,
+    }
+    const result = migrateStorage(legacy)
+    expect(result.instances).toHaveLength(1)
+    expect(result.instances[0].id).toBe('legacy-abcdef12')
+    expect(result.instances[0].bunkerUri).toBe(legacy.bunkerUri)
+    expect(result.instances[0].clientSecret).toBe(legacy.clientSecret)
+    expect(result.activeInstanceId).toBe(result.instances[0].id)
+    expect(result.removeKeys).toEqual(['bunkerUri', 'clientSecret', 'isHeartwood'])
+  })
+
+  it('returns null when no legacy fields present', () => {
+    expect(migrateStorage({})).toBeNull()
+    expect(migrateStorage({ instances: [] })).toBeNull()
+  })
+})
+
+describe('normaliseAddress', () => {
+  it('prepends http:// when no scheme', () => {
+    expect(normaliseAddress('bitcoin5.local:3000')).toBe('http://bitcoin5.local:3000')
+  })
+
+  it('preserves existing http scheme', () => {
+    expect(normaliseAddress('http://bitcoin5.local:3000')).toBe('http://bitcoin5.local:3000')
+  })
+
+  it('preserves https scheme', () => {
+    expect(normaliseAddress('https://my.server.com')).toBe('https://my.server.com')
+  })
+
+  it('strips trailing slash', () => {
+    expect(normaliseAddress('http://bitcoin5.local:3000/')).toBe('http://bitcoin5.local:3000')
+  })
+
+  it('handles onion addresses', () => {
+    expect(normaliseAddress('http://abc123.onion:3000/')).toBe('http://abc123.onion:3000')
   })
 })
