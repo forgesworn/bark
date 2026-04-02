@@ -9,6 +9,16 @@ const mainScreen = document.getElementById('main-screen')
 const bunkerInput = document.getElementById('bunker-input')
 const connectBtn = document.getElementById('connect-btn')
 const statusDot = document.getElementById('status-dot')
+
+// Multi-instance UI refs
+const heartwoodAddress = document.getElementById('heartwood-address')
+const pairBtn = document.getElementById('pair-btn')
+const pairError = document.getElementById('pair-error')
+const instanceListEl = document.getElementById('instance-list')
+const addAddressInput = document.getElementById('add-address')
+const addPairBtn = document.getElementById('add-pair-btn')
+const showAddBtn = document.getElementById('show-add-btn')
+const addInstanceSection = document.getElementById('add-instance-section')
 const heartwoodBadge = document.getElementById('heartwood-badge')
 const activeName = document.getElementById('active-name')
 const activeNpub = document.getElementById('active-npub')
@@ -97,6 +107,115 @@ function showScreen(screen) {
 /** Validate that a string looks like a valid bunker URI. */
 function isValidBunkerUri(value) {
   return typeof value === 'string' && /^bunker:\/\/[0-9a-f]{64}\??[?/\w:.=&%-]*$/.test(value)
+}
+
+// ---------------------------------------------------------------------------
+// Instance card rendering and actions
+// ---------------------------------------------------------------------------
+
+/** Render the instance card list from storage. */
+async function renderInstances() {
+  const { instances = [], activeInstanceId } = await chrome.storage.local.get([
+    'instances', 'activeInstanceId',
+  ])
+
+  if (instances.length === 0) {
+    showScreen(setupScreen)
+    return
+  }
+
+  showScreen(mainScreen)
+  instanceListEl.innerHTML = instances.map(inst => {
+    const isActive = inst.id === activeInstanceId
+    const statusClass = isActive ? 'connected' : 'inactive'
+    const cardClass = isActive ? 'instance-card active' : 'instance-card'
+    const npubShort = inst.npub ? inst.npub.slice(0, 20) + '...' : 'connecting...'
+    return `<div class="${cardClass}" data-id="${inst.id}">
+      <span class="inst-status ${statusClass}"></span>
+      <div style="flex:1; min-width:0;">
+        <div class="inst-name">${escapeHtml(inst.name)}</div>
+        <div class="inst-npub">${escapeHtml(npubShort)}</div>
+      </div>
+      <button class="inst-remove" data-id="${inst.id}" title="Remove">&times;</button>
+    </div>`
+  }).join('')
+
+  // Click to switch
+  instanceListEl.querySelectorAll('.instance-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.classList.contains('inst-remove')) return
+      const id = card.dataset.id
+      if (id !== activeInstanceId) switchInstance(id)
+    })
+  })
+
+  // Click to remove
+  instanceListEl.querySelectorAll('.inst-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      removeInstance(btn.dataset.id)
+    })
+  })
+}
+
+async function pairHeartwood(address) {
+  if (!address) return
+  pairError.classList.add('hidden')
+  const btn = document.activeElement === addPairBtn ? addPairBtn : pairBtn
+  const origText = btn.textContent
+  btn.disabled = true
+  btn.textContent = 'Connecting...'
+
+  try {
+    const result = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: 'bark-pair', address }, resolve)
+    })
+    if (!result.ok) throw new Error(result.error)
+
+    await renderInstances()
+    await refreshState()
+
+    if (addAddressInput) addAddressInput.value = ''
+    if (addInstanceSection) addInstanceSection.style.display = 'none'
+    if (showAddBtn) showAddBtn.style.display = ''
+  } catch (err) {
+    pairError.textContent = err.message
+    pairError.classList.remove('hidden')
+  } finally {
+    btn.disabled = false
+    btn.textContent = origText
+  }
+}
+
+async function switchInstance(instanceId) {
+  const card = instanceListEl.querySelector(`[data-id="${instanceId}"]`)
+  if (card) {
+    const nameEl = card.querySelector('.inst-name')
+    if (nameEl) nameEl.textContent += ' (connecting...)'
+  }
+
+  const result = await new Promise((resolve) => {
+    chrome.runtime.sendMessage({ type: 'bark-switch', instanceId }, resolve)
+  })
+
+  if (!result.ok) showError(result.error)
+  await renderInstances()
+  await refreshState()
+}
+
+async function removeInstance(instanceId) {
+  if (!confirm('Remove this Heartwood instance?')) return
+
+  const result = await new Promise((resolve) => {
+    chrome.runtime.sendMessage({ type: 'bark-remove', instanceId }, resolve)
+  })
+
+  if (!result.ok) {
+    showError(result.error)
+    return
+  }
+  await renderInstances()
+  if (result.remaining > 0) await refreshState()
 }
 
 // ---------------------------------------------------------------------------
@@ -387,10 +506,37 @@ deriveInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') derivePersona()
 })
 
+// Instance pairing and management
+if (pairBtn) {
+  pairBtn.addEventListener('click', () => pairHeartwood(heartwoodAddress.value.trim()))
+}
+if (heartwoodAddress) {
+  heartwoodAddress.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') pairHeartwood(heartwoodAddress.value.trim())
+  })
+}
+
+if (showAddBtn) {
+  showAddBtn.addEventListener('click', () => {
+    addInstanceSection.style.display = ''
+    showAddBtn.style.display = 'none'
+    addAddressInput.focus()
+  })
+}
+
+if (addPairBtn) {
+  addPairBtn.addEventListener('click', () => pairHeartwood(addAddressInput.value.trim()))
+}
+if (addAddressInput) {
+  addAddressInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') pairHeartwood(addAddressInput.value.trim())
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Initialise
 // ---------------------------------------------------------------------------
 
-refreshState().catch((err) => {
+renderInstances().then(() => refreshState()).catch((err) => {
   showError(err.message)
 })
