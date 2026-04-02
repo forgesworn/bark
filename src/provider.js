@@ -23,6 +23,7 @@
     if (error) {
       if (error === 'Bark was updated. Please refresh the page.') {
         showStaleBanner()
+        return // don't reject — user needs to refresh, hanging promise is fine
       }
       p.reject(new Error(error))
     } else {
