@@ -620,12 +620,11 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           instances.push(instance)
           await chrome.storage.local.set({ instances, activeInstanceId: id })
 
-          // Reset the signer so it reconnects with the new active instance
+          // Respond immediately — connect in the background
           signer = null
           connectPromise = null
-          await ensureConnected()
-
           sendResponse({ ok: true, instance })
+          ensureConnected().catch(() => {})
         } catch (err) {
           sendResponse({ ok: false, error: err.message })
         }
@@ -649,9 +648,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           connectionState.status = 'connecting'
 
           await chrome.storage.local.set({ activeInstanceId: instanceId })
-          await ensureConnected()
 
+          // Respond immediately — connect in the background
           sendResponse({ ok: true })
+          ensureConnected().catch(() => {})
         } catch (err) {
           sendResponse({ ok: false, error: err.message })
         }
