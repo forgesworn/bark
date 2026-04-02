@@ -516,6 +516,7 @@ export function buildHeartwoodArgs(method, params) {
  */
 const SAFE_ERROR_PREFIXES = [
   'No bunker URI configured',
+  'No Heartwood instance',
   'Invalid bunker URI',
   'Bunker URI must',
   'Connection timed out',
