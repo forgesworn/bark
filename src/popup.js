@@ -6,8 +6,6 @@
 
 const setupScreen = document.getElementById('setup-screen')
 const mainScreen = document.getElementById('main-screen')
-const bunkerInput = document.getElementById('bunker-input')
-const connectBtn = document.getElementById('connect-btn')
 const statusDot = document.getElementById('status-dot')
 
 // Multi-instance UI refs
@@ -445,49 +443,14 @@ function showConnectStatus(msg, connecting = false) {
   connectStatus.classList.toggle('connecting', connecting)
 }
 
-async function connect() {
-  const uri = bunkerInput.value.trim()
-  if (!uri) return
-
-  if (!isValidBunkerUri(uri)) {
-    showError('Invalid bunker URI. Expected format: bunker://<64-hex-pubkey>?relay=...')
-    return
-  }
-
-  connectBtn.disabled = true
-  connectBtn.textContent = 'Connecting...'
-  showConnectStatus('Reaching Heartwood via relays...', true)
-
-  try {
-    await chrome.storage.local.set({ bunkerUri: uri })
-
-    await new Promise((resolve) => {
-      chrome.runtime.sendMessage({ type: 'bark-reset' }, resolve)
-    })
-
-    showConnectStatus('Verifying identity...', true)
-    await refreshState()
-    showConnectStatus('')
-  } catch (err) {
-    showError(err.message)
-    showConnectStatus('')
-  } finally {
-    connectBtn.disabled = false
-    connectBtn.textContent = 'Connect'
-  }
-}
-
 async function disconnect() {
   try {
-    // Keep clientSecret so Bark reuses the same identity with the bunker.
-    // Clearing it would create a new pending client on every reconnect.
-    await chrome.storage.local.remove(['bunkerUri', 'isHeartwood'])
+    await chrome.storage.local.remove(['instances', 'activeInstanceId'])
     await new Promise((resolve) => {
       chrome.runtime.sendMessage({ type: 'bark-reset' }, resolve)
     })
     clearRetryState()
     showScreen(setupScreen)
-    bunkerInput.value = ''
     statusDot.className = 'status-dot'
   } catch (err) {
     showError(err.message)
@@ -498,7 +461,6 @@ async function disconnect() {
 // Event listeners
 // ---------------------------------------------------------------------------
 
-connectBtn.addEventListener('click', connect)
 disconnectBtn.addEventListener('click', disconnect)
 deriveBtn.addEventListener('click', derivePersona)
 retryBtn.addEventListener('click', () => {
@@ -512,9 +474,6 @@ relaySummary.addEventListener('click', () => {
   relayInfo.classList.toggle('expanded')
 })
 
-bunkerInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') connect()
-})
 deriveInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') derivePersona()
 })
