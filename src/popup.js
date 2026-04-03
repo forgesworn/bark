@@ -110,11 +110,6 @@ function showScreen(screen) {
   screen.classList.add('active')
 }
 
-/** Validate that a string looks like a valid bunker URI. */
-function isValidBunkerUri(value) {
-  return typeof value === 'string' && /^bunker:\/\/[0-9a-f]{64}\??[?/\w:.=&%-]*$/.test(value)
-}
-
 // ---------------------------------------------------------------------------
 // Instance card rendering and actions
 // ---------------------------------------------------------------------------
