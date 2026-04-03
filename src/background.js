@@ -598,62 +598,108 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       const { address } = message;
       (async () => {
         try {
-          const url = normaliseAddress(address)
           const { instances = [] } = await chrome.storage.local.get('instances')
+          let bunkerUri, instanceName, npub, pairAddress
 
-          // Reuse existing client key if we've paired with this address before,
-          // otherwise generate a fresh one. This prevents orphaned keys when
-          // re-pairing after a bunker restart or client clear.
-          const existing = instances.find(i => i.address === url)
+          if (address.startsWith('bunker://')) {
+            // Direct bunker URI — skip HTTP pairing, connect via NIP-46 only.
+            // Works from anywhere (no local network needed).
+            if (!isValidBunkerUri(address)) {
+              throw new Error('Invalid bunker URI format.')
+            }
+            bunkerUri = address
+            instanceName = 'bunker'
+            npub = ''
+            pairAddress = address
+          } else {
+            // HTTP pairing — fetch bunker URI from the device web API.
+            const url = normaliseAddress(address)
+            pairAddress = url
+
+            const existing = instances.find(i => i.address === url)
+            const clientSk = existing && existing.clientSecret && /^[0-9a-f]{64}$/.test(existing.clientSecret)
+              ? hexToBytes(existing.clientSecret)
+              : generateSecretKey()
+            const clientPk = getPublicKey(clientSk)
+
+            const res = await fetch(`${url}/api/pair`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: 'bark', pubkey: clientPk }),
+            })
+
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({}))
+              throw new Error(body.error || `HTTP ${res.status}`)
+            }
+
+            const data = await res.json()
+
+            if (!data.bunkerUri || !isValidBunkerUri(data.bunkerUri)) {
+              throw new Error('Server returned an invalid bunker URI.')
+            }
+            if (data.instance && (typeof data.instance !== 'string' || data.instance.length > 64)) {
+              throw new Error('Server returned an invalid instance name.')
+            }
+
+            bunkerUri = data.bunkerUri
+            instanceName = data.instance || 'heartwood'
+            npub = data.npub || ''
+
+            // Save client secret for HTTP-paired instances
+            const id = makeInstanceId(instanceName, bunkerUri)
+            if (existing) {
+              existing.bunkerUri = bunkerUri
+              existing.npub = npub || existing.npub
+              existing.name = instanceName || existing.name
+              existing.id = id
+            } else {
+              instances.push({
+                id,
+                name: instanceName,
+                address: url,
+                bunkerUri,
+                clientSecret: bytesToHex(clientSk),
+                npub,
+                signingPubkey: '',
+                isHeartwood: true,
+              })
+            }
+            await chrome.storage.local.set({ instances, activeInstanceId: id })
+            signer = null
+            connectPromise = null
+            sendResponse({ ok: true })
+            ensureConnected().catch(() => {})
+            return
+          }
+
+          // Direct bunker URI path — generate a fresh client key and store.
+          const existing = instances.find(i => i.bunkerUri === bunkerUri)
           const clientSk = existing && existing.clientSecret && /^[0-9a-f]{64}$/.test(existing.clientSecret)
             ? hexToBytes(existing.clientSecret)
             : generateSecretKey()
-          const clientPk = getPublicKey(clientSk)
 
-          const res = await fetch(`${url}/api/pair`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: 'bark', pubkey: clientPk }),
-          })
-
-          if (!res.ok) {
-            const body = await res.json().catch(() => ({}))
-            throw new Error(body.error || `HTTP ${res.status}`)
-          }
-
-          const data = await res.json()
-
-          if (!data.bunkerUri || !isValidBunkerUri(data.bunkerUri)) {
-            throw new Error('Server returned an invalid bunker URI.')
-          }
-          if (data.instance && (typeof data.instance !== 'string' || data.instance.length > 64)) {
-            throw new Error('Server returned an invalid instance name.')
-          }
-
-          const id = makeInstanceId(data.instance || 'heartwood', data.bunkerUri)
+          const id = makeInstanceId(instanceName, bunkerUri)
 
           if (existing) {
-            // Update existing instance (re-pair with same key)
-            existing.bunkerUri = data.bunkerUri
-            existing.npub = data.npub || existing.npub
-            existing.name = data.instance || existing.name
+            existing.bunkerUri = bunkerUri
+            existing.name = instanceName
             existing.id = id
           } else {
             instances.push({
               id,
-              name: data.instance || 'heartwood',
-              address: url,
-              bunkerUri: data.bunkerUri,
+              name: instanceName,
+              address: pairAddress,
+              bunkerUri,
               clientSecret: bytesToHex(clientSk),
-              npub: data.npub || '',
+              npub,
               signingPubkey: '',
-              isHeartwood: true,
+              isHeartwood: false,
             })
           }
 
           await chrome.storage.local.set({ instances, activeInstanceId: id })
 
-          // Respond immediately — connect in the background
           signer = null
           connectPromise = null
           sendResponse({ ok: true })
