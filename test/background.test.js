@@ -114,6 +114,19 @@ describe('isValidBunkerUri', () => {
   it('rejects empty string', () => {
     expect(isValidBunkerUri('')).toBe(false)
   })
+
+  it('rejects double question marks', () => {
+    expect(isValidBunkerUri(`bunker://${'a'.repeat(64)}??relay=wss://r.com`)).toBe(false)
+  })
+
+  it('rejects URIs exceeding length limit', () => {
+    const longQuery = 'relay=' + 'a'.repeat(3000)
+    expect(isValidBunkerUri(`bunker://${'a'.repeat(64)}?${longQuery}`)).toBe(false)
+  })
+
+  it('rejects empty query string after ?', () => {
+    expect(isValidBunkerUri(`bunker://${'a'.repeat(64)}?`)).toBe(false)
+  })
 })
 
 describe('isValidPurpose', () => {
@@ -324,5 +337,28 @@ describe('normaliseAddress', () => {
 
   it('handles onion addresses', () => {
     expect(normaliseAddress('http://abc123.onion:3000/')).toBe('http://abc123.onion:3000')
+  })
+
+  it('rejects empty input', () => {
+    expect(() => normaliseAddress('')).toThrow('Invalid address.')
+  })
+
+  it('rejects whitespace-only input', () => {
+    expect(() => normaliseAddress('   ')).toThrow('Invalid address.')
+  })
+
+  it('validates the resulting URL is parseable', () => {
+    // Valid addresses should not throw
+    expect(() => normaliseAddress('192.168.1.1:3000')).not.toThrow()
+    expect(() => normaliseAddress('localhost:3000')).not.toThrow()
+  })
+})
+
+describe('sanitiseError — safe prefix coverage', () => {
+  it('passes through new safe prefixes', () => {
+    expect(sanitiseError(new Error('Invalid address.'))).toBe('Invalid address.')
+    expect(sanitiseError(new Error('Instance not found.'))).toBe('Instance not found.')
+    expect(sanitiseError(new Error('Server returned an invalid bunker URI.'))).toBe('Server returned an invalid bunker URI.')
+    expect(sanitiseError(new Error('Active identity changed. Please retry.'))).toBe('Active identity changed. Please retry.')
   })
 })

@@ -25,7 +25,7 @@ const HEARTWOOD_METHODS = new Set([
 ])
 
 /** Regex for validating a bunker URI (bunker://<64-hex-chars>?<params>). */
-const BUNKER_URI_RE = /^bunker:\/\/[0-9a-f]{64}\??[?/\w:.=&%-]*$/
+const BUNKER_URI_RE = /^bunker:\/\/[0-9a-f]{64}(\?[/\w:.=&%-]+)?$/
 
 // ---------------------------------------------------------------------------
 // Multi-instance storage helpers
@@ -69,7 +69,9 @@ export function migrateStorage(stored) {
 export function normaliseAddress(addr) {
   let url = addr.trim()
   if (!/^https?:\/\//.test(url)) url = `http://${url}`
-  return url.replace(/\/+$/, '')
+  url = url.replace(/\/+$/, '')
+  try { new URL(url) } catch { throw new Error('Invalid address.') }
+  return url
 }
 
 /** Event kinds that require user approval before signing. */
@@ -95,13 +97,12 @@ const APPROVAL_TIMEOUT_MS = 60_000
 // Approval system — pending requests awaiting user decision
 // ---------------------------------------------------------------------------
 
-/** @type {Map<string, { method: string, params: any, event?: object, pubkey: string, personaName: string, origin: string, sendResponse: Function, timeoutId: number, windowId?: number }>} */
+/** @type {Map<string, { method: string, params: any, event?: object, pubkey: string, personaName: string, origin: string, instanceId?: string, sendResponse: Function, timeoutId: number, windowId?: number }>} */
 const pendingApprovals = new Map()
 
 /** @type {string|null} Currently active approval request ID, if any. */
 let activeApprovalId = null
 
-let approvalCounter = 0
 
 /**
  * Open the approval popup window and store the pending request.
@@ -151,6 +152,15 @@ async function allowApproval(requestId) {
   pendingApprovals.delete(requestId)
   if (activeApprovalId === requestId) activeApprovalId = null
 
+  // Verify the active instance hasn't changed since the approval was created
+  if (entry.instanceId) {
+    const { activeInstanceId } = await chrome.storage.local.get('activeInstanceId')
+    if (entry.instanceId !== activeInstanceId) {
+      entry.sendResponse({ error: 'Active identity changed. Please retry.' })
+      return
+    }
+  }
+
   try {
     const result = await handleMessage(entry.method, entry.params)
     entry.sendResponse(result)
@@ -199,7 +209,7 @@ export function isValidHexPubkey(value) {
 
 /** Validate a bunker URI matches the expected format. */
 export function isValidBunkerUri(value) {
-  return typeof value === 'string' && BUNKER_URI_RE.test(value)
+  return typeof value === 'string' && value.length <= 2048 && BUNKER_URI_RE.test(value)
 }
 
 /** Validate a purpose string for derivation (alphanumeric, hyphens, underscores, 1-64 chars). */
@@ -324,7 +334,8 @@ async function doConnect() {
     clientSk = hexToBytes(clientSecret)
   } else {
     clientSk = generateSecretKey()
-    await chrome.storage.local.set({ clientSecret: bytesToHex(clientSk) })
+    active.clientSecret = bytesToHex(clientSk)
+    await chrome.storage.local.set({ instances })
   }
 
   signer = BunkerSigner.fromBunker(clientSk, bp, {
@@ -518,6 +529,7 @@ const SAFE_ERROR_PREFIXES = [
   'No bunker URI configured',
   'No Heartwood instance',
   'Invalid bunker URI',
+  'Invalid address',
   'Bunker URI must',
   'Connection timed out',
   'Invalid method',
@@ -528,6 +540,9 @@ const SAFE_ERROR_PREFIXES = [
   'Corrupted client',
   'Approve this client',
   'client not approved',
+  'Active identity changed',
+  'Instance not found',
+  'Server returned',
   'Request denied',
   'An approval request',
   'Approval timed out',
@@ -590,7 +605,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           // otherwise generate a fresh one. This prevents orphaned keys when
           // re-pairing after a bunker restart or client clear.
           const existing = instances.find(i => i.address === url)
-          const clientSk = existing
+          const clientSk = existing && existing.clientSecret && /^[0-9a-f]{64}$/.test(existing.clientSecret)
             ? hexToBytes(existing.clientSecret)
             : generateSecretKey()
           const clientPk = getPublicKey(clientSk)
@@ -607,6 +622,14 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           }
 
           const data = await res.json()
+
+          if (!data.bunkerUri || !isValidBunkerUri(data.bunkerUri)) {
+            throw new Error('Server returned an invalid bunker URI.')
+          }
+          if (data.instance && (typeof data.instance !== 'string' || data.instance.length > 64)) {
+            throw new Error('Server returned an invalid instance name.')
+          }
+
           const id = makeInstanceId(data.instance || 'heartwood', data.bunkerUri)
 
           if (existing) {
@@ -633,10 +656,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           // Respond immediately — connect in the background
           signer = null
           connectPromise = null
-          sendResponse({ ok: true, instance })
+          sendResponse({ ok: true })
           ensureConnected().catch(() => {})
         } catch (err) {
-          sendResponse({ ok: false, error: err.message })
+          sendResponse({ ok: false, error: sanitiseError(err) })
         }
       })()
       return true
@@ -663,7 +686,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           sendResponse({ ok: true })
           ensureConnected().catch(() => {})
         } catch (err) {
-          sendResponse({ ok: false, error: err.message })
+          sendResponse({ ok: false, error: sanitiseError(err) })
         }
       })()
       return true
@@ -697,7 +720,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
           sendResponse({ ok: true, remaining: instances.length })
         } catch (err) {
-          sendResponse({ ok: false, error: err.message })
+          sendResponse({ ok: false, error: sanitiseError(err) })
         }
       })()
       return true
@@ -738,7 +761,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           return true
         }
 
-        const requestId = `approval-${++approvalCounter}`
+        const requestId = `approval-${crypto.randomUUID()}`
 
         // Connect first to get persona info for the approval UI
         ensureConnected()
@@ -759,6 +782,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             }
 
             const origin = sender.origin || 'Unknown'
+            const { activeInstanceId: approvalInstanceId } = await chrome.storage.local.get('activeInstanceId')
 
             await openApprovalWindow(requestId, {
               method: message.method,
@@ -766,6 +790,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               event: message.method === 'signEvent' ? message.params : undefined,
               pubkey,
               personaName,
+              instanceId: approvalInstanceId,
               origin,
               sendResponse,
             })
