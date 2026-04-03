@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
 // ---------------------------------------------------------------------------
@@ -136,13 +136,14 @@ async function renderInstances() {
     const statusClass = isActive ? 'connected' : 'inactive'
     const cardClass = isActive ? 'instance-card active' : 'instance-card'
     const npubShort = inst.npub ? inst.npub.slice(0, 20) + '...' : 'connecting...'
-    return `<div class="${cardClass}" data-id="${inst.id}">
+    const safeId = escapeHtml(inst.id)
+    return `<div class="${cardClass}" data-id="${safeId}">
       <span class="inst-status ${statusClass}"></span>
       <div style="flex:1; min-width:0;">
         <div class="inst-name">${escapeHtml(inst.name)}</div>
         <div class="inst-npub">${escapeHtml(npubShort)}</div>
       </div>
-      <button class="inst-remove" data-id="${inst.id}" title="Remove">&times;</button>
+      <button class="inst-remove" data-id="${safeId}" title="Remove">&times;</button>
     </div>`
   }).join('')
 
