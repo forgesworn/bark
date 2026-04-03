@@ -347,6 +347,11 @@ async function doConnect() {
   })
 
   try {
+    // Allow relay WebSocket connections to establish before sending the
+    // connect request. Without this, the subscription may not be ready
+    // when the bunker responds, causing a missed response and timeout.
+    await new Promise(r => setTimeout(r, 2000))
+
     await Promise.race([
       signer.connect(),
       new Promise((_, reject) =>
