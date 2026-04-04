@@ -4,20 +4,20 @@
   const pending = new Map()
   let idCounter = 0
 
-  /** Timeout for NIP-07 requests (ms). The ESP32 bunker may take up to 30s
-   *  for button approval, plus relay round-trip and service worker wake time. */
+  /** Timeout for NIP-07 requests (ms). Allows for ESP32 button approval (~30s)
+   *  plus relay round-trip and service worker wake time. */
   const REQUEST_TIMEOUT_MS = 60_000
 
   function call(method, params) {
     return new Promise((resolve, reject) => {
       const id = ++idCounter
       const timeoutId = setTimeout(() => {
-        const p = pending.get(id)
-        if (!p) return
+        if (!pending.has(id)) return
         pending.delete(id)
-        p.reject(new Error('Bark request timed out.'))
+        reject(new Error('Bark request timed out.'))
       }, REQUEST_TIMEOUT_MS)
       pending.set(id, { resolve, reject, timeoutId })
+      console.log('[bark:provider] →', method, 'id=' + id)
       window.postMessage({ type: 'bark-request', id, method, params }, window.location.origin)
     })
   }
@@ -27,6 +27,7 @@
     if (event.origin !== window.location.origin) return
     if (event.data?.type !== 'bark-response') return
     const { id, result, error } = event.data
+    console.log('[bark:provider] ←', 'id=' + id, error ? 'error=' + error : 'result=', result)
     const p = pending.get(id)
     if (!p) return
     pending.delete(id)
