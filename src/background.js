@@ -171,7 +171,7 @@ async function allowApproval(requestId) {
   }
 
   try {
-    const result = await handleMessage(entry.method, entry.params)
+    const result = await handleMessage(entry.method, entry.params, entry.origin)
     entry.sendResponse(result)
   } catch (err) {
     entry.sendResponse({ error: sanitiseError(err) })
@@ -214,6 +214,50 @@ export function parseMethod(method) {
 /** Validate that a value looks like a 64-character lowercase hex string. */
 export function isValidHexPubkey(value) {
   return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value)
+}
+
+// ---------------------------------------------------------------------------
+// Connect metadata helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Derive a human-readable app name from a website origin or URL.
+ * Returns "Bark" as a fallback when no origin is available.
+ *
+ * Examples:
+ *   "https://nostrudel.ninja"  → "nostrudel.ninja"
+ *   "https://snort.social"     → "snort.social"
+ *   "chrome-extension://..."   → "Bark"
+ *   undefined                  → "Bark"
+ *
+ * @param {string|undefined} origin
+ * @returns {string}
+ */
+export function appNameFromOrigin(origin) {
+  if (!origin) return 'Bark'
+  try {
+    const url = new URL(origin)
+    if (url.protocol === 'https:' || url.protocol === 'http:') {
+      // Strip leading "www." for a cleaner label
+      return url.hostname.replace(/^www\./, '')
+    }
+  } catch { /* not a parseable URL */ }
+  return 'Bark'
+}
+
+/**
+ * Build the NIP-46 connect metadata object from a website origin.
+ * The metadata is serialised to JSON and passed as the third param of the
+ * NIP-46 "connect" request so that the signer (Heartwood) can label the
+ * client policy with meaningful information.
+ *
+ * @param {string|undefined} origin  The requesting website's origin (e.g. "https://nostrudel.ninja")
+ * @returns {{ name: string, url: string }}
+ */
+export function buildConnectMetadata(origin) {
+  const name = appNameFromOrigin(origin)
+  const url = (origin && origin.startsWith('http')) ? origin : 'bark://extension'
+  return { name, url }
 }
 
 /** Validate a bunker URI matches the expected format. */
@@ -327,7 +371,16 @@ function isPoolAlive() {
   return alive
 }
 
-async function ensureConnected() {
+/**
+ * Ensure a live NIP-46 connection exists, establishing one if necessary.
+ *
+ * @param {string} [originHint]  The website origin that triggered this request
+ *   (e.g. "https://nostrudel.ninja"). Passed to doConnect() so it can include
+ *   app metadata in the NIP-46 connect handshake for Heartwood policy labelling.
+ *   Only used on the first connect for a given instance; ignored on reconnects
+ *   (the stored connectLabel is used instead).
+ */
+async function ensureConnected(originHint) {
   // If we have a signer but the relay pool is dead, tear it down so
   // doConnect() creates a fresh one with live WebSocket connections.
   if (signer && !isPoolAlive()) {
@@ -337,7 +390,7 @@ async function ensureConnected() {
   }
   if (signer) return signer
   if (connectPromise) return connectPromise
-  connectPromise = doConnect()
+  connectPromise = doConnect(originHint)
   try {
     return await connectPromise
   } finally {
@@ -345,7 +398,7 @@ async function ensureConnected() {
   }
 }
 
-async function doConnect() {
+async function doConnect(originHint) {
 
   connectionState.status = 'connecting'
   connectionState.lastError = null
@@ -407,6 +460,19 @@ async function doConnect() {
     await chrome.storage.local.set({ instances })
   }
 
+  // Determine the connect metadata to include in the NIP-46 handshake.
+  // Heartwood uses this to label the TOFU client policy on-device.
+  // Prefer: (1) a previously stored label for this instance, (2) the origin
+  // of the website that triggered this connection, (3) a generic Bark label.
+  const connectOrigin = active.connectOrigin || originHint
+  const connectMeta = buildConnectMetadata(connectOrigin)
+
+  // Persist the origin on first use so that reconnects produce the same label.
+  if (!active.connectOrigin && connectOrigin) {
+    active.connectOrigin = connectOrigin
+    await chrome.storage.local.set({ instances })
+  }
+
   signer = BunkerSigner.fromBunker(clientSk, bp, {
     onauth(authUrl) {
       connectionState.status = 'awaiting-approval'
@@ -421,8 +487,10 @@ async function doConnect() {
     // when the bunker responds, causing a missed response and timeout.
     await new Promise(r => setTimeout(r, 2000))
 
+    // Send the connect request directly so we can include app metadata as the
+    // optional third parameter. Heartwood uses this to label the TOFU policy.
     await Promise.race([
-      signer.connect(),
+      signer.sendRequest('connect', [bp.pubkey, bp.secret || '', JSON.stringify(connectMeta)]),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Connection timed out.')), CONNECT_TIMEOUT_MS),
       ),
@@ -492,11 +560,14 @@ async function resetConnection() {
  * Handle a classified request by delegating to the appropriate BunkerSigner
  * method.
  *
- * @param {string} method  Raw method string from the content script
- * @param {*}      params  Parameters accompanying the request
+ * @param {string} method      Raw method string from the content script
+ * @param {*}      params      Parameters accompanying the request
+ * @param {string} [originHint]  The requesting website origin, forwarded to
+ *   ensureConnected() so the NIP-46 connect handshake can include app metadata
+ *   for Heartwood TOFU policy labelling.
  * @returns {Promise<*>}
  */
-async function handleMessage(method, params) {
+async function handleMessage(method, params, originHint) {
   // Validate method is a string.
   if (typeof method !== 'string' || method.length === 0 || method.length > 64) {
     throw new Error('Invalid method.')
@@ -504,7 +575,7 @@ async function handleMessage(method, params) {
 
   const parsed = parseMethod(method)
   console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connecting...')
-  const bunker = await ensureConnected()
+  const bunker = await ensureConnected(originHint)
   console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connected, dispatching')
 
   switch (parsed.type) {
@@ -915,7 +986,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           const requestId = `approval-${crypto.randomUUID()}`
 
           try {
-            const bunker = await ensureConnected()
+            const bunker = await ensureConnected(origin)
             const pubkey = await bunker.getPublicKey()
 
             // For Heartwood, try to get the active persona name
@@ -951,7 +1022,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
         // decision === 'allow'
         try {
-          const result = await handleMessage(message.method, message.params)
+          const result = await handleMessage(message.method, message.params, origin)
           console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
           sendResponse(result)
         } catch (err) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -354,5 +354,63 @@ describe('sanitiseError — safe prefix coverage', () => {
     expect(sanitiseError(new Error('Instance not found.'))).toBe('Instance not found.')
     expect(sanitiseError(new Error('Server returned an invalid bunker URI.'))).toBe('Server returned an invalid bunker URI.')
     expect(sanitiseError(new Error('Active identity changed. Please retry.'))).toBe('Active identity changed. Please retry.')
+  })
+})
+
+describe('appNameFromOrigin', () => {
+  it('extracts hostname from https origin', () => {
+    expect(appNameFromOrigin('https://nostrudel.ninja')).toBe('nostrudel.ninja')
+  })
+
+  it('extracts hostname from http origin', () => {
+    expect(appNameFromOrigin('http://localhost:3000')).toBe('localhost')
+  })
+
+  it('strips leading www.', () => {
+    expect(appNameFromOrigin('https://www.snort.social')).toBe('snort.social')
+  })
+
+  it('falls back to Bark for non-http schemes', () => {
+    expect(appNameFromOrigin('chrome-extension://abc123')).toBe('Bark')
+  })
+
+  it('falls back to Bark for undefined', () => {
+    expect(appNameFromOrigin(undefined)).toBe('Bark')
+  })
+
+  it('falls back to Bark for empty string', () => {
+    expect(appNameFromOrigin('')).toBe('Bark')
+  })
+
+  it('falls back to Bark for non-URL strings', () => {
+    expect(appNameFromOrigin('not-a-url')).toBe('Bark')
+  })
+})
+
+describe('buildConnectMetadata', () => {
+  it('returns name and url for a valid https origin', () => {
+    const meta = buildConnectMetadata('https://nostrudel.ninja')
+    expect(meta.name).toBe('nostrudel.ninja')
+    expect(meta.url).toBe('https://nostrudel.ninja')
+  })
+
+  it('uses bark://extension as url for non-http origins', () => {
+    const meta = buildConnectMetadata('chrome-extension://abc')
+    expect(meta.name).toBe('Bark')
+    expect(meta.url).toBe('bark://extension')
+  })
+
+  it('uses bark://extension as url when origin is undefined', () => {
+    const meta = buildConnectMetadata(undefined)
+    expect(meta.name).toBe('Bark')
+    expect(meta.url).toBe('bark://extension')
+  })
+
+  it('result is JSON-serialisable', () => {
+    const meta = buildConnectMetadata('https://iris.to')
+    expect(() => JSON.stringify(meta)).not.toThrow()
+    const parsed = JSON.parse(JSON.stringify(meta))
+    expect(parsed.name).toBe('iris.to')
+    expect(parsed.url).toBe('https://iris.to')
   })
 })
