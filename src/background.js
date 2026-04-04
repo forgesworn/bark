@@ -362,12 +362,14 @@ async function doConnect() {
     signer = null
     connectionState.status = 'disconnected'
     connectionState.lastError = sanitiseError(err)
+    stopKeepalive()
     await probeRelays(bp.relays)
     throw err
   }
 
   connectionState.status = 'connected'
   connectionState.lastError = null
+  startKeepalive()
 
   // Probe relay health
   await probeRelays(bp.relays)
@@ -410,6 +412,7 @@ async function resetConnection() {
   connectionState.lastError = null
   connectionState.relays = []
   connectionState.isHeartwood = false
+  stopKeepalive()
 }
 
 // ---------------------------------------------------------------------------
@@ -552,6 +555,7 @@ const SAFE_ERROR_PREFIXES = [
   'An approval request',
   'Approval timed out',
   'Could not open approval',
+  'Bark request timed out',
 ]
 
 export function sanitiseError(err) {
@@ -563,6 +567,37 @@ export function sanitiseError(err) {
     if (msg.startsWith(prefix)) return msg
   }
   return 'Request failed.'
+}
+
+// ---------------------------------------------------------------------------
+// Keepalive — prevent the service worker from being killed while connected
+// ---------------------------------------------------------------------------
+
+const KEEPALIVE_ALARM_NAME = 'bark-keepalive'
+
+/** Start a periodic alarm that keeps the service worker alive. */
+function startKeepalive() {
+  if (typeof chrome !== 'undefined' && chrome.alarms) {
+    chrome.alarms.create(KEEPALIVE_ALARM_NAME, { periodInMinutes: 0.4 })
+  }
+}
+
+/** Stop the keepalive alarm when disconnected. */
+function stopKeepalive() {
+  if (typeof chrome !== 'undefined' && chrome.alarms) {
+    chrome.alarms.clear(KEEPALIVE_ALARM_NAME)
+  }
+}
+
+if (typeof chrome !== 'undefined' && chrome.alarms?.onAlarm) {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name !== KEEPALIVE_ALARM_NAME) return
+    // The alarm firing keeps the service worker alive. If we've lost our
+    // signer (e.g. after a crash), attempt to reconnect silently.
+    if (!signer) {
+      ensureConnected().catch(() => {})
+    }
+  })
 }
 
 // ---------------------------------------------------------------------------
