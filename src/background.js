@@ -362,14 +362,12 @@ async function doConnect() {
     signer = null
     connectionState.status = 'disconnected'
     connectionState.lastError = sanitiseError(err)
-    stopKeepalive()
     await probeRelays(bp.relays)
     throw err
   }
 
   connectionState.status = 'connected'
   connectionState.lastError = null
-  startKeepalive()
 
   // Probe relay health
   await probeRelays(bp.relays)
@@ -412,7 +410,6 @@ async function resetConnection() {
   connectionState.lastError = null
   connectionState.relays = []
   connectionState.isHeartwood = false
-  stopKeepalive()
 }
 
 // ---------------------------------------------------------------------------
@@ -434,7 +431,9 @@ async function handleMessage(method, params) {
   }
 
   const parsed = parseMethod(method)
+  console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connecting...')
   const bunker = await ensureConnected()
+  console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connected, dispatching')
 
   switch (parsed.type) {
     case 'nip07': {
@@ -555,7 +554,6 @@ const SAFE_ERROR_PREFIXES = [
   'An approval request',
   'Approval timed out',
   'Could not open approval',
-  'Bark request timed out',
 ]
 
 export function sanitiseError(err) {
@@ -567,37 +565,6 @@ export function sanitiseError(err) {
     if (msg.startsWith(prefix)) return msg
   }
   return 'Request failed.'
-}
-
-// ---------------------------------------------------------------------------
-// Keepalive — prevent the service worker from being killed while connected
-// ---------------------------------------------------------------------------
-
-const KEEPALIVE_ALARM_NAME = 'bark-keepalive'
-
-/** Start a periodic alarm that keeps the service worker alive. */
-function startKeepalive() {
-  if (typeof chrome !== 'undefined' && chrome.alarms) {
-    chrome.alarms.create(KEEPALIVE_ALARM_NAME, { periodInMinutes: 0.4 })
-  }
-}
-
-/** Stop the keepalive alarm when disconnected. */
-function stopKeepalive() {
-  if (typeof chrome !== 'undefined' && chrome.alarms) {
-    chrome.alarms.clear(KEEPALIVE_ALARM_NAME)
-  }
-}
-
-if (typeof chrome !== 'undefined' && chrome.alarms?.onAlarm) {
-  chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name !== KEEPALIVE_ALARM_NAME) return
-    // The alarm firing keeps the service worker alive. If we've lost our
-    // signer (e.g. after a crash), attempt to reconnect silently.
-    if (!signer) {
-      ensureConnected().catch(() => {})
-    }
-  })
 }
 
 // ---------------------------------------------------------------------------
@@ -840,7 +807,9 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     }
 
     if (message.type === 'bark-request') {
+      console.error('[bark:bg] ← request', message.method, 'from', sender.tab ? 'tab' : 'extension')
       if (sender.tab && requiresApproval(message.method, message.params)) {
+        console.error('[bark:bg] approval required for', message.method)
         // Guard: only one approval at a time
         if (activeApprovalId) {
           sendResponse({ error: 'An approval request is already in progress.' })
@@ -887,8 +856,14 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       }
 
       handleMessage(message.method, message.params)
-        .then((result) => sendResponse(result))
-        .catch((err) => sendResponse({ error: sanitiseError(err) }))
+        .then((result) => {
+          console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
+          sendResponse(result)
+        })
+        .catch((err) => {
+          console.error('[bark:bg] ✗ error', message.method, sanitiseError(err))
+          sendResponse({ error: sanitiseError(err) })
+        })
       return true // keep channel open for async response
     }
   })

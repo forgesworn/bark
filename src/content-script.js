@@ -5,45 +5,29 @@ script.onload = () => script.remove()
 
 let isStale = false
 
-/** Maximum retries when the service worker is asleep (not invalidated). */
-const MAX_SW_RETRIES = 3
-
-/** Delay between retries (ms) — gives the service worker time to restart. */
-const SW_RETRY_DELAY_MS = 500
-
 /**
- * Send a message to the background service worker, retrying if the worker is
- * asleep. Chrome MV3 service workers are killed after 30s of inactivity;
- * calling chrome.runtime.sendMessage wakes them, but the first attempt may
- * fail with "Receiving end does not exist" before the listener is registered.
- * A short retry loop handles this without marking the extension as stale.
+ * Send a message to the background service worker, retrying once if the worker
+ * is asleep. MV3 service workers die after ~30s of inactivity; the first
+ * sendMessage wakes them but may fail before the listener is registered.
  */
 async function sendToBackground(payload) {
-  let lastErr
-  for (let attempt = 0; attempt < MAX_SW_RETRIES; attempt++) {
-    try {
+  try {
+    const result = await chrome.runtime.sendMessage(payload)
+    console.log('[bark:content] ← bg responded', payload.method, result)
+    return result
+  } catch (err) {
+    const msg = String(err?.message || '')
+    console.log('[bark:content] ✗ sendMessage failed:', msg)
+    // Genuine invalidation — extension was updated/reloaded. No retry.
+    if (msg.includes('context invalidated')) throw err
+    // Service worker waking up — retry once after a short delay.
+    if (msg.includes('does not exist')) {
+      console.log('[bark:content] retrying after 500ms (service worker waking)')
+      await new Promise(r => setTimeout(r, 500))
       return await chrome.runtime.sendMessage(payload)
-    } catch (err) {
-      lastErr = err
-      const msg = String(err?.message || '')
-
-      // "Extension context invalidated" means a genuine update/reload — no
-      // amount of retrying will help. Mark stale immediately.
-      if (msg.includes('context invalidated')) {
-        throw err
-      }
-
-      // "Receiving end does not exist" means the service worker is waking up.
-      // Wait briefly and retry.
-      if (msg.includes('does not exist') && attempt < MAX_SW_RETRIES - 1) {
-        await new Promise(r => setTimeout(r, SW_RETRY_DELAY_MS))
-        continue
-      }
-
-      throw err
     }
+    throw err
   }
-  throw lastErr
 }
 
 window.addEventListener('message', async (event) => {
@@ -60,6 +44,8 @@ window.addEventListener('message', async (event) => {
   // Validate method is a non-empty string.
   if (typeof method !== 'string' || method.length === 0) return
 
+  console.log('[bark:content] → bg', method, 'id=' + id)
+
   if (isStale) {
     window.postMessage(
       { type: 'bark-response', id, error: 'Bark was updated. Please refresh the page.' },
@@ -70,15 +56,16 @@ window.addEventListener('message', async (event) => {
 
   try {
     const result = await sendToBackground({ type: 'bark-request', method, params })
+    // Background sends errors as {error: 'msg'} via sendResponse — unwrap them.
     if (result && result.error) {
       window.postMessage({ type: 'bark-response', id, error: result.error }, window.location.origin)
     } else {
       window.postMessage({ type: 'bark-response', id, result }, window.location.origin)
     }
   } catch (err) {
-    // "Extension context invalidated" means the extension was updated or
-    // reloaded. The page must be refreshed — mark as permanently stale.
     const msg = String(err?.message || '')
+    // Only "context invalidated" is genuinely permanent — the extension was
+    // reloaded/updated and this content script is orphaned.
     if (msg.includes('context invalidated')) {
       isStale = true
       window.postMessage(
@@ -86,9 +73,8 @@ window.addEventListener('message', async (event) => {
         window.location.origin,
       )
     } else {
-      // Transient failure (retries exhausted, network issue, etc.)
       window.postMessage(
-        { type: 'bark-response', id, error: 'Request failed — service worker unavailable.' },
+        { type: 'bark-response', id, error: 'Service worker unavailable. Try again.' },
         window.location.origin,
       )
     }
