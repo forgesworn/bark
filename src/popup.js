@@ -44,6 +44,26 @@ const disconnectBtn = document.getElementById('disconnect-btn')
 const errorMsg = document.getElementById('error-msg')
 const connectStatus = document.getElementById('connect-status')
 
+// Policy UI refs
+const policyToggle = document.getElementById('policy-toggle')
+const policyArrow = document.getElementById('policy-arrow')
+const policyContent = document.getElementById('policy-content')
+const kindRulesList = document.getElementById('kind-rules-list')
+const addKindInput = document.getElementById('add-kind-input')
+const addKindBtn = document.getElementById('add-kind-btn')
+const siteRulesList = document.getElementById('site-rules-list')
+const addSiteInput = document.getElementById('add-site-input')
+const addSiteAction = document.getElementById('add-site-action')
+const addSiteBtn = document.getElementById('add-site-btn')
+const resetPoliciesBtn = document.getElementById('reset-policies-btn')
+
+// Policy defaults (must match src/policy.js)
+const DEFAULT_POLICIES = {
+  defaults: { getPublicKey: 'allow', signEvent: 'allow', 'nip44.encrypt': 'allow', 'nip44.decrypt': 'allow' },
+  kindRules: { '0': 'ask', '3': 'ask', '10002': 'ask' },
+  siteRules: {},
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -349,6 +369,9 @@ async function refreshState() {
   connectedContent.style.display = ''
   statusDot.className = 'status-dot connected'
 
+  // Render policy settings
+  renderPolicies()
+
   // Heartwood badge
   heartwoodBadge.style.display = status.isHeartwood ? '' : 'none'
 
@@ -462,6 +485,121 @@ async function disconnect() {
 }
 
 // ---------------------------------------------------------------------------
+// Policy settings
+// ---------------------------------------------------------------------------
+
+const KIND_NAMES = {
+  0: 'Profile metadata',
+  3: 'Contact list',
+  10002: 'Relay list',
+}
+
+async function loadPolicies() {
+  const { policies } = await chrome.storage.local.get('policies')
+  return policies || DEFAULT_POLICIES
+}
+
+async function savePolicies(policies) {
+  await chrome.storage.local.set({ policies })
+}
+
+function renderKindRules(policies) {
+  kindRulesList.innerHTML = ''
+  const entries = Object.entries(policies.kindRules || {})
+  if (entries.length === 0) {
+    const placeholder = document.createElement('div')
+    placeholder.className = 'policy-placeholder'
+    placeholder.textContent = 'No kind rules configured'
+    kindRulesList.appendChild(placeholder)
+    return
+  }
+  for (const [kind, action] of entries) {
+    const item = document.createElement('div')
+    item.className = 'policy-item'
+
+    const label = document.createElement('span')
+    label.className = 'policy-label'
+    const name = KIND_NAMES[Number(kind)] || `Kind ${kind}`
+    label.innerHTML = `${escapeHtml(name)} <span class="policy-kind-num">${escapeHtml(kind)}</span>`
+    item.appendChild(label)
+
+    const actionSpan = document.createElement('span')
+    actionSpan.className = `policy-action ${escapeHtml(action)}`
+    actionSpan.textContent = action
+    item.appendChild(actionSpan)
+
+    const removeBtn = document.createElement('button')
+    removeBtn.className = 'policy-remove'
+    removeBtn.textContent = '×'
+    removeBtn.dataset.kind = kind
+    removeBtn.addEventListener('click', async () => {
+      const current = await loadPolicies()
+      delete current.kindRules[kind]
+      await savePolicies(current)
+      renderKindRules(current)
+    })
+    item.appendChild(removeBtn)
+
+    kindRulesList.appendChild(item)
+  }
+}
+
+function renderSiteRules(policies) {
+  siteRulesList.innerHTML = ''
+  const entries = Object.entries(policies.siteRules || {})
+  if (entries.length === 0) {
+    const placeholder = document.createElement('div')
+    placeholder.className = 'policy-placeholder'
+    placeholder.textContent = 'No site rules configured'
+    siteRulesList.appendChild(placeholder)
+    return
+  }
+  for (const [origin, rule] of entries) {
+    let hostname = origin
+    try {
+      hostname = new URL(origin).hostname
+    } catch {
+      // fall back to raw origin
+    }
+
+    const item = document.createElement('div')
+    item.className = 'policy-item'
+
+    const label = document.createElement('span')
+    label.className = 'policy-label'
+    label.title = origin
+    label.textContent = hostname
+    item.appendChild(label)
+
+    const actionSpan = document.createElement('span')
+    const displayAction = rule.signEvent || 'allow'
+    actionSpan.className = `policy-action ${escapeHtml(displayAction)}`
+    actionSpan.textContent = displayAction
+    item.appendChild(actionSpan)
+
+    const removeBtn = document.createElement('button')
+    removeBtn.className = 'policy-remove'
+    removeBtn.textContent = '×'
+    removeBtn.dataset.origin = origin
+    removeBtn.addEventListener('click', async () => {
+      const current = await loadPolicies()
+      delete current.siteRules[origin]
+      await savePolicies(current)
+      renderSiteRules(current)
+    })
+    item.appendChild(removeBtn)
+
+    siteRulesList.appendChild(item)
+  }
+}
+
+async function renderPolicies() {
+  const policies = await loadPolicies()
+  renderKindRules(policies)
+  renderSiteRules(policies)
+}
+
+// ---------------------------------------------------------------------------
 // Event listeners
 // ---------------------------------------------------------------------------
 
@@ -508,6 +646,66 @@ if (addAddressInput) {
     if (e.key === 'Enter') pairHeartwood(addAddressInput.value.trim())
   })
 }
+
+// Policy toggle
+policyToggle.addEventListener('click', () => {
+  const visible = policyContent.style.display !== 'none'
+  policyContent.style.display = visible ? 'none' : ''
+  policyArrow.innerHTML = visible ? '&#9654;' : '&#9660;'
+})
+
+// Add kind rule
+async function addKindRule() {
+  const raw = addKindInput.value.trim()
+  const num = Number(raw)
+  if (!raw || isNaN(num) || !Number.isInteger(num) || num < 0 || num > 65535) return
+  const policies = await loadPolicies()
+  policies.kindRules[String(num)] = 'ask'
+  await savePolicies(policies)
+  renderKindRules(policies)
+  addKindInput.value = ''
+}
+
+addKindBtn.addEventListener('click', addKindRule)
+addKindInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addKindRule()
+})
+
+// Add site rule
+async function addSiteRule() {
+  let raw = addSiteInput.value.trim()
+  if (!raw) return
+  if (!/^[a-z][a-z0-9+\-.]*:\/\//i.test(raw)) raw = 'https://' + raw
+  let origin
+  try {
+    origin = new URL(raw).origin
+  } catch {
+    return
+  }
+  const action = addSiteAction.value || 'allow'
+  const policies = await loadPolicies()
+  policies.siteRules[origin] = {
+    signEvent: action,
+    getPublicKey: action,
+    'nip44.encrypt': action,
+    'nip44.decrypt': action,
+  }
+  await savePolicies(policies)
+  renderSiteRules(policies)
+  addSiteInput.value = ''
+}
+
+addSiteBtn.addEventListener('click', addSiteRule)
+addSiteInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addSiteRule()
+})
+
+// Reset policies
+resetPoliciesBtn.addEventListener('click', async () => {
+  if (!confirm('Reset all policy rules to defaults?')) return
+  await chrome.storage.local.remove('policies')
+  await renderPolicies()
+})
 
 // ---------------------------------------------------------------------------
 // Initialise
