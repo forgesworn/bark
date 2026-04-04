@@ -228,6 +228,33 @@ let signer = null
 let connectPromise = null
 
 // ---------------------------------------------------------------------------
+// Auto-reconnect with exponential backoff
+// ---------------------------------------------------------------------------
+
+const RECONNECT_DELAYS = [5_000, 10_000, 30_000, 60_000]
+let reconnectAttempt = 0
+let reconnectTimer = null
+
+function scheduleReconnect() {
+  if (reconnectTimer) return
+  const delay = RECONNECT_DELAYS[Math.min(reconnectAttempt, RECONNECT_DELAYS.length - 1)]
+  reconnectAttempt++
+  console.error(`[bark:bg] reconnecting in ${delay / 1000}s (attempt ${reconnectAttempt})`)
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null
+    ensureConnected().catch(() => {})
+  }, delay)
+}
+
+function cancelReconnect() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+  reconnectAttempt = 0
+}
+
+// ---------------------------------------------------------------------------
 // Connection state — queried by popup via bark-status
 // ---------------------------------------------------------------------------
 
@@ -362,10 +389,12 @@ async function doConnect() {
     signer = null
     connectionState.status = 'disconnected'
     connectionState.lastError = sanitiseError(err)
+    scheduleReconnect()
     await probeRelays(bp.relays)
     throw err
   }
 
+  cancelReconnect()
   connectionState.status = 'connected'
   connectionState.lastError = null
 
@@ -401,6 +430,7 @@ async function doConnect() {
  * Tear down the current connection (used by bark-reset).
  */
 async function resetConnection() {
+  cancelReconnect()
   if (signer) {
     try { signer.close() } catch { /* ignore */ }
   }
