@@ -3,6 +3,7 @@
 import { BunkerSigner, parseBunkerInput } from 'nostr-tools/nip46'
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
+import { evaluatePolicy, DEFAULT_POLICIES } from './policy.js'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -74,19 +75,28 @@ export function normaliseAddress(addr) {
   return url
 }
 
-/** Event kinds that require user approval before signing. */
-const PROTECTED_KINDS = new Set([0])
+/**
+ * Load policies from storage, falling back to defaults.
+ * @returns {Promise<import('./policy.js').PolicySet>}
+ */
+async function loadPolicies() {
+  if (typeof chrome === 'undefined' || !chrome.storage) return DEFAULT_POLICIES
+  const { policies } = await chrome.storage.local.get('policies')
+  return policies || DEFAULT_POLICIES
+}
 
 /**
- * Determine whether a request method + params combination requires user
- * approval before proceeding.
+ * Check whether a request requires approval, is denied, or is allowed.
+ * Exported for testing — in tests, uses DEFAULT_POLICIES (no chrome.storage).
+ *
  * @param {string} method
  * @param {*} params
- * @returns {boolean}
+ * @param {string} [origin]
+ * @returns {Promise<'allow'|'ask'|'deny'>}
  */
-export function requiresApproval(method, params) {
-  if (method === 'signEvent' && params && typeof params === 'object' && PROTECTED_KINDS.has(params.kind)) return true
-  return false
+export async function checkApproval(method, params, origin) {
+  const policies = await loadPolicies()
+  return evaluatePolicy(policies, method, params, origin)
 }
 
 /** Timeout for approval requests (ms). */
@@ -870,20 +880,42 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     }
 
     if (message.type === 'bark-request') {
-      console.error('[bark:bg] ← request', message.method, 'from', sender.tab ? 'tab' : 'extension')
-      if (sender.tab && requiresApproval(message.method, message.params)) {
-        console.error('[bark:bg] approval required for', message.method)
-        // Guard: only one approval at a time
-        if (activeApprovalId) {
-          sendResponse({ error: 'An approval request is already in progress.' })
-          return true
+      console.error('[bark:bg] ← request', message.method, 'from', sender.tab ? 'tab' : 'extension');
+      (async () => {
+        // Extension-internal requests (e.g. from popup) bypass policy checks.
+        if (!sender.tab) {
+          try {
+            const result = await handleMessage(message.method, message.params)
+            console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
+            sendResponse(result)
+          } catch (err) {
+            console.error('[bark:bg] ✗ error', message.method, sanitiseError(err))
+            sendResponse({ error: sanitiseError(err) })
+          }
+          return
         }
 
-        const requestId = `approval-${crypto.randomUUID()}`
+        const origin = sender.origin || sender.tab?.url
+        const decision = await checkApproval(message.method, message.params, origin)
 
-        // Connect first to get persona info for the approval UI
-        ensureConnected()
-          .then(async (bunker) => {
+        if (decision === 'deny') {
+          console.error('[bark:bg] request denied by policy for', message.method)
+          sendResponse({ error: 'Request denied by policy.' })
+          return
+        }
+
+        if (decision === 'ask') {
+          console.error('[bark:bg] approval required for', message.method)
+          // Guard: only one approval at a time
+          if (activeApprovalId) {
+            sendResponse({ error: 'An approval request is already in progress.' })
+            return
+          }
+
+          const requestId = `approval-${crypto.randomUUID()}`
+
+          try {
+            const bunker = await ensureConnected()
             const pubkey = await bunker.getPublicKey()
 
             // For Heartwood, try to get the active persona name
@@ -899,7 +931,6 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               } catch { /* use default */ }
             }
 
-            const origin = sender.origin || 'Unknown'
             const { activeInstanceId: approvalInstanceId } = await chrome.storage.local.get('activeInstanceId')
 
             await openApprovalWindow(requestId, {
@@ -909,24 +940,25 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               pubkey,
               personaName,
               instanceId: approvalInstanceId,
-              origin,
+              origin: origin || 'Unknown',
               sendResponse,
             })
-          })
-          .catch((err) => sendResponse({ error: sanitiseError(err) }))
+          } catch (err) {
+            sendResponse({ error: sanitiseError(err) })
+          }
+          return
+        }
 
-        return true // keep channel open
-      }
-
-      handleMessage(message.method, message.params)
-        .then((result) => {
+        // decision === 'allow'
+        try {
+          const result = await handleMessage(message.method, message.params)
           console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
           sendResponse(result)
-        })
-        .catch((err) => {
+        } catch (err) {
           console.error('[bark:bg] ✗ error', message.method, sanitiseError(err))
           sendResponse({ error: sanitiseError(err) })
-        })
+        }
+      })()
       return true // keep channel open for async response
     }
   })

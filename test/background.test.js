@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, requiresApproval, migrateStorage, makeInstanceId, normaliseAddress } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -256,36 +256,30 @@ describe('buildHeartwoodArgs', () => {
   })
 })
 
-describe('requiresApproval', () => {
-  it('does not require approval for getPublicKey', () => {
-    expect(requiresApproval('getPublicKey', undefined)).toBe(false)
+describe('checkApproval', () => {
+  it('returns allow for getPublicKey with default policies', async () => {
+    expect(await checkApproval('getPublicKey', undefined, 'https://example.com')).toBe('allow')
   })
 
-  it('requires approval for signEvent with kind 0', () => {
-    expect(requiresApproval('signEvent', { kind: 0, content: '{}' })).toBe(true)
+  it('returns ask for signEvent kind 0 with default policies', async () => {
+    expect(await checkApproval('signEvent', { kind: 0 }, 'https://example.com')).toBe('ask')
   })
 
-  it('does not require approval for signEvent with kind 1', () => {
-    expect(requiresApproval('signEvent', { kind: 1, content: 'hello' })).toBe(false)
+  it('returns ask for signEvent kind 3 with default policies', async () => {
+    expect(await checkApproval('signEvent', { kind: 3 }, 'https://example.com')).toBe('ask')
   })
 
-  it('does not require approval for signEvent with kind 7', () => {
-    expect(requiresApproval('signEvent', { kind: 7, content: '+' })).toBe(false)
+  it('returns ask for signEvent kind 10002 with default policies', async () => {
+    expect(await checkApproval('signEvent', { kind: 10002 }, 'https://example.com')).toBe('ask')
   })
 
-  it('does not require approval for nip44 methods', () => {
-    expect(requiresApproval('nip44.encrypt', { pubkey: 'a'.repeat(64), plaintext: 'hi' })).toBe(false)
-    expect(requiresApproval('nip44.decrypt', { pubkey: 'a'.repeat(64), ciphertext: 'x' })).toBe(false)
+  it('returns allow for signEvent kind 1 with default policies', async () => {
+    expect(await checkApproval('signEvent', { kind: 1 }, 'https://example.com')).toBe('allow')
   })
 
-  it('does not require approval for heartwood methods', () => {
-    expect(requiresApproval('heartwood_list_identities', {})).toBe(false)
-    expect(requiresApproval('heartwood_switch', { target: 'master' })).toBe(false)
-  })
-
-  it('does not require approval for signEvent with missing params', () => {
-    expect(requiresApproval('signEvent', null)).toBe(false)
-    expect(requiresApproval('signEvent', 'not-an-object')).toBe(false)
+  it('returns allow for nip44 methods with default policies', async () => {
+    expect(await checkApproval('nip44.encrypt', {}, 'https://example.com')).toBe('allow')
+    expect(await checkApproval('nip44.decrypt', {}, 'https://example.com')).toBe('allow')
   })
 })
 
