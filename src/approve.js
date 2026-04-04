@@ -94,16 +94,33 @@ function init() {
       loading.style.display = 'none'
       content.style.display = ''
 
-      // Set title and origin based on request type
-      if (details.method === 'getPublicKey') {
-        title.textContent = 'Identity Request'
-        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to know your identity'
-      } else if (details.method === 'signEvent') {
-        title.textContent = 'Profile Update Request'
-        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to update your profile'
-        if (details.event && details.event.content) {
+      // Method-specific title and description
+      const kindNames = {
+        0: 'Profile Metadata',
+        3: 'Contact List',
+        10002: 'Relay List',
+      }
+
+      if (details.method === 'signEvent' && details.event) {
+        const kind = details.event.kind
+        const kindLabel = kindNames[kind] || `Kind ${kind}`
+        title.textContent = `Sign ${kindLabel}?`
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to sign a ' + escapeHtml(kindLabel) + ' event'
+        if (kind === 0 && details.event.content) {
           renderProfileFields(details.event.content)
         }
+      } else if (details.method === 'getPublicKey') {
+        title.textContent = 'Share Identity?'
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to know your public key'
+      } else if (details.method === 'nip44.encrypt') {
+        title.textContent = 'Encrypt Message?'
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to encrypt a message'
+      } else if (details.method === 'nip44.decrypt') {
+        title.textContent = 'Decrypt Message?'
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to decrypt a message'
+      } else {
+        title.textContent = 'Approve Request?'
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to call <code>' + escapeHtml(details.method) + '</code>'
       }
 
       // Persona info
