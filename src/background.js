@@ -508,22 +508,6 @@ async function handleMessage(method, params) {
         if (!params || typeof params !== 'object') {
           throw new Error('signEvent requires an event object.')
         }
-        // Diagnostic: test if pool.publish actually works
-        const testEvent = bunker.pool.publish(bunker.bp.relays, {
-          kind: 24133,
-          tags: [],
-          content: 'test',
-          created_at: Math.floor(Date.now() / 1000),
-          pubkey: 'test',
-          id: 'test',
-          sig: 'test',
-        })
-        console.error('[bark:bg] publish test: got', testEvent.length, 'promises')
-        for (let i = 0; i < testEvent.length; i++) {
-          testEvent[i]
-            .then(() => console.error('[bark:bg] publish test: relay', i, 'OK'))
-            .catch(e => console.error('[bark:bg] publish test: relay', i, 'FAILED:', String(e)))
-        }
         console.error('[bark:bg] signEvent: calling bunker.signEvent()...')
         return await bunker.signEvent(params)
       }
