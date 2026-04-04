@@ -297,14 +297,23 @@ async function probeRelays(relayUrls) {
  * silently dead even though the signer object still exists.
  */
 function isPoolAlive() {
-  if (!signer?.pool?.relays) return false
+  if (!signer?.pool?.relays) {
+    console.error('[bark:bg] isPoolAlive: no pool or relays')
+    return false
+  }
+  const relayMap = signer.pool.relays
+  if (relayMap.size === 0) {
+    console.error('[bark:bg] isPoolAlive: relay map is empty')
+    return false
+  }
   let alive = false
-  signer.pool.relays.forEach((relay) => {
-    // WebSocket readyState: 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED
-    if (relay?.ws?.readyState === 1) alive = true
+  relayMap.forEach((relay, url) => {
+    const wsState = relay?.ws?.readyState
+    const connected = relay?.connected
+    console.error('[bark:bg] isPoolAlive:', url, 'connected:', connected, 'ws.readyState:', wsState)
+    if (connected || wsState === 1) alive = true
   })
-  // Also check: if the pool has zero relays, the subscription never connected
-  if (signer.pool.relays.size === 0) return false
+  if (!alive) console.error('[bark:bg] isPoolAlive: no live relays')
   return alive
 }
 
@@ -499,6 +508,23 @@ async function handleMessage(method, params) {
         if (!params || typeof params !== 'object') {
           throw new Error('signEvent requires an event object.')
         }
+        // Diagnostic: test if pool.publish actually works
+        const testEvent = bunker.pool.publish(bunker.bp.relays, {
+          kind: 24133,
+          tags: [],
+          content: 'test',
+          created_at: Math.floor(Date.now() / 1000),
+          pubkey: 'test',
+          id: 'test',
+          sig: 'test',
+        })
+        console.error('[bark:bg] publish test: got', testEvent.length, 'promises')
+        for (let i = 0; i < testEvent.length; i++) {
+          testEvent[i]
+            .then(() => console.error('[bark:bg] publish test: relay', i, 'OK'))
+            .catch(e => console.error('[bark:bg] publish test: relay', i, 'FAILED:', String(e)))
+        }
+        console.error('[bark:bg] signEvent: calling bunker.signEvent()...')
         return await bunker.signEvent(params)
       }
       break
