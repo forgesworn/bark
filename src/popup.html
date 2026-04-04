@@ -414,6 +414,95 @@
       color: #cc8833;
       animation: pulse 1.5s ease-in-out infinite;
     }
+
+    /* ---- Small buttons ---- */
+    .btn-sm {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      background: #1a3a2a;
+      color: #66cc66;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-sm:hover { opacity: 0.85; }
+
+    .btn-save { background: #1a3a2a; color: #66cc66; }
+    .btn-add { background: #1a2a3a; color: #6699cc; }
+
+    /* ---- Policy settings ---- */
+    .policy-subsection {
+      margin: 8px 0 12px 0;
+    }
+
+    .policy-label {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .policy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 6px;
+    }
+
+    .policy-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      background: #111;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    .policy-item .policy-action {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .policy-action.allow { background: #1a3a2a; color: #66cc66; }
+    .policy-action.ask { background: #3a3a1a; color: #cccc66; }
+    .policy-action.deny { background: #3a1a1a; color: #cc6666; }
+
+    .policy-item .policy-remove {
+      background: none;
+      border: none;
+      color: #844;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 4px;
+      opacity: 0.5;
+    }
+
+    .policy-item .policy-remove:hover { opacity: 1; }
+
+    .policy-add-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .policy-add-row input, .policy-add-row select {
+      padding: 5px 8px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-size: 12px;
+    }
+
+    .policy-add-row select {
+      background: #111;
+    }
   </style>
 </head>
 <body>
@@ -477,6 +566,39 @@
         <div id="standard-bunker-card" class="standard-bunker-card" style="display:none">
           <div class="section-label">Personas</div>
           <p style="margin-top:6px">Persona management requires <a href="https://github.com/forgesworn/heartwood" target="_blank" rel="noopener">Heartwood</a></p>
+        </div>
+
+        <!-- Policy settings -->
+        <div id="policy-section" style="margin-bottom: 16px;">
+          <div class="section-label" style="cursor: pointer; user-select: none;" id="policy-toggle">
+            Signing Policies <span id="policy-arrow" style="font-size: 8px;">&#9654;</span>
+          </div>
+          <div id="policy-content" style="display: none;">
+            <div class="policy-subsection">
+              <div class="policy-label">Protected kinds (ask before signing)</div>
+              <div id="kind-rules-list" class="policy-list"></div>
+              <div class="policy-add-row">
+                <input id="add-kind-input" type="number" placeholder="Kind number" min="0" max="65535" style="width: 80px;">
+                <button id="add-kind-btn" class="btn-sm btn-save">Add</button>
+              </div>
+            </div>
+
+            <div class="policy-subsection">
+              <div class="policy-label">Site rules</div>
+              <div id="site-rules-list" class="policy-list"></div>
+              <div class="policy-add-row">
+                <input id="add-site-input" type="text" placeholder="https://example.com" style="flex: 1;">
+                <select id="add-site-action">
+                  <option value="allow">Allow</option>
+                  <option value="ask">Ask</option>
+                  <option value="deny">Deny</option>
+                </select>
+                <button id="add-site-btn" class="btn-sm btn-save">Add</button>
+              </div>
+            </div>
+
+            <button id="reset-policies-btn" class="btn-sm" style="margin-top: 8px; color: #888; background: none; border: 1px solid #333; width: 100%;">Reset to defaults</button>
+          </div>
         </div>
 
         <button id="disconnect-btn" class="btn btn-danger">Disconnect</button>
