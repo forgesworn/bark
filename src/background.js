@@ -85,7 +85,6 @@ const PROTECTED_KINDS = new Set([0])
  * @returns {boolean}
  */
 export function requiresApproval(method, params) {
-  if (method === 'getPublicKey') return true
   if (method === 'signEvent' && params && typeof params === 'object' && PROTECTED_KINDS.has(params.kind)) return true
   return false
 }

@@ -257,8 +257,8 @@ describe('buildHeartwoodArgs', () => {
 })
 
 describe('requiresApproval', () => {
-  it('requires approval for getPublicKey', () => {
-    expect(requiresApproval('getPublicKey', undefined)).toBe(true)
+  it('does not require approval for getPublicKey', () => {
+    expect(requiresApproval('getPublicKey', undefined)).toBe(false)
   })
 
   it('requires approval for signEvent with kind 0', () => {
