@@ -291,7 +291,31 @@ async function probeRelays(relayUrls) {
  * then establish the NIP-46 connection to Heartwood.
  * Uses connectPromise as a mutex to prevent concurrent connection attempts.
  */
+/**
+ * Check whether the BunkerSigner's relay pool has any live connections.
+ * MV3 service workers kill WebSockets when idle, so the pool can be
+ * silently dead even though the signer object still exists.
+ */
+function isPoolAlive() {
+  if (!signer?.pool?.relays) return false
+  let alive = false
+  signer.pool.relays.forEach((relay) => {
+    // WebSocket readyState: 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED
+    if (relay?.ws?.readyState === 1) alive = true
+  })
+  // Also check: if the pool has zero relays, the subscription never connected
+  if (signer.pool.relays.size === 0) return false
+  return alive
+}
+
 async function ensureConnected() {
+  // If we have a signer but the relay pool is dead, tear it down so
+  // doConnect() creates a fresh one with live WebSocket connections.
+  if (signer && !isPoolAlive()) {
+    console.error('[bark:bg] pool connections dead — forcing reconnect')
+    try { signer.close() } catch { /* ignore */ }
+    signer = null
+  }
   if (signer) return signer
   if (connectPromise) return connectPromise
   connectPromise = doConnect()
