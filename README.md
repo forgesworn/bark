@@ -86,6 +86,8 @@ See [PRIVACY.md](PRIVACY.md). TL;DR: Bark stores a bunker URI and client secret 
 
 ## Part of ForgeSworn
 
+> For internal architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 Bark is part of the [ForgeSworn](https://github.com/forgesworn) open-source ecosystem for sovereign identity and commerce on Nostr and Lightning.
 
 ## Part of the ForgeSworn Toolkit
