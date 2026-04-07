@@ -15,7 +15,7 @@ Bark is a minimal NIP-07 browser extension that signs Nostr events through a rem
 
 - No wallet, no Lightning, no zaps
 - No local key storage
-- No NIP-44 encrypt/decrypt yet (waiting on Heartwood)
+- NIP-44 encrypt/decrypt forwarded to remote signer
 
 ## Install
 

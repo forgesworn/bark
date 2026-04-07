@@ -73,9 +73,11 @@ Bark supports multiple bunker connections. Each instance stores:
 {
   id: "heartwood-a1b2c3d4",
   name: "heartwood",
+  address: "heartwood.local:3000",  // HTTP pairing address
   bunkerUri: "bunker://...",
   clientSecret: "hex64",       // Auth credential, not a signing key
   npub: "npub1...",
+  signingPubkey: "",           // Active signing identity (if different from master)
   isHeartwood: true
 }
 ```
