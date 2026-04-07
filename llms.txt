@@ -47,9 +47,51 @@ Five source files, one dependency (nostr-tools):
 - **Persona derivation** — unique to Bark+Heartwood, no other extension does this
 - **Minimal** — 5 files, ~800 lines, 1 dependency
 
+## Policy system
+
+Bark evaluates a layered allow/ask/deny policy before forwarding each request. Rules
+are checked in priority order; first match wins:
+
+1. Site-specific kind rule (e.g. kind 0 at snort.social)
+2. Site-specific method default
+3. Global kind rule
+4. Global method default
+5. Fallback: allow
+
+Default policy: `getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt` are
+`allow`. Event kinds 0 (profile metadata), 3 (contact list), and 10002 (relay list)
+require explicit user confirmation (`ask`).
+
+When a request triggers `ask`, Bark opens a 420 × 520 approval popup. The user
+allows or denies. The request times out after 60 seconds if the popup is not acted on.
+The policy is configurable per method, per event kind, and per origin.
+
+## Multi-instance support
+
+Bark supports multiple simultaneous bunker connections. Each instance stores:
+- A unique ID and user-chosen name
+- Bunker URI (connection string, not a private key)
+- Client secret (NIP-46 auth credential, not a signing key)
+- The active signing pubkey (which may differ from the bunker's master key if
+  persona switching is in use)
+- Whether the connected signer is a Heartwood device
+
+Users switch between instances in the popup. All data lives in `chrome.storage.local`.
+Legacy single-connection storage is automatically migrated on first load.
+
+## How Bark differs from other NIP-07 signers
+
+- **No local keys** — unlike nos2x or Alby, keys never exist in the browser
+- **Any NIP-46 bunker** — unlike Remote NIP-07 (Amber-only), works with any bunker
+- **Persona derivation** — unique to Bark+Heartwood; no other extension has this
+- **Policy engine** — configurable allow/ask/deny per site and per event kind
+- **Minimal** — 8 source files, ~1500 lines, 1 runtime dependency (nostr-tools)
+
 ## Links
 
 - Source: https://github.com/forgesworn/bark
+- Full reference: https://github.com/forgesworn/bark/blob/main/llms-full.txt
 - Heartwood: https://github.com/forgesworn/heartwood
 - NIP-07: https://github.com/nostr-protocol/nips/blob/master/07.md
 - NIP-46: https://github.com/nostr-protocol/nips/blob/master/46.md
+- Changelog: https://github.com/forgesworn/bark/blob/main/CHANGELOG.md

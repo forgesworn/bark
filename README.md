@@ -34,6 +34,10 @@ cd bark && npm install && npm run build
 
 Then load the `dist/` directory as above.
 
+### Full setup guide
+
+For a complete walkthrough — firmware, bridge, provisioning, and Bark together — see the [Heartwood + Bark setup guide](docs/setup-guide.md).
+
 ## Works with any NIP-46 bunker
 
 Bark works as a standard NIP-07 provider with any NIP-46 bunker. Paste a `bunker://` URI from nsecBunker, Amber, or any compliant signer. The signing flow (`getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt`) works identically regardless of the backend.
