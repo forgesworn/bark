@@ -4,6 +4,25 @@
 
 Bark is a Chrome/Edge browser extension (Manifest V3) that provides the standard `window.nostr` API. It holds no private keys. Every operation is forwarded over NIP-46 to a remote signer -- typically a Heartwood device, but any NIP-46 bunker works.
 
+## Architecture overview
+
+Five components, two security boundaries.
+
+```mermaid
+graph LR
+    WA["Web Page"] --> P["provider.js"]
+    P --> CS["content-script.js"]
+    CS --> BG["background.js"]
+    BG --> R["Nostr Relays"]
+    R --> HW["Remote Signer"]
+
+    style P fill:#3b82f6,color:#fff
+    style CS fill:#3b82f6,color:#fff
+    style BG fill:#3b82f6,color:#fff
+    style R fill:#8b5cf6,color:#fff
+    style HW fill:#f59e0b,color:#000
+```
+
 ## Message passing chain
 
 The critical path from web page to hardware signer. Five hops, each with a distinct security boundary.
