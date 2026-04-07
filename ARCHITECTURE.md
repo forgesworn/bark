@@ -30,11 +30,17 @@ The critical path from web page to hardware signer. Five hops, each with a disti
 ```mermaid
 sequenceDiagram
     participant WA as Web Page
-    participant P as provider.js
-    participant CS as content-script.js
-    participant BG as background.js
-    participant R as Nostr Relay
-    participant HW as Remote Signer
+    box rgb(59, 130, 246) Bark Extension
+        participant P as provider.js
+        participant CS as content-script.js
+        participant BG as background.js
+    end
+    box rgb(139, 92, 246) Network
+        participant R as Nostr Relay
+    end
+    box rgb(249, 158, 11) Signing Device
+        participant HW as Remote Signer
+    end
 
     WA->>P: window.nostr.signEvent(event)
     P->>CS: postMessage (bark-request)
