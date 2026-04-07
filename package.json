@@ -11,6 +11,17 @@
     "test:watch": "vitest",
     "package": "node esbuild.config.js --package"
   },
+  "keywords": [
+    "nostr",
+    "nip-07",
+    "nip-46",
+    "browser-extension",
+    "remote-signing",
+    "heartwood",
+    "nsec-tree",
+    "persona",
+    "signer"
+  ],
   "license": "MIT",
   "devDependencies": {
     "esbuild": "^0.25.0",
