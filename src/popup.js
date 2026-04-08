@@ -1,5 +1,7 @@
 // Popup UI logic — persona management, Heartwood detection, relay display.
 
+import { nip19 } from 'nostr-tools'
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -396,8 +398,14 @@ async function refreshState() {
 
     let activeLabel = 'default'
     if (identities.length > 0) {
-      const match = identities.find((id) => (id.pubkey || id.npub) === pubkey)
-      activeLabel = match?.name || match?.personaName || match?.purpose || 'default'
+      const match = identities.find((id) => {
+        if (id.pubkey) return id.pubkey === pubkey
+        if (id.npub) {
+          try { return nip19.decode(id.npub).data === pubkey } catch { return false }
+        }
+        return false
+      })
+      activeLabel = match?.personaName || match?.name || match?.purpose || 'default'
     }
     activeName.textContent = activeLabel
 
@@ -405,12 +413,14 @@ async function refreshState() {
     personaList.innerHTML = ''
     for (const id of identities) {
       const pk = id.pubkey || id.npub
+      const displayName = id.name || id.personaName || id.purpose || 'unnamed'
+      const switchTarget = id.name || id.personaName || id.purpose || pk
       const item = document.createElement('div')
       item.className = 'persona-item' + (pk === pubkey ? ' active' : '')
 
       const name = document.createElement('div')
       name.className = 'persona-name'
-      name.textContent = id.name || id.personaName || id.purpose || 'unnamed'
+      name.textContent = displayName
       item.appendChild(name)
 
       const npub = document.createElement('div')
@@ -418,7 +428,7 @@ async function refreshState() {
       npub.textContent = truncateNpub(pk)
       item.appendChild(npub)
 
-      item.addEventListener('click', () => switchPersona(pk))
+      item.addEventListener('click', () => switchPersona(switchTarget))
       personaList.appendChild(item)
     }
   } else {
@@ -454,7 +464,8 @@ async function derivePersona() {
       : null
 
     if (derived) {
-      await rpc('heartwood_switch', { target: derived.pubkey || derived.npub })
+      const switchTarget = derived.personaName || derived.name || derived.purpose || derived.npub
+      await rpc('heartwood_switch', { target: switchTarget })
     }
 
     deriveInput.value = ''

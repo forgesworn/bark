@@ -268,7 +268,7 @@ export function isValidBunkerUri(value) {
 
 /** Validate a purpose string for derivation (alphanumeric, hyphens, underscores, 1-64 chars). */
 export function isValidPurpose(value) {
-  return typeof value === 'string' && /^[\w-]{1,64}$/.test(value)
+  return typeof value === 'string' && /^[\w:.-]{1,64}$/.test(value)
 }
 
 // ---------------------------------------------------------------------------
@@ -647,7 +647,15 @@ async function handleMessage(method, params, originHint) {
 
     case 'heartwood': {
       const args = buildHeartwoodArgs(parsed.method, params)
-      const raw = await bunker.sendRequest(parsed.method, args)
+      console.error('[bark:bg] heartwood request:', parsed.method, JSON.stringify(args))
+      let raw
+      try {
+        raw = await bunker.sendRequest(parsed.method, args)
+      } catch (hwErr) {
+        console.error('[bark:bg] heartwood error:', parsed.method, String(hwErr))
+        throw hwErr
+      }
+      console.error('[bark:bg] heartwood response:', parsed.method, typeof raw === 'string' ? raw.slice(0, 200) : typeof raw)
       // After a switch, clear the cached pubkey so getPublicKey() fetches
       // the new active identity from the bunker.
       if (parsed.method === 'heartwood_switch') {
@@ -743,6 +751,10 @@ export function sanitiseError(err) {
   for (const prefix of SAFE_ERROR_PREFIXES) {
     if (msg.startsWith(prefix)) return msg
   }
+  // Pass through short, non-sensitive NIP-46 error strings from the signer
+  // (e.g. "identity not found in cache") so the user can see what went wrong.
+  // Block anything that looks like a file path or stack trace.
+  if (msg.length <= 120 && !msg.includes('/') && !msg.includes('\\')) return msg
   return 'Request failed.'
 }
 

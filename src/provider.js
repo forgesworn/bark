@@ -70,6 +70,8 @@
     },
     heartwood: {
       async lsagSign(params) { return call('heartwood_lsag_sign', params) },
+      async switch(target) { return call('heartwood_switch', { target }) },
+      async listIdentities() { return call('heartwood_list_identities') },
     },
   }
 })()

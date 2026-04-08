@@ -191,10 +191,20 @@ describe('sanitiseError', () => {
     )
   })
 
-  it('redacts unknown internal errors', () => {
-    expect(sanitiseError(new Error('Cannot read property x of undefined'))).toBe('Request failed.')
+  it('redacts errors containing file paths or URLs', () => {
     expect(sanitiseError(new Error('WebSocket connection failed at wss://relay.example.com'))).toBe('Request failed.')
-    expect(sanitiseError(new Error('ECONNREFUSED 127.0.0.1:443'))).toBe('Request failed.')
+    expect(sanitiseError(new Error('ENOENT: no such file, open /home/user/.config'))).toBe('Request failed.')
+    expect(sanitiseError(new Error('module not found at C:\\Users\\foo\\bar'))).toBe('Request failed.')
+  })
+
+  it('redacts excessively long error messages', () => {
+    expect(sanitiseError(new Error('x'.repeat(121)))).toBe('Request failed.')
+  })
+
+  it('passes through short signer errors without paths', () => {
+    expect(sanitiseError(new Error('identity not found in cache'))).toBe('identity not found in cache')
+    expect(sanitiseError(new Error('not available in bunker mode'))).toBe('not available in bunker mode')
+    expect(sanitiseError(new Error('ECONNREFUSED 127.0.0.1:443'))).toBe('ECONNREFUSED 127.0.0.1:443')
   })
 
   it('handles plain string errors from nostr-tools NIP-46', () => {
@@ -202,7 +212,7 @@ describe('sanitiseError', () => {
       'heartwood_derive requires a valid purpose',
     )
     expect(sanitiseError('Connection timed out.')).toBe('Connection timed out.')
-    expect(sanitiseError('some internal nostr-tools error')).toBe('Request failed.')
+    expect(sanitiseError('identity not found in cache')).toBe('identity not found in cache')
   })
 
   it('handles missing or malformed error objects', () => {
