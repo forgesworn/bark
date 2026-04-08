@@ -68,5 +68,8 @@
       async encrypt(pubkey, plaintext) { return call('nip44.encrypt', { pubkey, plaintext }) },
       async decrypt(pubkey, ciphertext) { return call('nip44.decrypt', { pubkey, ciphertext }) },
     },
+    heartwood: {
+      async lsagSign(params) { return call('heartwood_lsag_sign', params) },
+    },
   }
 })()
