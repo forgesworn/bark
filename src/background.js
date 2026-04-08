@@ -281,6 +281,19 @@ let signer = null
 /** @type {Promise<BunkerSigner>|null} Mutex to prevent concurrent connect attempts. */
 let connectPromise = null
 
+/**
+ * Timestamp of the last successful NIP-46 request/response cycle.
+ * Chrome MV3 silently kills WebSocket connections after ~30s of service
+ * worker inactivity. The readyState property on the dead WebSocket still
+ * reports OPEN (1), so isPoolAlive() is unreliable after idle periods.
+ * We force a full reconnect if more than MAX_IDLE_MS has elapsed.
+ * @type {number}
+ */
+let lastActivityTime = Date.now()
+
+/** Force reconnect after this many ms of inactivity (< MV3's ~30s kill). */
+const MAX_IDLE_MS = 20_000
+
 // ---------------------------------------------------------------------------
 // Auto-reconnect with exponential backoff
 // ---------------------------------------------------------------------------
@@ -384,10 +397,19 @@ function isPoolAlive() {
 async function ensureConnected(originHint) {
   // If we have a signer but the relay pool is dead, tear it down so
   // doConnect() creates a fresh one with live WebSocket connections.
-  if (signer && !isPoolAlive()) {
-    console.error('[bark:bg] pool connections dead — forcing reconnect')
-    try { signer.close() } catch { /* ignore */ }
-    signer = null
+  // MV3 kills WebSockets silently — readyState stays OPEN even after
+  // the underlying connection is gone. Use idle time as a second check.
+  if (signer) {
+    const idleMs = Date.now() - lastActivityTime
+    if (idleMs > MAX_IDLE_MS) {
+      console.error(`[bark:bg] idle ${Math.round(idleMs / 1000)}s > ${MAX_IDLE_MS / 1000}s — forcing reconnect`)
+      try { signer.close() } catch { /* ignore */ }
+      signer = null
+    } else if (!isPoolAlive()) {
+      console.error('[bark:bg] pool connections dead — forcing reconnect')
+      try { signer.close() } catch { /* ignore */ }
+      signer = null
+    }
   }
   if (signer) return signer
   if (connectPromise) return connectPromise
@@ -508,6 +530,7 @@ async function doConnect(originHint) {
   cancelReconnect()
   connectionState.status = 'connected'
   connectionState.lastError = null
+  lastActivityTime = Date.now()
 
   // Probe relay health
   await probeRelays(bp.relays)
@@ -578,6 +601,10 @@ async function handleMessage(method, params, originHint) {
   console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connecting...')
   const bunker = await ensureConnected(originHint)
   console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connected, dispatching')
+
+  // Update activity timestamp so the idle-time reconnect logic knows the
+  // relay WebSockets were recently used and probably still alive.
+  lastActivityTime = Date.now()
 
   switch (parsed.type) {
     case 'nip07': {
