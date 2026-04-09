@@ -396,27 +396,37 @@ async function refreshState() {
       showError('Could not load personas: ' + err.message)
     }
 
-    let activeLabel = 'default'
-    if (identities.length > 0) {
-      const match = identities.find((id) => {
-        if (id.pubkey) return id.pubkey === pubkey
-        if (id.npub) {
-          try { return nip19.decode(id.npub).data === pubkey } catch { return false }
-        }
-        return false
-      })
-      activeLabel = match?.personaName || match?.name || match?.purpose || 'default'
-    }
-    activeName.textContent = activeLabel
+    const activeMatch = identities.find((id) => {
+      if (id.pubkey) return id.pubkey === pubkey
+      if (id.npub) {
+        try { return nip19.decode(id.npub).data === pubkey } catch { return false }
+      }
+      return false
+    })
+    const onMaster = !activeMatch
+    activeName.textContent = activeMatch
+      ? (activeMatch.personaName || activeMatch.name || activeMatch.purpose || 'default')
+      : 'master'
 
-    // Render persona list
+    // Render persona list — master first, then derived identities
     personaList.innerHTML = ''
+
+    const masterItem = document.createElement('div')
+    masterItem.className = 'persona-item' + (onMaster ? ' active' : '')
+    const masterName = document.createElement('div')
+    masterName.className = 'persona-name'
+    masterName.textContent = 'master'
+    masterItem.appendChild(masterName)
+    masterItem.addEventListener('click', () => switchPersona('master'))
+    personaList.appendChild(masterItem)
+
     for (const id of identities) {
       const pk = id.pubkey || id.npub
-      const displayName = id.name || id.personaName || id.purpose || 'unnamed'
-      const switchTarget = id.name || id.personaName || id.purpose || pk
+      const displayName = id.personaName || id.name || id.purpose || 'unnamed'
+      const switchTarget = id.personaName || id.name || id.purpose || pk
+      const isActive = !onMaster && !!activeMatch && (id === activeMatch)
       const item = document.createElement('div')
-      item.className = 'persona-item' + (pk === pubkey ? ' active' : '')
+      item.className = 'persona-item' + (isActive ? ' active' : '')
 
       const name = document.createElement('div')
       name.className = 'persona-name'
