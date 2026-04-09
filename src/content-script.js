@@ -6,27 +6,55 @@ script.onload = () => script.remove()
 let isStale = false
 
 /**
- * Send a message to the background service worker, retrying once if the worker
- * is asleep. MV3 service workers die after ~30s of inactivity; the first
- * sendMessage wakes them but may fail before the listener is registered.
+ * Serialise messages to the background service worker. MV3 workers die after
+ * ~30s of inactivity; the first sendMessage wakes them but may fail or resolve
+ * with undefined before the onMessage listener is registered. A queue ensures
+ * a second message isn't dispatched while the first is still retrying through
+ * the wake-up window.
  */
+let sendQueue = Promise.resolve()
+
+function enqueueSend(payload) {
+  const p = sendQueue.then(() => sendToBackground(payload))
+  // Swallow rejections so the queue itself never stalls.
+  sendQueue = p.catch(() => {})
+  return p
+}
+
 async function sendToBackground(payload) {
-  try {
-    const result = await chrome.runtime.sendMessage(payload)
-    console.log('[bark:content] ← bg responded', payload.method, result)
-    return result
-  } catch (err) {
-    const msg = String(err?.message || '')
-    console.log('[bark:content] ✗ sendMessage failed:', msg)
-    // Genuine invalidation — extension was updated/reloaded. No retry.
-    if (msg.includes('context invalidated')) throw err
-    // Service worker waking up — retry once after a short delay.
-    if (msg.includes('does not exist')) {
-      console.log('[bark:content] retrying after 500ms (service worker waking)')
-      await new Promise(r => setTimeout(r, 500))
-      return await chrome.runtime.sendMessage(payload)
+  const MAX_RETRIES = 3
+  const RETRY_DELAY = 500
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const result = await chrome.runtime.sendMessage(payload)
+
+      // undefined means no listener handled the message — worker is alive
+      // but not yet initialised. Retry after a short delay.
+      if (result === undefined && attempt < MAX_RETRIES - 1) {
+        console.log('[bark:content] ✗ undefined response for', payload.method, '— retrying')
+        await new Promise(r => setTimeout(r, RETRY_DELAY))
+        continue
+      }
+
+      console.log('[bark:content] ← bg responded', payload.method, result)
+      return result
+    } catch (err) {
+      const msg = String(err?.message || '')
+      console.log('[bark:content] ✗ sendMessage failed:', msg)
+
+      // Genuine invalidation — extension was updated/reloaded. No retry.
+      if (msg.includes('context invalidated')) throw err
+
+      // Service worker waking up — retry after a short delay.
+      if (msg.includes('does not exist') && attempt < MAX_RETRIES - 1) {
+        console.log('[bark:content] retrying after', RETRY_DELAY, 'ms (service worker waking)')
+        await new Promise(r => setTimeout(r, RETRY_DELAY))
+        continue
+      }
+
+      throw err
     }
-    throw err
   }
 }
 
@@ -55,7 +83,7 @@ window.addEventListener('message', async (event) => {
   }
 
   try {
-    const result = await sendToBackground({ type: 'bark-request', method, params })
+    const result = await enqueueSend({ type: 'bark-request', method, params })
     // Background sends errors as {error: 'msg'} via sendResponse — unwrap them.
     if (result && result.error) {
       window.postMessage({ type: 'bark-response', id, error: result.error }, window.location.origin)
