@@ -22,6 +22,7 @@ const NIP44_METHODS = new Set(['encrypt', 'decrypt'])
 const HEARTWOOD_METHODS = new Set([
   'heartwood_list_identities',
   'heartwood_derive',
+  'heartwood_derive_persona',
   'heartwood_switch',
   'heartwood_lsag_sign',
 ])
@@ -691,6 +692,16 @@ export function buildHeartwoodArgs(method, params) {
         throw new Error('heartwood_derive index must be an integer 0-1000.')
       }
       return [params.purpose, String(index)]
+    }
+    case 'heartwood_derive_persona': {
+      if (!params || typeof params.name !== 'string' || !/^[\w.-]{1,64}$/.test(params.name)) {
+        throw new Error('heartwood_derive_persona requires a valid name (alphanumeric/hyphens/dots, 1-64 chars).')
+      }
+      const index = Number(params.index ?? 0)
+      if (!Number.isInteger(index) || index < 0 || index > 1000) {
+        throw new Error('heartwood_derive_persona index must be an integer 0-1000.')
+      }
+      return [params.name, String(index)]
     }
     case 'heartwood_switch': {
       if (!params || typeof params.target !== 'string' || params.target.length === 0 || params.target.length > 256) {

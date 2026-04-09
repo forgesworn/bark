@@ -72,6 +72,7 @@
       async lsagSign(params) { return call('heartwood_lsag_sign', params) },
       async switch(target) { return call('heartwood_switch', { target }) },
       async listIdentities() { return call('heartwood_list_identities') },
+      async derivePersona(name, index = 0) { return call('heartwood_derive_persona', { name, index }) },
     },
   }
 })()
