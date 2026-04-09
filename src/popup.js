@@ -195,7 +195,7 @@ async function pairHeartwood(address) {
   btn.textContent = 'Connecting...'
 
   try {
-    const result = await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: 'bark-pair', address }, (resp) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message))
@@ -211,6 +211,13 @@ async function pairHeartwood(address) {
 
     await renderInstances()
     await refreshState()
+
+    // After fresh pairing, default to master so the user starts from a known state.
+    const status = await queryStatus()
+    if (status.isHeartwood) {
+      try { await rpc('heartwood_switch', { target: 'master' }) } catch { /* non-fatal */ }
+      await refreshState()
+    }
 
     if (addAddressInput) addAddressInput.value = ''
     if (addInstanceSection) addInstanceSection.style.display = 'none'
