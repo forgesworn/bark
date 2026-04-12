@@ -1,5 +1,7 @@
 # Bark
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/TheCryptoDonkey?logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/TheCryptoDonkey)
+
 The protective outer layer of [Heartwood](https://github.com/forgesworn/heartwood).
 
 Bark is a minimal NIP-07 browser extension that signs Nostr events through a remote signer via NIP-46. No keys in the browser. No accounts. No bloat.
