@@ -12,6 +12,9 @@ import { evaluatePolicy, DEFAULT_POLICIES } from './policy.js'
 /** Timeout for the initial NIP-46 connect handshake (ms). */
 const CONNECT_TIMEOUT_MS = 30_000
 
+/** Timeout for an established NIP-46 request (ms). */
+const BUNKER_REQUEST_TIMEOUT_MS = 45_000
+
 /** Allowed NIP-07 methods. */
 const NIP07_METHODS = new Set(['getPublicKey', 'signEvent'])
 
@@ -601,6 +604,26 @@ async function resetConnection() {
   connectionState.isHeartwood = false
 }
 
+async function withBunkerRequestTimeout(promise, label) {
+  let timer
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} timed out.`)), BUNKER_REQUEST_TIMEOUT_MS)
+      }),
+    ])
+  } catch (err) {
+    const msg = typeof err === 'string' ? err : (err?.message || '')
+    if (msg.endsWith(' timed out.')) {
+      void resetConnection()
+    }
+    throw err
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Request handlers
 // ---------------------------------------------------------------------------
@@ -634,12 +657,22 @@ async function handleMessage(method, params, originHint) {
   switch (parsed.type) {
     case 'nip07': {
       if (parsed.method === 'getPublicKey') {
-        return await bunker.getPublicKey()
+        return await withBunkerRequestTimeout(bunker.getPublicKey(), 'getPublicKey')
       }
       if (parsed.method === 'signEvent') {
         const event = normaliseSignEventTemplate(params)
-        console.error('[bark:bg] signEvent: calling bunker.signEvent()...')
-        return await bunker.signEvent(event)
+        console.error('[bark:bg] signEvent: calling bunker.signEvent()', {
+          kind: event.kind,
+          created_at: event.created_at,
+          tags: Array.isArray(event.tags) ? event.tags.length : 0,
+        })
+        const signed = await withBunkerRequestTimeout(bunker.signEvent(event), 'signEvent')
+        console.error('[bark:bg] signEvent: bunker returned', {
+          kind: signed?.kind,
+          pubkey: typeof signed?.pubkey === 'string' ? `${signed.pubkey.slice(0, 12)}…` : typeof signed?.pubkey,
+          id: typeof signed?.id === 'string' ? `${signed.id.slice(0, 12)}…` : typeof signed?.id,
+        })
+        return signed
       }
       break
     }
@@ -652,7 +685,10 @@ async function handleMessage(method, params, originHint) {
         if (!isValidHexPubkey(params.pubkey)) {
           throw new Error('Invalid pubkey for nip44.encrypt.')
         }
-        return await bunker.nip44Encrypt(params.pubkey, params.plaintext)
+        return await withBunkerRequestTimeout(
+          bunker.nip44Encrypt(params.pubkey, params.plaintext),
+          'nip44.encrypt',
+        )
       }
       if (parsed.method === 'decrypt') {
         if (!params || typeof params.pubkey !== 'string' || typeof params.ciphertext !== 'string') {
@@ -661,7 +697,10 @@ async function handleMessage(method, params, originHint) {
         if (!isValidHexPubkey(params.pubkey)) {
           throw new Error('Invalid pubkey for nip44.decrypt.')
         }
-        return await bunker.nip44Decrypt(params.pubkey, params.ciphertext)
+        return await withBunkerRequestTimeout(
+          bunker.nip44Decrypt(params.pubkey, params.ciphertext),
+          'nip44.decrypt',
+        )
       }
       break
     }
@@ -671,7 +710,10 @@ async function handleMessage(method, params, originHint) {
       console.error('[bark:bg] heartwood request:', parsed.method, JSON.stringify(args))
       let raw
       try {
-        raw = await bunker.sendRequest(parsed.method, args)
+        raw = await withBunkerRequestTimeout(
+          bunker.sendRequest(parsed.method, args),
+          parsed.method,
+        )
       } catch (hwErr) {
         console.error('[bark:bg] heartwood error:', parsed.method, String(hwErr))
         throw hwErr
@@ -1038,7 +1080,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
             sendResponse(result)
           } catch (err) {
-            console.error('[bark:bg] ✗ error', message.method, sanitiseError(err))
+            console.error('[bark:bg] ✗ error', message.method, err, sanitiseError(err))
             sendResponse({ error: sanitiseError(err) })
           }
           return
@@ -1093,6 +1135,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               sendResponse,
             })
           } catch (err) {
+            console.error('[bark:bg] ✗ approval setup error', message.method, err, sanitiseError(err))
             sendResponse({ error: sanitiseError(err) })
           }
           return
@@ -1104,7 +1147,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
           sendResponse(result)
         } catch (err) {
-          console.error('[bark:bg] ✗ error', message.method, sanitiseError(err))
+          console.error('[bark:bg] ✗ error', message.method, err, sanitiseError(err))
           sendResponse({ error: sanitiseError(err) })
         }
       })()
