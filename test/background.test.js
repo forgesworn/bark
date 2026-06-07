@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -166,6 +166,42 @@ describe('isValidPurpose', () => {
     expect(isValidPurpose(null)).toBe(false)
     expect(isValidPurpose(undefined)).toBe(false)
     expect(isValidPurpose(123)).toBe(false)
+  })
+})
+
+describe('normaliseSignEventTemplate', () => {
+  it('fills created_at and tags for NIP-07 event templates', () => {
+    const event = normaliseSignEventTemplate({
+      kind: 21236,
+      content: '',
+      tags: [['challenge', 'abc']],
+      pubkey: 'x'.repeat(64),
+      sig: 'y'.repeat(128),
+      id: 'z'.repeat(64),
+    })
+
+    expect(event.kind).toBe(21236)
+    expect(event.content).toBe('')
+    expect(event.tags).toEqual([['challenge', 'abc']])
+    expect(Number.isInteger(event.created_at)).toBe(true)
+    expect(event.pubkey).toBeUndefined()
+    expect(event.sig).toBeUndefined()
+    expect(event.id).toBeUndefined()
+  })
+
+  it('preserves caller supplied created_at', () => {
+    expect(normaliseSignEventTemplate({ kind: 1, content: 'hi', created_at: 123, tags: [] })).toEqual({
+      kind: 1,
+      content: 'hi',
+      tags: [],
+      created_at: 123,
+    })
+  })
+
+  it('rejects malformed templates before hitting the bunker', () => {
+    expect(() => normaliseSignEventTemplate(null)).toThrow(/event object/)
+    expect(() => normaliseSignEventTemplate({ kind: '1' })).toThrow(/numeric kind/)
+    expect(() => normaliseSignEventTemplate({ kind: 1, tags: 'bad' })).toThrow(/array tags/)
   })
 })
 

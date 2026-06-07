@@ -272,6 +272,30 @@ export function isValidPurpose(value) {
   return typeof value === 'string' && /^[\w:.-]{1,64}$/.test(value)
 }
 
+export function normaliseSignEventTemplate(params) {
+  if (!params || typeof params !== 'object' || Array.isArray(params)) {
+    throw new Error('signEvent requires an event object.')
+  }
+  if (typeof params.kind !== 'number' || !Number.isInteger(params.kind)) {
+    throw new Error('signEvent requires a numeric kind.')
+  }
+  if (params.content !== undefined && typeof params.content !== 'string') {
+    throw new Error('signEvent requires string content.')
+  }
+  if (params.tags !== undefined && !Array.isArray(params.tags)) {
+    throw new Error('signEvent requires array tags.')
+  }
+  if (params.created_at !== undefined && !Number.isInteger(params.created_at)) {
+    throw new Error('signEvent requires integer created_at.')
+  }
+  return {
+    kind: params.kind,
+    content: params.content ?? '',
+    tags: params.tags ?? [],
+    created_at: params.created_at ?? Math.floor(Date.now() / 1000),
+  }
+}
+
 // ---------------------------------------------------------------------------
 // NIP-46 connection state
 // ---------------------------------------------------------------------------
@@ -613,13 +637,9 @@ async function handleMessage(method, params, originHint) {
         return await bunker.getPublicKey()
       }
       if (parsed.method === 'signEvent') {
-        // Basic shape validation — the bunker will do full validation, but
-        // reject obviously wrong payloads early.
-        if (!params || typeof params !== 'object') {
-          throw new Error('signEvent requires an event object.')
-        }
+        const event = normaliseSignEventTemplate(params)
         console.error('[bark:bg] signEvent: calling bunker.signEvent()...')
-        return await bunker.signEvent(params)
+        return await bunker.signEvent(event)
       }
       break
     }
