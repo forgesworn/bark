@@ -14,7 +14,10 @@
       const timeoutId = setTimeout(() => {
         if (!pending.has(id)) return
         pending.delete(id)
-        reject(new Error('Bark request timed out.'))
+        const timeoutMessage = method === 'signEvent'
+          ? 'Bark signEvent timed out. Open Bark and test signing.'
+          : 'Bark request timed out.'
+        reject(new Error(timeoutMessage))
       }, REQUEST_TIMEOUT_MS)
       pending.set(id, { resolve, reject, timeoutId })
       console.log('[bark:provider] →', method, 'id=' + id)
@@ -63,7 +66,12 @@
 
   window.nostr = {
     async getPublicKey() { return call('getPublicKey') },
+    async getRelays() { return call('getRelays') },
     async signEvent(event) { return call('signEvent', event) },
+    nip04: {
+      async encrypt(pubkey, plaintext) { return call('nip04.encrypt', { pubkey, plaintext }) },
+      async decrypt(pubkey, ciphertext) { return call('nip04.decrypt', { pubkey, ciphertext }) },
+    },
     nip44: {
       async encrypt(pubkey, plaintext) { return call('nip44.encrypt', { pubkey, plaintext }) },
       async decrypt(pubkey, ciphertext) { return call('nip44.decrypt', { pubkey, ciphertext }) },

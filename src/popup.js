@@ -31,6 +31,10 @@ const heartwoodBadge = document.getElementById('heartwood-badge')
 const activeName = document.getElementById('active-name')
 const activeNpub = document.getElementById('active-npub')
 const connectedContent = document.getElementById('connected-content')
+const signStatusDot = document.getElementById('sign-status-dot')
+const signStatusText = document.getElementById('sign-status-text')
+const signStatusDetail = document.getElementById('sign-status-detail')
+const signTestBtn = document.getElementById('sign-test-btn')
 const reconnectStatus = document.getElementById('reconnect-status')
 const reconnectMsg = document.getElementById('reconnect-msg')
 const retryBtn = document.getElementById('retry-btn')
@@ -61,9 +65,32 @@ const resetPoliciesBtn = document.getElementById('reset-policies-btn')
 
 // Policy defaults (must match src/policy.js)
 const DEFAULT_POLICIES = {
-  defaults: { getPublicKey: 'allow', signEvent: 'allow', 'nip44.encrypt': 'allow', 'nip44.decrypt': 'allow' },
+  defaults: {
+    getPublicKey: 'allow',
+    getRelays: 'allow',
+    signEvent: 'allow',
+    'nip04.encrypt': 'allow',
+    'nip04.decrypt': 'allow',
+    'nip44.encrypt': 'allow',
+    'nip44.decrypt': 'allow',
+  },
   kindRules: { '0': 'ask', '3': 'ask', '10002': 'ask' },
   siteRules: {},
+}
+
+/** Ask the background worker to do a real local sign probe. */
+async function primeSigner() {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'bark-prime-signer' }, (resp) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message))
+      } else if (!resp || !resp.ok) {
+        reject(new Error(resp?.error || 'Signer test failed.'))
+      } else {
+        resolve(resp)
+      }
+    })
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -336,6 +363,48 @@ function renderRelays(relays) {
   }
 }
 
+function formatTime(ms) {
+  if (!ms) return ''
+  try {
+    return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return ''
+  }
+}
+
+function renderSigningStatus(status) {
+  const state = status.signingStatus || 'untested'
+  signStatusDot.className = `sign-status-dot ${state}`
+  signTestBtn.disabled = state === 'pending'
+
+  if (state === 'ready') {
+    signStatusText.textContent = 'Signing ready'
+    signStatusDetail.textContent = status.signingLastOkAt
+      ? `Last tested ${formatTime(status.signingLastOkAt)}`
+      : 'Signer returned a valid event.'
+    signTestBtn.textContent = 'Test'
+    return
+  }
+
+  if (state === 'pending') {
+    signStatusText.textContent = 'Waiting for signer'
+    signStatusDetail.textContent = 'Approve the request on your signer device.'
+    signTestBtn.textContent = 'Waiting'
+    return
+  }
+
+  if (state === 'error') {
+    signStatusText.textContent = 'Signing failed'
+    signStatusDetail.textContent = status.signingLastError || 'Run the sign test again.'
+    signTestBtn.textContent = 'Retry'
+    return
+  }
+
+  signStatusText.textContent = 'Signing not tested'
+  signStatusDetail.textContent = 'Run a sign test before using sites.'
+  signTestBtn.textContent = 'Test'
+}
+
 // ---------------------------------------------------------------------------
 // Core state refresh
 // ---------------------------------------------------------------------------
@@ -386,6 +455,7 @@ async function refreshState() {
 
   // Relay info
   renderRelays(status.relays)
+  renderSigningStatus(status)
 
   // Active persona
   activeNpub.textContent = truncateNpub(pubkey)
@@ -489,6 +559,22 @@ async function derivePersona() {
     await refreshState()
   } catch (err) {
     showError(err.message)
+  }
+}
+
+async function testSigner() {
+  signTestBtn.disabled = true
+  signTestBtn.textContent = 'Waiting'
+  signStatusDot.className = 'sign-status-dot pending'
+  signStatusText.textContent = 'Waiting for signer'
+  signStatusDetail.textContent = 'Approve the request on your signer device.'
+
+  try {
+    await primeSigner()
+  } catch (err) {
+    showError(err.message)
+  } finally {
+    await refreshState()
   }
 }
 
@@ -633,6 +719,7 @@ async function renderPolicies() {
 
 disconnectBtn.addEventListener('click', disconnect)
 deriveBtn.addEventListener('click', derivePersona)
+signTestBtn.addEventListener('click', testSigner)
 retryBtn.addEventListener('click', () => {
   clearRetryState()
   retryBtn.textContent = 'Retry'
@@ -713,7 +800,10 @@ async function addSiteRule() {
   const action = addSiteAction.value || 'allow'
   const policies = await loadPolicies()
   policies.siteRules[origin] = {
+    getRelays: action,
     signEvent: action,
+    'nip04.encrypt': action,
+    'nip04.decrypt': action,
     getPublicKey: action,
     'nip44.encrypt': action,
     'nip44.decrypt': action,
@@ -742,3 +832,9 @@ resetPoliciesBtn.addEventListener('click', async () => {
 renderInstances().then(() => refreshState()).catch((err) => {
   showError(err.message)
 })
+
+setInterval(async () => {
+  if (!mainScreen.classList.contains('active')) return
+  const status = await queryStatus()
+  renderSigningStatus(status)
+}, 2500)

@@ -112,6 +112,15 @@ function init() {
       } else if (details.method === 'getPublicKey') {
         title.textContent = 'Share Identity?'
         originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to know your public key'
+      } else if (details.method === 'getRelays') {
+        title.textContent = 'Share Relays?'
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to know your relay list'
+      } else if (details.method === 'nip04.encrypt') {
+        title.textContent = 'Encrypt Message?'
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to encrypt a legacy message'
+      } else if (details.method === 'nip04.decrypt') {
+        title.textContent = 'Decrypt Message?'
+        originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to decrypt a legacy message'
       } else if (details.method === 'nip44.encrypt') {
         title.textContent = 'Encrypt Message?'
         originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to encrypt a message'

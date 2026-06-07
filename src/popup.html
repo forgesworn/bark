@@ -118,6 +118,11 @@
       color: #fff;
     }
 
+    .btn-secondary {
+      background: #1a2a3a;
+      color: #88bbdd;
+    }
+
     .btn-danger {
       background: #662222;
       color: #ff8888;
@@ -346,6 +351,55 @@
       background: #339933;
     }
 
+    /* ---- Signing health ---- */
+    .sign-status-card {
+      background: #111827;
+      border: 1px solid #283245;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 0 0 12px 0;
+    }
+
+    .sign-status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sign-status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #777;
+      flex-shrink: 0;
+    }
+
+    .sign-status-dot.ready { background: #339933; }
+    .sign-status-dot.pending {
+      background: #cc8833;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .sign-status-dot.error { background: #ff4444; }
+
+    .sign-status-copy {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sign-status-text {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sign-status-detail {
+      font-size: 11px;
+      color: #888;
+      margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     /* Instance cards */
     .instance-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
     .instance-card {
@@ -546,6 +600,17 @@
         <div class="active-persona">
           <div id="active-name" class="persona-name">--</div>
           <div id="active-npub" class="persona-npub">--</div>
+        </div>
+
+        <div id="sign-status-card" class="sign-status-card">
+          <div class="sign-status-row">
+            <span id="sign-status-dot" class="sign-status-dot"></span>
+            <div class="sign-status-copy">
+              <div id="sign-status-text" class="sign-status-text">Signing not tested</div>
+              <div id="sign-status-detail" class="sign-status-detail">Run a sign test before using sites.</div>
+            </div>
+            <button id="sign-test-btn" class="btn-sm btn-save">Test</button>
+          </div>
         </div>
 
         <div id="relay-info" class="relay-info">

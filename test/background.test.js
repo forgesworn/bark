@@ -1,13 +1,22 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, isRelayPublishFailure, buildSignerHealthEvent } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
     expect(parseMethod('getPublicKey')).toEqual({ type: 'nip07', method: 'getPublicKey' })
   })
 
+  it('parses getRelays', () => {
+    expect(parseMethod('getRelays')).toEqual({ type: 'nip07', method: 'getRelays' })
+  })
+
   it('parses signEvent', () => {
     expect(parseMethod('signEvent')).toEqual({ type: 'nip07', method: 'signEvent' })
+  })
+
+  it('parses nip04 methods', () => {
+    expect(parseMethod('nip04.encrypt')).toEqual({ type: 'nip04', method: 'encrypt' })
+    expect(parseMethod('nip04.decrypt')).toEqual({ type: 'nip04', method: 'decrypt' })
   })
 
   it('parses nip44.encrypt', () => {
@@ -32,6 +41,11 @@ describe('parseMethod', () => {
   it('rejects unknown nip44 sub-methods', () => {
     expect(parseMethod('nip44.deleteAll')).toEqual({ type: 'unknown', method: 'nip44.deleteAll' })
     expect(parseMethod('nip44.')).toEqual({ type: 'unknown', method: 'nip44.' })
+  })
+
+  it('rejects unknown nip04 sub-methods', () => {
+    expect(parseMethod('nip04.deleteAll')).toEqual({ type: 'unknown', method: 'nip04.deleteAll' })
+    expect(parseMethod('nip04.')).toEqual({ type: 'unknown', method: 'nip04.' })
   })
 
   it('rejects unknown heartwood methods', () => {
@@ -205,6 +219,31 @@ describe('normaliseSignEventTemplate', () => {
   })
 })
 
+describe('buildSignerHealthEvent', () => {
+  it('builds a non-published signer health event', () => {
+    const event = buildSignerHealthEvent('challenge-123')
+
+    expect(event.kind).toBe(22242)
+    expect(event.content).toBe('')
+    expect(event.tags).toContainEqual(['relay', 'bark://extension'])
+    expect(event.tags).toContainEqual(['challenge', 'challenge-123'])
+    expect(event.tags).toContainEqual(['purpose', 'signer-health-check'])
+    expect(Number.isInteger(event.created_at)).toBe(true)
+  })
+})
+
+describe('isRelayPublishFailure', () => {
+  it('detects nostr-tools relay connection failures that resolve as strings', () => {
+    expect(isRelayPublishFailure('connection failure: Error: failed')).toBe(true)
+  })
+
+  it('does not treat normal relay OK strings as failures', () => {
+    expect(isRelayPublishFailure('OK')).toBe(false)
+    expect(isRelayPublishFailure('duplicate url')).toBe(false)
+    expect(isRelayPublishFailure(new Error('connection failure: nope'))).toBe(false)
+  })
+})
+
 describe('sanitiseError', () => {
   it('passes through known safe error prefixes', () => {
     expect(sanitiseError(new Error('No bunker URI configured. Open the Bark popup to connect.'))).toBe(
@@ -326,6 +365,12 @@ describe('checkApproval', () => {
   it('returns allow for nip44 methods with default policies', async () => {
     expect(await checkApproval('nip44.encrypt', {}, 'https://example.com')).toBe('allow')
     expect(await checkApproval('nip44.decrypt', {}, 'https://example.com')).toBe('allow')
+  })
+
+  it('returns allow for getRelays and nip04 methods with default policies', async () => {
+    expect(await checkApproval('getRelays', {}, 'https://example.com')).toBe('allow')
+    expect(await checkApproval('nip04.encrypt', {}, 'https://example.com')).toBe('allow')
+    expect(await checkApproval('nip04.decrypt', {}, 'https://example.com')).toBe('allow')
   })
 })
 

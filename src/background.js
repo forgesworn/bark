@@ -16,10 +16,13 @@ const CONNECT_TIMEOUT_MS = 30_000
 const BUNKER_REQUEST_TIMEOUT_MS = 45_000
 
 /** Allowed NIP-07 methods. */
-const NIP07_METHODS = new Set(['getPublicKey', 'signEvent'])
+const NIP07_METHODS = new Set(['getPublicKey', 'signEvent', 'getRelays'])
 
 /** Allowed NIP-44 sub-methods (after the `nip44.` prefix). */
 const NIP44_METHODS = new Set(['encrypt', 'decrypt'])
+
+/** Allowed NIP-04 sub-methods (after the `nip04.` prefix). */
+const NIP04_METHODS = new Set(['encrypt', 'decrypt'])
 
 /** Allowed heartwood methods. */
 const HEARTWOOD_METHODS = new Set([
@@ -64,6 +67,8 @@ export function migrateStorage(stored) {
       clientSecret: stored.clientSecret || '',
       npub: '',
       signingPubkey: '',
+      signingVerifiedAt: 0,
+      signingLastError: null,
       isHeartwood: stored.isHeartwood || false,
     }],
     activeInstanceId: id,
@@ -190,7 +195,7 @@ async function allowApproval(requestId) {
 /**
  * Classify an incoming method string into its handler category.
  * @param {string} method
- * @returns {{ type: 'nip07'|'nip44'|'heartwood'|'unknown', method: string }}
+ * @returns {{ type: 'nip07'|'nip04'|'nip44'|'heartwood'|'unknown', method: string }}
  */
 export function parseMethod(method) {
   if (NIP07_METHODS.has(method)) {
@@ -203,6 +208,13 @@ export function parseMethod(method) {
     }
     return { type: 'unknown', method }
   }
+  if (method.startsWith('nip04.')) {
+    const sub = method.slice('nip04.'.length)
+    if (NIP04_METHODS.has(sub)) {
+      return { type: 'nip04', method: sub }
+    }
+    return { type: 'unknown', method }
+  }
   if (method.startsWith('heartwood_')) {
     if (HEARTWOOD_METHODS.has(method)) {
       return { type: 'heartwood', method }
@@ -210,6 +222,13 @@ export function parseMethod(method) {
     return { type: 'unknown', method }
   }
   return { type: 'unknown', method }
+}
+
+function buildRelayPolicy(relays) {
+  return Object.fromEntries((relays || []).map((relay) => [
+    relay.url || relay,
+    { read: true, write: true },
+  ]))
 }
 
 // ---------------------------------------------------------------------------
@@ -299,6 +318,47 @@ export function normaliseSignEventTemplate(params) {
   }
 }
 
+export function isRelayPublishFailure(reason) {
+  return typeof reason === 'string' && reason.startsWith('connection failure:')
+}
+
+export function buildSignerHealthEvent(challenge = makeChallenge()) {
+  return {
+    kind: 22242,
+    content: '',
+    tags: [
+      ['relay', 'bark://extension'],
+      ['challenge', challenge],
+      ['client', 'Bark'],
+      ['purpose', 'signer-health-check'],
+    ],
+    created_at: Math.floor(Date.now() / 1000),
+  }
+}
+
+function makeChallenge() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function patchSignerPublishFailures(bunkerSigner) {
+  const pool = bunkerSigner?.pool
+  if (!pool || pool.__barkPublishPatched || typeof pool.publish !== 'function') return
+
+  const publish = pool.publish.bind(pool)
+  Object.defineProperty(pool, '__barkPublishPatched', { value: true, configurable: true })
+  pool.publish = (relays, event, params) => {
+    return publish(relays, event, params).map((promise) => {
+      return Promise.resolve(promise).then((reason) => {
+        if (isRelayPublishFailure(reason)) throw new Error(reason)
+        return reason
+      })
+    })
+  }
+}
+
 // ---------------------------------------------------------------------------
 // NIP-46 connection state
 // ---------------------------------------------------------------------------
@@ -353,12 +413,123 @@ function cancelReconnect() {
 // Connection state — queried by popup via bark-status
 // ---------------------------------------------------------------------------
 
-/** @type {{ status: string, lastError: string|null, relays: Array<{url: string, connected: boolean}>, isHeartwood: boolean }} */
+/** @type {{ status: string, lastError: string|null, relays: Array<{url: string, connected: boolean}>, isHeartwood: boolean, signingStatus: string, signingLastOkAt: number|null, signingLastError: string|null, signingPubkey: string|null, signingProbeReason: string|null }} */
 let connectionState = {
   status: 'disconnected',
   lastError: null,
   relays: [],
   isHeartwood: false,
+  signingStatus: 'untested',
+  signingLastOkAt: null,
+  signingLastError: null,
+  signingPubkey: null,
+  signingProbeReason: null,
+}
+
+let primePromise = null
+let autoPrimeTimer = null
+
+function applyInstanceSigningState(active) {
+  connectionState.signingStatus = active?.signingVerifiedAt ? 'ready' : 'untested'
+  connectionState.signingLastOkAt = active?.signingVerifiedAt || null
+  connectionState.signingLastError = active?.signingLastError || null
+  connectionState.signingPubkey = active?.signingPubkey || null
+  connectionState.signingProbeReason = null
+}
+
+function setSigningState(status, updates = {}) {
+  connectionState.signingStatus = status
+  Object.assign(connectionState, updates)
+}
+
+async function updateActiveInstanceSigningState(updates) {
+  if (typeof chrome === 'undefined' || !chrome.storage?.local) return
+
+  const { instances = [], activeInstanceId } = await chrome.storage.local.get([
+    'instances',
+    'activeInstanceId',
+  ])
+  const active = instances.find(i => i.id === activeInstanceId)
+  if (!active) return
+
+  Object.assign(active, updates)
+  await chrome.storage.local.set({ instances })
+}
+
+async function markSigningSucceeded(signed) {
+  const now = Date.now()
+  const signingPubkey = typeof signed?.pubkey === 'string' ? signed.pubkey : null
+
+  setSigningState('ready', {
+    signingLastOkAt: now,
+    signingLastError: null,
+    signingPubkey,
+    signingProbeReason: null,
+  })
+
+  await updateActiveInstanceSigningState({
+    signingVerifiedAt: now,
+    signingLastError: null,
+    signingPubkey: signingPubkey || '',
+  })
+}
+
+async function markSigningFailed(err) {
+  const error = sanitiseError(err)
+  setSigningState('error', {
+    signingLastError: error,
+    signingProbeReason: null,
+  })
+  await updateActiveInstanceSigningState({
+    signingLastError: error,
+  })
+}
+
+async function signWithHealthTracking(bunker, event, label, reason = 'request') {
+  setSigningState('pending', {
+    signingLastError: null,
+    signingProbeReason: reason,
+  })
+
+  try {
+    const signed = await withBunkerRequestTimeout(bunker.signEvent(event), label)
+    await markSigningSucceeded(signed)
+    return signed
+  } catch (err) {
+    await markSigningFailed(err)
+    throw err
+  }
+}
+
+async function primeSigner(reason = 'manual') {
+  if (primePromise) return primePromise
+
+  primePromise = (async () => {
+    const bunker = await ensureConnected()
+    return await signWithHealthTracking(
+      bunker,
+      buildSignerHealthEvent(),
+      'signer health check',
+      reason,
+    )
+  })()
+
+  try {
+    return await primePromise
+  } finally {
+    primePromise = null
+  }
+}
+
+function scheduleSignerPrime(reason = 'initial') {
+  if (autoPrimeTimer || primePromise || connectionState.signingStatus === 'ready') return
+  autoPrimeTimer = setTimeout(() => {
+    autoPrimeTimer = null
+    if (connectionState.signingStatus !== 'untested') return
+    primeSigner(reason).catch((err) => {
+      console.error('[bark:bg] signer health check failed:', sanitiseError(err))
+    })
+  }, 1000)
 }
 
 /**
@@ -474,8 +645,11 @@ async function doConnect(originHint) {
   const active = instances.find(i => i.id === activeInstanceId)
   if (!active) {
     connectionState.status = 'disconnected'
+    applyInstanceSigningState(null)
     throw new Error('No Heartwood instance configured. Open the Bark popup to connect.')
   }
+
+  applyInstanceSigningState(active)
 
   const bunkerUri = active.bunkerUri
   const clientSecret = active.clientSecret
@@ -531,6 +705,7 @@ async function doConnect(originHint) {
       connectionState.authUrl = authUrl || null
     },
   })
+  patchSignerPublishFailures(signer)
 
   try {
     // Allow relay WebSocket connections to establish before sending the
@@ -585,14 +760,20 @@ async function doConnect(originHint) {
   }
   await chrome.storage.local.set({ isHeartwood: connectionState.isHeartwood })
 
+  if (!active.signingVerifiedAt) scheduleSignerPrime('initial')
+
   return signer
 }
 
 /**
  * Tear down the current connection (used by bark-reset).
  */
-async function resetConnection() {
+async function resetConnection({ clearSigning = true } = {}) {
   cancelReconnect()
+  if (autoPrimeTimer) {
+    clearTimeout(autoPrimeTimer)
+    autoPrimeTimer = null
+  }
   if (signer) {
     try { signer.close() } catch { /* ignore */ }
   }
@@ -602,6 +783,14 @@ async function resetConnection() {
   connectionState.lastError = null
   connectionState.relays = []
   connectionState.isHeartwood = false
+  if (clearSigning) {
+    setSigningState('untested', {
+      signingLastOkAt: null,
+      signingLastError: null,
+      signingPubkey: null,
+      signingProbeReason: null,
+    })
+  }
 }
 
 async function withBunkerRequestTimeout(promise, label) {
@@ -616,7 +805,7 @@ async function withBunkerRequestTimeout(promise, label) {
   } catch (err) {
     const msg = typeof err === 'string' ? err : (err?.message || '')
     if (msg.endsWith(' timed out.')) {
-      void resetConnection()
+      void resetConnection({ clearSigning: false })
     }
     throw err
   } finally {
@@ -659,6 +848,9 @@ async function handleMessage(method, params, originHint) {
       if (parsed.method === 'getPublicKey') {
         return await withBunkerRequestTimeout(bunker.getPublicKey(), 'getPublicKey')
       }
+      if (parsed.method === 'getRelays') {
+        return buildRelayPolicy(connectionState.relays)
+      }
       if (parsed.method === 'signEvent') {
         const event = normaliseSignEventTemplate(params)
         console.error('[bark:bg] signEvent: calling bunker.signEvent()', {
@@ -666,13 +858,41 @@ async function handleMessage(method, params, originHint) {
           created_at: event.created_at,
           tags: Array.isArray(event.tags) ? event.tags.length : 0,
         })
-        const signed = await withBunkerRequestTimeout(bunker.signEvent(event), 'signEvent')
+        const signed = await signWithHealthTracking(bunker, event, 'signEvent', 'site-request')
         console.error('[bark:bg] signEvent: bunker returned', {
           kind: signed?.kind,
           pubkey: typeof signed?.pubkey === 'string' ? `${signed.pubkey.slice(0, 12)}…` : typeof signed?.pubkey,
           id: typeof signed?.id === 'string' ? `${signed.id.slice(0, 12)}…` : typeof signed?.id,
         })
         return signed
+      }
+      break
+    }
+
+    case 'nip04': {
+      if (parsed.method === 'encrypt') {
+        if (!params || typeof params.pubkey !== 'string' || typeof params.plaintext !== 'string') {
+          throw new Error('nip04.encrypt requires pubkey and plaintext.')
+        }
+        if (!isValidHexPubkey(params.pubkey)) {
+          throw new Error('Invalid pubkey for nip04.encrypt.')
+        }
+        return await withBunkerRequestTimeout(
+          bunker.nip04Encrypt(params.pubkey, params.plaintext),
+          'nip04.encrypt',
+        )
+      }
+      if (parsed.method === 'decrypt') {
+        if (!params || typeof params.pubkey !== 'string' || typeof params.ciphertext !== 'string') {
+          throw new Error('nip04.decrypt requires pubkey and ciphertext.')
+        }
+        if (!isValidHexPubkey(params.pubkey)) {
+          throw new Error('Invalid pubkey for nip04.decrypt.')
+        }
+        return await withBunkerRequestTimeout(
+          bunker.nip04Decrypt(params.pubkey, params.ciphertext),
+          'nip04.decrypt',
+        )
       }
       break
     }
@@ -801,6 +1021,7 @@ const SAFE_ERROR_PREFIXES = [
   'Connection timed out',
   'Invalid method',
   'signEvent requires',
+  'nip04.',
   'nip44.',
   'heartwood_',
   'Unknown method',
@@ -924,6 +1145,9 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               existing.npub = npub || existing.npub
               existing.name = instanceName || existing.name
               existing.id = id
+              existing.signingVerifiedAt = 0
+              existing.signingLastError = null
+              existing.signingPubkey = ''
             } else {
               instances.push({
                 id,
@@ -933,6 +1157,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
                 clientSecret: bytesToHex(clientSk),
                 npub,
                 signingPubkey: '',
+                signingVerifiedAt: 0,
+                signingLastError: null,
                 isHeartwood: true,
               })
             }
@@ -956,6 +1182,9 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             existing.bunkerUri = bunkerUri
             existing.name = instanceName
             existing.id = id
+            existing.signingVerifiedAt = 0
+            existing.signingLastError = null
+            existing.signingPubkey = ''
           } else {
             instances.push({
               id,
@@ -965,6 +1194,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               clientSecret: bytesToHex(clientSk),
               npub,
               signingPubkey: '',
+              signingVerifiedAt: 0,
+              signingLastError: null,
               isHeartwood: false,
             })
           }
@@ -1067,6 +1298,23 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         denyApproval(rid, 'Request denied by user.')
       }
       sendResponse({ ok: true })
+      return true
+    }
+
+    if (message.type === 'bark-prime-signer') {
+      (async () => {
+        try {
+          const signed = await primeSigner('manual')
+          sendResponse({
+            ok: true,
+            pubkey: signed?.pubkey || '',
+            id: signed?.id || '',
+          })
+        } catch (err) {
+          console.error('[bark:bg] ✗ signer health check error', err, sanitiseError(err))
+          sendResponse({ ok: false, error: sanitiseError(err) })
+        }
+      })()
       return true
     }
 

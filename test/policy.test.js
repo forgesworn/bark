@@ -30,7 +30,22 @@ describe('evaluatePolicy', () => {
     expect(result).toBe('allow')
   })
 
-  // 4. Global default for nip44 methods → 'allow'
+  it('returns allow for getRelays via global defaults', () => {
+    const result = evaluatePolicy(DEFAULT_POLICIES, 'getRelays', null, 'https://example.com')
+    expect(result).toBe('allow')
+  })
+
+  // 4. Global default for nip04/nip44 methods → 'allow'
+  it('returns allow for nip04.encrypt via global defaults', () => {
+    const result = evaluatePolicy(DEFAULT_POLICIES, 'nip04.encrypt', {}, 'https://example.com')
+    expect(result).toBe('allow')
+  })
+
+  it('returns allow for nip04.decrypt via global defaults', () => {
+    const result = evaluatePolicy(DEFAULT_POLICIES, 'nip04.decrypt', {}, 'https://example.com')
+    expect(result).toBe('allow')
+  })
+
   it('returns allow for nip44.encrypt via global defaults', () => {
     const result = evaluatePolicy(DEFAULT_POLICIES, 'nip44.encrypt', {}, 'https://example.com')
     expect(result).toBe('allow')
@@ -129,7 +144,10 @@ describe('evaluatePolicy', () => {
     const policies = {
       defaults: {
         getPublicKey: 'allow',
+        getRelays: 'allow',
         signEvent: 'allow',
+        'nip04.encrypt': 'allow',
+        'nip04.decrypt': 'allow',
         'nip44.encrypt': 'allow',
         'nip44.decrypt': 'allow',
       },
@@ -137,14 +155,20 @@ describe('evaluatePolicy', () => {
       siteRules: {
         'https://blocked.example': {
           getPublicKey: 'deny',
+          getRelays: 'deny',
           signEvent: 'deny',
+          'nip04.encrypt': 'deny',
+          'nip04.decrypt': 'deny',
           'nip44.encrypt': 'deny',
           'nip44.decrypt': 'deny',
         },
       },
     }
     expect(evaluatePolicy(policies, 'getPublicKey', null, 'https://blocked.example')).toBe('deny')
+    expect(evaluatePolicy(policies, 'getRelays', null, 'https://blocked.example')).toBe('deny')
     expect(evaluatePolicy(policies, 'signEvent', { kind: 1 }, 'https://blocked.example')).toBe('deny')
+    expect(evaluatePolicy(policies, 'nip04.encrypt', {}, 'https://blocked.example')).toBe('deny')
+    expect(evaluatePolicy(policies, 'nip04.decrypt', {}, 'https://blocked.example')).toBe('deny')
     expect(evaluatePolicy(policies, 'nip44.encrypt', {}, 'https://blocked.example')).toBe('deny')
     expect(evaluatePolicy(policies, 'nip44.decrypt', {}, 'https://blocked.example')).toBe('deny')
   })
@@ -154,7 +178,10 @@ describe('evaluatePolicy', () => {
     expect(DEFAULT_POLICIES).toMatchObject({
       defaults: {
         getPublicKey: 'allow',
+        getRelays: 'allow',
         signEvent: 'allow',
+        'nip04.encrypt': 'allow',
+        'nip04.decrypt': 'allow',
         'nip44.encrypt': 'allow',
         'nip44.decrypt': 'allow',
       },
@@ -181,6 +208,9 @@ describe('evaluatePolicy — real-world scenarios', () => {
         'https://snort.social': {
           signEvent: 'allow',
           getPublicKey: 'allow',
+          getRelays: 'allow',
+          'nip04.encrypt': 'allow',
+          'nip04.decrypt': 'allow',
           'nip44.encrypt': 'allow',
           'nip44.decrypt': 'allow',
           kindRules: { '0': 'ask' },
@@ -200,6 +230,7 @@ describe('evaluatePolicy — real-world scenarios', () => {
     // Relay list — same: site default wins over global kindRule
     expect(evaluatePolicy(policies, 'signEvent', { kind: 10002 }, 'https://snort.social')).toBe('allow')
     // DM encryption — auto
+    expect(evaluatePolicy(policies, 'nip04.encrypt', {}, 'https://snort.social')).toBe('allow')
     expect(evaluatePolicy(policies, 'nip44.encrypt', {}, 'https://snort.social')).toBe('allow')
   })
 
@@ -211,14 +242,20 @@ describe('evaluatePolicy — real-world scenarios', () => {
         'https://phishing.example': {
           signEvent: 'deny',
           getPublicKey: 'deny',
+          getRelays: 'deny',
+          'nip04.encrypt': 'deny',
+          'nip04.decrypt': 'deny',
           'nip44.encrypt': 'deny',
           'nip44.decrypt': 'deny',
         },
       },
     }
     expect(evaluatePolicy(policies, 'getPublicKey', null, 'https://phishing.example')).toBe('deny')
+    expect(evaluatePolicy(policies, 'getRelays', null, 'https://phishing.example')).toBe('deny')
     expect(evaluatePolicy(policies, 'signEvent', { kind: 1 }, 'https://phishing.example')).toBe('deny')
     expect(evaluatePolicy(policies, 'signEvent', { kind: 0 }, 'https://phishing.example')).toBe('deny')
+    expect(evaluatePolicy(policies, 'nip04.encrypt', {}, 'https://phishing.example')).toBe('deny')
+    expect(evaluatePolicy(policies, 'nip04.decrypt', {}, 'https://phishing.example')).toBe('deny')
     expect(evaluatePolicy(policies, 'nip44.encrypt', {}, 'https://phishing.example')).toBe('deny')
     expect(evaluatePolicy(policies, 'nip44.decrypt', {}, 'https://phishing.example')).toBe('deny')
   })
@@ -230,6 +267,8 @@ describe('evaluatePolicy — real-world scenarios', () => {
     expect(evaluatePolicy(DEFAULT_POLICIES, 'signEvent', { kind: 0 }, 'https://brand-new-client.com')).toBe('ask')
     expect(evaluatePolicy(DEFAULT_POLICIES, 'signEvent', { kind: 3 }, 'https://brand-new-client.com')).toBe('ask')
     expect(evaluatePolicy(DEFAULT_POLICIES, 'signEvent', { kind: 10002 }, 'https://brand-new-client.com')).toBe('ask')
+    expect(evaluatePolicy(DEFAULT_POLICIES, 'getRelays', {}, 'https://brand-new-client.com')).toBe('allow')
+    expect(evaluatePolicy(DEFAULT_POLICIES, 'nip04.encrypt', {}, 'https://brand-new-client.com')).toBe('allow')
     expect(evaluatePolicy(DEFAULT_POLICIES, 'nip44.encrypt', {}, 'https://brand-new-client.com')).toBe('allow')
   })
 

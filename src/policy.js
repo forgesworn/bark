@@ -20,7 +20,10 @@ const VALID_ACTIONS = new Set(['allow', 'ask', 'deny'])
 export const DEFAULT_POLICIES = {
   defaults: {
     getPublicKey: 'allow',
+    getRelays: 'allow',
     signEvent: 'allow',
+    'nip04.encrypt': 'allow',
+    'nip04.decrypt': 'allow',
     'nip44.encrypt': 'allow',
     'nip44.decrypt': 'allow',
   },
