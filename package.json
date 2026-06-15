@@ -24,8 +24,8 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.28.0",
-    "vitest": "^4.1.8"
+    "esbuild": "^0.28.1",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
     "nostr-tools": "^2.23.5"
