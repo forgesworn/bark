@@ -708,19 +708,43 @@ async function doConnect(originHint) {
   patchSignerPublishFailures(signer)
 
   try {
-    // Allow relay WebSocket connections to establish before sending the
-    // connect request. Without this, the subscription may not be ready
-    // when the bunker responds, causing a missed response and timeout.
+    // Allow the relay WebSocket to begin establishing before the first connect
+    // request. In MV3 the service-worker socket is often cold, so this alone is
+    // not enough — the retry loop below recovers a missed first response.
     await new Promise(r => setTimeout(r, 2000))
 
     // Send the connect request directly so we can include app metadata as the
     // optional third parameter. Heartwood uses this to label the TOFU policy.
-    await Promise.race([
-      signer.sendRequest('connect', [bp.pubkey, bp.secret || '', JSON.stringify(connectMeta)]),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timed out.')), CONNECT_TIMEOUT_MS),
-      ),
-    ])
+    //
+    // The signer answers in well under a second, so a slow reply almost always
+    // means the relay subscription wasn't ready when the response arrived (MV3
+    // cold socket) — the response was missed, not refused. Rather than stall on
+    // one long CONNECT_TIMEOUT_MS wait, re-publish connect on a short per-attempt
+    // timeout: a missed first response recovers in a few seconds instead of ~30s.
+    // Total budget stays ~CONNECT_TIMEOUT_MS; on exhaustion we fall through to
+    // the existing backoff path. Re-sending connect is idempotent on Heartwood
+    // (exact-match secret → same slot re-acked).
+    const CONNECT_ATTEMPT_TIMEOUT_MS = 6000
+    const maxConnectAttempts = Math.max(1, Math.ceil(CONNECT_TIMEOUT_MS / CONNECT_ATTEMPT_TIMEOUT_MS))
+    let connectOk = false
+    let lastConnectErr = null
+    for (let attempt = 1; attempt <= maxConnectAttempts && !connectOk; attempt++) {
+      try {
+        await Promise.race([
+          signer.sendRequest('connect', [bp.pubkey, bp.secret || '', JSON.stringify(connectMeta)]),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('connect attempt timed out')), CONNECT_ATTEMPT_TIMEOUT_MS),
+          ),
+        ])
+        connectOk = true
+      } catch (err) {
+        lastConnectErr = err
+        if (attempt < maxConnectAttempts) {
+          console.error(`[bark:bg] connect attempt ${attempt}/${maxConnectAttempts} timed out; re-publishing…`)
+        }
+      }
+    }
+    if (!connectOk) throw lastConnectErr || new Error('Connection timed out.')
   } catch (err) {
     signer = null
     connectionState.status = 'disconnected'
