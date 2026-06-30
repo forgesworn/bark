@@ -1407,7 +1407,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             await openApprovalWindow(requestId, {
               method: message.method,
               params: message.params,
-              event: message.method === 'signEvent' ? message.params : undefined,
+              // Preview the normalised event so it matches what handleMessage
+              // will actually sign. Throws here (caught below) reject an invalid
+              // template up front instead of after a pointless approval dialog.
+              event: message.method === 'signEvent' ? normaliseSignEventTemplate(message.params) : undefined,
               pubkey,
               personaName,
               instanceId: approvalInstanceId,
