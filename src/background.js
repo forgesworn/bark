@@ -310,11 +310,19 @@ export function normaliseSignEventTemplate(params) {
   if (params.created_at !== undefined && !Number.isInteger(params.created_at)) {
     throw new Error('signEvent requires integer created_at.')
   }
+  // Some dApps (e.g. coinos's login/register/settings flows) set created_at to
+  // Date.now() — milliseconds — which, signed verbatim, dates the event to the
+  // year ~58000 and gets rejected by relays and NIP-98 verifiers. Fill it in
+  // when absent and coerce milliseconds to seconds (cutoff 10^10 ≈ year 2286 in
+  // seconds; any larger integer is, in practice, milliseconds). Matches the
+  // de-facto Alby/nos2x behaviour.
+  let created_at = params.created_at ?? Math.floor(Date.now() / 1000)
+  if (created_at > 10_000_000_000) created_at = Math.floor(created_at / 1000)
   return {
     kind: params.kind,
     content: params.content ?? '',
     tags: params.tags ?? [],
-    created_at: params.created_at ?? Math.floor(Date.now() / 1000),
+    created_at,
   }
 }
 

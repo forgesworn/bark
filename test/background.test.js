@@ -212,6 +212,21 @@ describe('normaliseSignEventTemplate', () => {
     })
   })
 
+  it('coerces a millisecond created_at to seconds (coinos login bug)', () => {
+    // coinos builds its kind-27235 auth event with created_at: Date.now().
+    const event = normaliseSignEventTemplate({
+      kind: 27235,
+      content: '',
+      tags: [['u', 'https://coinos.io/api/nostrAuth']],
+      created_at: 1778326067724,
+    })
+    expect(event.created_at).toBe(1778326067)
+  })
+
+  it('treats the 10^10 boundary as seconds, not milliseconds', () => {
+    expect(normaliseSignEventTemplate({ kind: 1, content: '', tags: [], created_at: 10_000_000_000 }).created_at).toBe(10_000_000_000)
+  })
+
   it('rejects malformed templates before hitting the bunker', () => {
     expect(() => normaliseSignEventTemplate(null)).toThrow(/event object/)
     expect(() => normaliseSignEventTemplate({ kind: '1' })).toThrow(/numeric kind/)
