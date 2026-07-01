@@ -7,15 +7,34 @@ things focused, small, and in keeping with the no-local-keys philosophy.
 
 ```bash
 npm install
-npm run build        # esbuild → dist/
+npm run build        # esbuild -> dist/ (Chromium target)
+npm run build:all    # Chromium, Firefox, and Safari outputs
 npm run watch        # incremental rebuild on file change
 npm test             # vitest unit tests (run before any PR)
 npm run test:watch   # vitest in watch mode
-npm run package      # build + zip for release
+npm run e2e:chromium # Playwright extension smoke tests against dist/
+npm run e2e:deterministic # deterministic local NIP-46 signer smoke
+npm run e2e:live     # optional live relay/signer smoke; requires BARK_LIVE_BUNKER_URI
+npm run audit:prod   # production dependency audit
+npm run verify       # test + all browser builds + full npm audit
+npm run verify:full  # verify + Chromium browser E2E
+npm run package      # build + zip for Chromium-family release
+npm run package:all  # build + zip all browser targets
 ```
 
 Load `dist/` as an unpacked extension in Chrome (`chrome://extensions/`,
 Developer mode → Load unpacked).
+
+Firefox uses `dist-firefox/`; Safari uses `dist-safari/` through Apple's Safari
+Web Extension conversion flow.
+
+CI runs `npm ci`, `npm test`, `npm run build:all`, `npm audit`, and
+`npm run package:all` on Node 22 and Node 24.
+
+The Heartwood/bridge HTTP contract tests run as part of `npm test`. Chromium
+extension smoke tests run with `npm run e2e:chromium`, including the
+deterministic local NIP-46 relay signer. The broader browser E2E matrix is
+tracked in [docs/e2e-hardening.md](docs/e2e-hardening.md).
 
 ## Code style
 
@@ -50,7 +69,7 @@ GitHub and directly relevant.
 ## Pull request process
 
 1. Fork the repo and work on a branch named `type/short-description`.
-2. Run `npm test` — all tests must pass.
+2. Run `npm run verify` — all tests, build, and audit checks must pass.
 3. Load the built extension and manually verify the change in a browser.
 4. Open a PR against `main` with a clear description of what changed and why.
 5. Keep PRs focused. One logical change per PR.

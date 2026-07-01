@@ -3,29 +3,35 @@
  *
  * Evaluation order (highest priority first):
  *   1. Site-specific kindRule  — siteRules[origin].kindRules[kind]
- *   2. Site-specific method default — siteRules[origin][method]
- *   3. Global kindRule — kindRules[kind]
- *   4. Global method default — defaults[method]
- *   5. Fallback — 'allow'
+ *   2. Site-specific method deny — a blocked site stays blocked
+ *   3. Global kindRule — protected event kinds still ask on trusted sites
+ *   4. Site-specific method default — siteRules[origin][method]
+ *   5. Global method default — defaults[method]
+ *   6. Fallback — 'deny'
  */
 
 /** Valid policy action values. */
 const VALID_ACTIONS = new Set(['allow', 'ask', 'deny'])
 
+/** Current persisted policy schema version. */
+export const POLICY_VERSION = 2
+
 /**
  * Default policy set.
- * All standard NIP-07/NIP-44 methods are allowed by default; sensitive
- * event kinds (profile, contact list, relay list) require user confirmation.
+ * Unknown sites require explicit approval by default. Once a site is trusted,
+ * global kind rules continue protecting high-impact event kinds unless the user
+ * adds a site-specific kind override.
  */
 export const DEFAULT_POLICIES = {
+  version: POLICY_VERSION,
   defaults: {
-    getPublicKey: 'allow',
-    getRelays: 'allow',
-    signEvent: 'allow',
-    'nip04.encrypt': 'allow',
-    'nip04.decrypt': 'allow',
-    'nip44.encrypt': 'allow',
-    'nip44.decrypt': 'allow',
+    getPublicKey: 'ask',
+    getRelays: 'ask',
+    signEvent: 'ask',
+    'nip04.encrypt': 'ask',
+    'nip04.decrypt': 'ask',
+    'nip44.encrypt': 'ask',
+    'nip44.decrypt': 'ask',
   },
   kindRules: {
     '0': 'ask',     // profile metadata
@@ -33,6 +39,66 @@ export const DEFAULT_POLICIES = {
     '10002': 'ask', // relay list
   },
   siteRules: {},
+}
+
+/** Methods granted when the user trusts a site from the approval popup. */
+export const TRUSTED_SITE_METHODS = [
+  'getPublicKey',
+  'getRelays',
+  'signEvent',
+  'nip04.encrypt',
+  'nip04.decrypt',
+  'nip44.encrypt',
+  'nip44.decrypt',
+]
+
+/**
+ * Build the site rule used by the approval popup's persistent trust action.
+ * Protected global kinds are copied into the site rule so the popup can show
+ * the effective policy clearly and future policy priority changes stay safe.
+ */
+export function buildTrustedSiteRule(existing = {}) {
+  const rule = { ...existing }
+  for (const method of TRUSTED_SITE_METHODS) {
+    rule[method] = 'allow'
+  }
+  rule.kindRules = {
+    ...DEFAULT_POLICIES.kindRules,
+    ...(existing.kindRules || {}),
+  }
+  return rule
+}
+
+/**
+ * Normalize stored policies to the current safer schema. Existing site and
+ * kind rules are preserved, but old global defaults are replaced with the
+ * current first-use approval defaults.
+ */
+export function normalisePolicies(policies) {
+  if (!policies || policies.version !== POLICY_VERSION) {
+    return {
+      ...DEFAULT_POLICIES,
+      kindRules: {
+        ...DEFAULT_POLICIES.kindRules,
+        ...(policies?.kindRules || {}),
+      },
+      siteRules: policies?.siteRules || {},
+    }
+  }
+
+  return {
+    ...DEFAULT_POLICIES,
+    ...policies,
+    defaults: {
+      ...DEFAULT_POLICIES.defaults,
+      ...(policies.defaults || {}),
+    },
+    kindRules: {
+      ...DEFAULT_POLICIES.kindRules,
+      ...(policies.kindRules || {}),
+    },
+    siteRules: policies.siteRules || {},
+  }
 }
 
 /**
@@ -45,7 +111,7 @@ export const DEFAULT_POLICIES = {
  * @returns {'allow'|'ask'|'deny'}
  */
 export function evaluatePolicy(policies, method, params, origin) {
-  const { defaults = {}, kindRules = {}, siteRules = {} } = policies
+  const { defaults = {}, kindRules = {}, siteRules = {} } = normalisePolicies(policies)
 
   // Extract kind string for kindRules lookups (signEvent only)
   let kindKey = null
@@ -67,10 +133,11 @@ export function evaluatePolicy(policies, method, params, origin) {
       if (action !== null) return action
     }
 
-    // 2. Site-specific method default
+    // 2. Site-specific method deny. A blocked site must not fall through to a
+    // global "ask" for protected kinds.
     if (site) {
       const action = validAction(site[method])
-      if (action !== null) return action
+      if (action === 'deny') return action
     }
   }
 
@@ -80,10 +147,19 @@ export function evaluatePolicy(policies, method, params, origin) {
     if (action !== null) return action
   }
 
-  // 4. Global method default
+  // 4. Site-specific method default
+  if (origin) {
+    const site = siteRules[origin]
+    if (site) {
+      const action = validAction(site[method])
+      if (action !== null) return action
+    }
+  }
+
+  // 5. Global method default
   const action = validAction(defaults[method])
   if (action !== null) return action
 
-  // 5. Fallback
-  return 'allow'
+  // 6. Fallback
+  return 'deny'
 }

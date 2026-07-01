@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, isRelayPublishFailure, buildSignerHealthEvent } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -100,6 +100,10 @@ describe('isValidBunkerUri', () => {
 
   it('accepts a valid bunker URI', () => {
     expect(isValidBunkerUri(validUri)).toBe(true)
+  })
+
+  it('accepts localhost WebSocket relay bunker URIs for local bridge signers', () => {
+    expect(isValidBunkerUri(`bunker://${'a'.repeat(64)}?relay=ws://127.0.0.1:49152&secret=local-slot`)).toBe(true)
   })
 
   it('accepts a bunker URI without query params', () => {
@@ -357,8 +361,8 @@ describe('buildHeartwoodArgs', () => {
 })
 
 describe('checkApproval', () => {
-  it('returns allow for getPublicKey with default policies', async () => {
-    expect(await checkApproval('getPublicKey', undefined, 'https://example.com')).toBe('allow')
+  it('returns ask for getPublicKey with default policies', async () => {
+    expect(await checkApproval('getPublicKey', undefined, 'https://example.com')).toBe('ask')
   })
 
   it('returns ask for signEvent kind 0 with default policies', async () => {
@@ -373,19 +377,19 @@ describe('checkApproval', () => {
     expect(await checkApproval('signEvent', { kind: 10002 }, 'https://example.com')).toBe('ask')
   })
 
-  it('returns allow for signEvent kind 1 with default policies', async () => {
-    expect(await checkApproval('signEvent', { kind: 1 }, 'https://example.com')).toBe('allow')
+  it('returns ask for signEvent kind 1 with default policies', async () => {
+    expect(await checkApproval('signEvent', { kind: 1 }, 'https://example.com')).toBe('ask')
   })
 
-  it('returns allow for nip44 methods with default policies', async () => {
-    expect(await checkApproval('nip44.encrypt', {}, 'https://example.com')).toBe('allow')
-    expect(await checkApproval('nip44.decrypt', {}, 'https://example.com')).toBe('allow')
+  it('returns ask for nip44 methods with default policies', async () => {
+    expect(await checkApproval('nip44.encrypt', {}, 'https://example.com')).toBe('ask')
+    expect(await checkApproval('nip44.decrypt', {}, 'https://example.com')).toBe('ask')
   })
 
-  it('returns allow for getRelays and nip04 methods with default policies', async () => {
-    expect(await checkApproval('getRelays', {}, 'https://example.com')).toBe('allow')
-    expect(await checkApproval('nip04.encrypt', {}, 'https://example.com')).toBe('allow')
-    expect(await checkApproval('nip04.decrypt', {}, 'https://example.com')).toBe('allow')
+  it('returns ask for getRelays and nip04 methods with default policies', async () => {
+    expect(await checkApproval('getRelays', {}, 'https://example.com')).toBe('ask')
+    expect(await checkApproval('nip04.encrypt', {}, 'https://example.com')).toBe('ask')
+    expect(await checkApproval('nip04.decrypt', {}, 'https://example.com')).toBe('ask')
   })
 })
 
@@ -393,6 +397,91 @@ describe('makeInstanceId', () => {
   it('builds id from name and bunker pubkey', () => {
     const uri = 'bunker://abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890?relay=wss://r.com'
     expect(makeInstanceId('personal', uri)).toBe('personal-abcdef12')
+  })
+
+  it('sanitises unsafe names for stable ids', () => {
+    const uri = 'bunker://abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890?relay=wss://r.com'
+    expect(makeInstanceId('my persona!', uri)).toBe('my-persona-abcdef12')
+  })
+})
+
+describe('Heartwood identity import helpers', () => {
+  const masterPubkey = 'a'.repeat(64)
+  const socialPubkey = 'b'.repeat(64)
+  const masterUri = `bunker://${masterPubkey}?relay=wss://relay.example.com`
+  const socialUri = `bunker://${socialPubkey}?relay=wss://relay.example.com&secret=slot-secret`
+
+  it('sanitises display names without dropping useful separators', () => {
+    expect(safeInstanceName(' social profile ')).toBe('social-profile')
+    expect(safeInstanceName('heartwood:social.1')).toBe('heartwood:social.1')
+    expect(safeInstanceName('')).toBe('heartwood')
+  })
+
+  it('normalises a valid Heartwood identity manifest entry', () => {
+    expect(normaliseHeartwoodIdentity({
+      label: 'social',
+      pubkey: socialPubkey,
+      npub: 'npub1abc',
+      uri: socialUri,
+    })).toEqual({
+      label: 'social',
+      pubkey: socialPubkey,
+      npub: 'npub1abc',
+      uri: socialUri,
+    })
+  })
+
+  it('rejects malformed or mismatched Heartwood identity records', () => {
+    expect(normaliseHeartwoodIdentity(null)).toBeNull()
+    expect(normaliseHeartwoodIdentity({ label: 'bad', uri: 'https://example.com' })).toBeNull()
+    expect(normaliseHeartwoodIdentity({
+      label: 'bad',
+      pubkey: masterPubkey,
+      uri: socialUri,
+    })).toBeNull()
+  })
+
+  it('accepts both array and { identities } Heartwood identity payloads', () => {
+    expect(normaliseHeartwoodIdentities([
+      { label: 'master', pubkey: masterPubkey, uri: masterUri },
+    ])).toHaveLength(1)
+    expect(normaliseHeartwoodIdentities({
+      identities: [{ label: 'social', pubkey: socialPubkey, uri: socialUri }],
+    })[0].label).toBe('social')
+  })
+
+  it('builds Bark instances from Heartwood per-identity bunker URIs', () => {
+    const instances = buildHeartwoodIdentityInstances({
+      identities: [
+        { label: 'master', pubkey: masterPubkey, npub: 'npub1master', uri: masterUri },
+        { label: 'social', pubkey: socialPubkey, npub: 'npub1social', uri: socialUri },
+      ],
+    }, {
+      address: 'http://heartwood.local:3000',
+      baseName: 'heartwood',
+      clientSecret: 'ff'.repeat(32),
+    })
+
+    expect(instances).toHaveLength(2)
+    expect(instances[0]).toMatchObject({
+      id: 'heartwood-aaaaaaaa',
+      name: 'heartwood',
+      address: 'http://heartwood.local:3000',
+      bunkerUri: masterUri,
+      clientSecret: 'ff'.repeat(32),
+      npub: 'npub1master',
+      isHeartwood: true,
+      heartwoodBaseName: 'heartwood',
+      heartwoodIdentityLabel: 'master',
+      heartwoodIdentityPubkey: masterPubkey,
+    })
+    expect(instances[1]).toMatchObject({
+      id: 'heartwood:social-bbbbbbbb',
+      name: 'heartwood:social',
+      bunkerUri: socialUri,
+      heartwoodIdentityLabel: 'social',
+      heartwoodIdentityPubkey: socialPubkey,
+    })
   })
 })
 
@@ -457,9 +546,37 @@ describe('normaliseAddress', () => {
 describe('sanitiseError — safe prefix coverage', () => {
   it('passes through new safe prefixes', () => {
     expect(sanitiseError(new Error('Invalid address.'))).toBe('Invalid address.')
+    expect(sanitiseError(new Error('Invalid request origin.'))).toBe('Invalid request origin.')
     expect(sanitiseError(new Error('Instance not found.'))).toBe('Instance not found.')
     expect(sanitiseError(new Error('Server returned an invalid bunker URI.'))).toBe('Server returned an invalid bunker URI.')
     expect(sanitiseError(new Error('Active identity changed. Please retry.'))).toBe('Active identity changed. Please retry.')
+  })
+})
+
+describe('originFromSender', () => {
+  it('uses sender.origin when it is an http origin', () => {
+    expect(originFromSender({
+      origin: 'https://example.com',
+      tab: { url: 'https://other.example/path' },
+    })).toBe('https://example.com')
+  })
+
+  it('canonicalizes tab URLs when sender.origin is unavailable', () => {
+    expect(originFromSender({
+      tab: { url: 'https://example.com/some/path?x=1#hash' },
+    })).toBe('https://example.com')
+  })
+
+  it('preserves localhost ports', () => {
+    expect(originFromSender({
+      origin: 'http://localhost:5173',
+    })).toBe('http://localhost:5173')
+  })
+
+  it('rejects extension, file, and malformed origins', () => {
+    expect(originFromSender({ origin: 'chrome-extension://abc' })).toBeNull()
+    expect(originFromSender({ tab: { url: 'file:///tmp/page.html' } })).toBeNull()
+    expect(originFromSender({ origin: 'not-a-url' })).toBeNull()
   })
 })
 
@@ -518,5 +635,38 @@ describe('buildConnectMetadata', () => {
     const parsed = JSON.parse(JSON.stringify(meta))
     expect(parsed.name).toBe('iris.to')
     expect(parsed.url).toBe('https://iris.to')
+  })
+})
+
+describe('buildConnectParams', () => {
+  it('places client metadata in the fourth NIP-46 connect parameter', () => {
+    const meta = buildConnectMetadata('https://nostrudel.ninja')
+    expect(buildConnectParams({ pubkey: 'a'.repeat(64), secret: 'pair-secret' }, meta)).toEqual([
+      'a'.repeat(64),
+      'pair-secret',
+      '',
+      JSON.stringify(meta),
+    ])
+  })
+
+  it('uses an empty secret when the bunker URI has none', () => {
+    const meta = buildConnectMetadata(undefined)
+    expect(buildConnectParams({ pubkey: 'a'.repeat(64) }, meta)[1]).toBe('')
+  })
+})
+
+describe('isUnsupportedHeartwoodProbeError', () => {
+  it('treats optional Heartwood probe timeouts and unsupported-method errors as standard bunker mode', () => {
+    expect(isUnsupportedHeartwoodProbeError('Heartwood identity probe timed out.')).toBe(true)
+    expect(isUnsupportedHeartwoodProbeError('unknown method: heartwood_list_identities')).toBe(true)
+    expect(isUnsupportedHeartwoodProbeError('method not supported')).toBe(true)
+    expect(isUnsupportedHeartwoodProbeError('unrecognised method')).toBe(true)
+    expect(isUnsupportedHeartwoodProbeError('unrecognized method')).toBe(true)
+  })
+
+  it('does not hide approval or signer errors as unsupported Heartwood capability', () => {
+    expect(isUnsupportedHeartwoodProbeError('client not approved')).toBe(false)
+    expect(isUnsupportedHeartwoodProbeError('Request failed.')).toBe(false)
+    expect(isUnsupportedHeartwoodProbeError('')).toBe(false)
   })
 })

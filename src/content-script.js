@@ -1,7 +1,32 @@
+const extensionApi = globalThis.chrome || globalThis.browser
+
+function runtimeGetURL(path) {
+  return extensionApi.runtime.getURL(path)
+}
+
+function runtimeSendMessage(payload) {
+  if (globalThis.chrome?.runtime?.sendMessage) {
+    return new Promise((resolve, reject) => {
+      globalThis.chrome.runtime.sendMessage(payload, (result) => {
+        const err = globalThis.chrome.runtime.lastError
+        if (err) reject(new Error(err.message))
+        else resolve(result)
+      })
+    })
+  }
+  if (globalThis.browser?.runtime?.sendMessage) return globalThis.browser.runtime.sendMessage(payload)
+  return Promise.reject(new Error('Extension runtime unavailable.'))
+}
+
 const script = document.createElement('script')
-script.src = chrome.runtime.getURL('provider.js')
+script.src = runtimeGetURL('provider.js')
 script.onload = () => script.remove()
 ;(document.head || document.documentElement).appendChild(script)
+
+const DEBUG = false
+function debug(...args) {
+  if (DEBUG) console.debug(...args)
+}
 
 let isStale = false
 
@@ -22,33 +47,36 @@ function enqueueSend(payload) {
 }
 
 async function sendToBackground(payload) {
-  const MAX_RETRIES = 3
-  const RETRY_DELAY = 500
+  const MAX_RETRIES = 8
+  const RETRY_DELAY = 750
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const result = await chrome.runtime.sendMessage(payload)
+      const result = await runtimeSendMessage(payload)
 
       // undefined means no listener handled the message — worker is alive
       // but not yet initialised. Retry after a short delay.
       if (result === undefined && attempt < MAX_RETRIES - 1) {
-        console.log('[bark:content] ✗ undefined response for', payload.method, '— retrying')
+        debug('[bark:content] ✗ undefined response for', payload.method, '— retrying')
         await new Promise(r => setTimeout(r, RETRY_DELAY))
         continue
       }
 
-      console.log('[bark:content] ← bg responded', payload.method, result)
+      debug('[bark:content] ← bg responded', payload.method, result)
       return result
     } catch (err) {
       const msg = String(err?.message || '')
-      console.log('[bark:content] ✗ sendMessage failed:', msg)
+      debug('[bark:content] ✗ sendMessage failed:', msg)
 
       // Genuine invalidation — extension was updated/reloaded. No retry.
       if (msg.includes('context invalidated')) throw err
 
       // Service worker waking up — retry after a short delay.
-      if (msg.includes('does not exist') && attempt < MAX_RETRIES - 1) {
-        console.log('[bark:content] retrying after', RETRY_DELAY, 'ms (service worker waking)')
+      const isWakeupError = msg.includes('does not exist') ||
+        msg.includes('Receiving end does not exist') ||
+        msg.includes('Could not establish connection')
+      if (isWakeupError && attempt < MAX_RETRIES - 1) {
+        debug('[bark:content] retrying after', RETRY_DELAY, 'ms (service worker waking)')
         await new Promise(r => setTimeout(r, RETRY_DELAY))
         continue
       }
@@ -72,7 +100,7 @@ window.addEventListener('message', async (event) => {
   // Validate method is a non-empty string.
   if (typeof method !== 'string' || method.length === 0) return
 
-  console.log('[bark:content] → bg', method, 'id=' + id)
+  debug('[bark:content] → bg', method, 'id=' + id)
 
   if (isStale) {
     window.postMessage(

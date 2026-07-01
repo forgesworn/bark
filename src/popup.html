@@ -567,8 +567,8 @@
       <h1>Bark</h1>
     </div>
     <div style="padding: 16px;">
-      <h2 style="margin-bottom: 8px;">Add Heartwood</h2>
-      <p style="font-size: 0.82rem; opacity: 0.5; margin-bottom: 12px;">Enter a device address or paste a bunker URI.</p>
+      <h2 style="margin-bottom: 8px;">Add Signer</h2>
+      <p style="font-size: 0.82rem; opacity: 0.5; margin-bottom: 12px;">Enter a signer or bridge address, or paste a bunker URI.</p>
       <input id="heartwood-address" type="text" placeholder="heartwood.local:3000 or bunker://..." spellcheck="false" autocomplete="off" style="width:100%; padding:8px; background:#111; border:1px solid #333; border-radius:6px; color:#e0e0e0; font-family:monospace; font-size:0.85rem; margin-bottom:8px;">
       <button class="btn btn-primary" id="pair-btn">Connect</button>
       <div id="pair-error" class="msg msg-err hidden" style="margin-top:8px;"></div>
@@ -585,10 +585,10 @@
     <div style="padding: 16px;">
       <div id="instance-list" class="instance-list"></div>
       <div id="add-instance-section" style="display:none;">
-        <input id="add-address" type="text" placeholder="Add another Heartwood..." spellcheck="false" autocomplete="off">
+        <input id="add-address" type="text" placeholder="Add another signer..." spellcheck="false" autocomplete="off">
         <button class="btn-sm btn-save" id="add-pair-btn">Add</button>
       </div>
-      <button class="btn-sm btn-add" id="show-add-btn" style="margin-bottom:12px;">+ Add Heartwood</button>
+      <button class="btn-sm btn-add" id="show-add-btn" style="margin-bottom:12px;">+ Add Signer</button>
 
       <div id="reconnect-status" class="reconnect-status" style="display:none">
         <div id="reconnect-msg" class="reconnect-msg"></div>

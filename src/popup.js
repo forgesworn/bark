@@ -1,6 +1,10 @@
 // Popup UI logic — persona management, Heartwood detection, relay display.
 
 import { nip19 } from 'nostr-tools'
+import { DEFAULT_POLICIES, normalisePolicies } from './policy.js'
+
+const callbackApi = globalThis.chrome
+const promiseApi = globalThis.browser && !globalThis.chrome ? globalThis.browser : null
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -8,6 +12,52 @@ import { nip19 } from 'nostr-tools'
 
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
+function sendRuntimeMessage(message) {
+  if (callbackApi?.runtime?.sendMessage) {
+    return new Promise((resolve, reject) => {
+      callbackApi.runtime.sendMessage(message, (result) => {
+        const err = callbackApi.runtime.lastError
+        if (err) reject(new Error(err.message))
+        else resolve(result)
+      })
+    })
+  }
+  if (promiseApi?.runtime?.sendMessage) return promiseApi.runtime.sendMessage(message)
+  return Promise.reject(new Error('Extension runtime unavailable.'))
+}
+
+function storageGet(keys) {
+  if (callbackApi?.storage?.local) {
+    return new Promise((resolve) => callbackApi.storage.local.get(keys, resolve))
+  }
+  if (promiseApi?.storage?.local) return promiseApi.storage.local.get(keys)
+  return Promise.resolve({})
+}
+
+function storageSet(items) {
+  if (callbackApi?.storage?.local) {
+    return new Promise((resolve) => callbackApi.storage.local.set(items, resolve))
+  }
+  if (promiseApi?.storage?.local) return promiseApi.storage.local.set(items)
+  return Promise.resolve()
+}
+
+function storageRemove(keys) {
+  if (callbackApi?.storage?.local) {
+    return new Promise((resolve) => callbackApi.storage.local.remove(keys, resolve))
+  }
+  if (promiseApi?.storage?.local) return promiseApi.storage.local.remove(keys)
+  return Promise.resolve()
+}
+
+function requestOptionalPermission(permission) {
+  if (callbackApi?.permissions?.request) {
+    return new Promise((resolve) => callbackApi.permissions.request(permission, resolve))
+  }
+  if (promiseApi?.permissions?.request) return promiseApi.permissions.request(permission)
+  return Promise.resolve(true)
 }
 
 // ---------------------------------------------------------------------------
@@ -63,34 +113,11 @@ const addSiteAction = document.getElementById('add-site-action')
 const addSiteBtn = document.getElementById('add-site-btn')
 const resetPoliciesBtn = document.getElementById('reset-policies-btn')
 
-// Policy defaults (must match src/policy.js)
-const DEFAULT_POLICIES = {
-  defaults: {
-    getPublicKey: 'allow',
-    getRelays: 'allow',
-    signEvent: 'allow',
-    'nip04.encrypt': 'allow',
-    'nip04.decrypt': 'allow',
-    'nip44.encrypt': 'allow',
-    'nip44.decrypt': 'allow',
-  },
-  kindRules: { '0': 'ask', '3': 'ask', '10002': 'ask' },
-  siteRules: {},
-}
-
 /** Ask the background worker to do a real local sign probe. */
 async function primeSigner() {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'bark-prime-signer' }, (resp) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message))
-      } else if (!resp || !resp.ok) {
-        reject(new Error(resp?.error || 'Signer test failed.'))
-      } else {
-        resolve(resp)
-      }
-    })
-  })
+  const resp = await sendRuntimeMessage({ type: 'bark-prime-signer' })
+  if (!resp || !resp.ok) throw new Error(resp?.error || 'Signer test failed.')
+  return resp
 }
 
 // ---------------------------------------------------------------------------
@@ -99,40 +126,24 @@ async function primeSigner() {
 
 /** Send an RPC request to the background service worker. */
 async function rpc(method, params) {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(
-      { type: 'bark-request', method, params },
-      (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message))
-          return
-        }
-        if (result && result.error) {
-          reject(new Error(result.error))
-          return
-        }
-        resolve(result)
-      },
-    )
-  })
+  const result = await sendRuntimeMessage({ type: 'bark-request', method, params })
+  if (result && result.error) throw new Error(result.error)
+  return result
 }
 
 /** Query connection state from the background worker. */
 async function queryStatus() {
-  return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: 'bark-status' }, (result) => {
-      if (chrome.runtime.lastError) {
-        resolve({
-          status: 'disconnected',
-          lastError: 'Extension error',
-          relays: [],
-          isHeartwood: false,
-        })
-        return
-      }
-      resolve(result || { status: 'disconnected', lastError: null, relays: [], isHeartwood: false })
-    })
-  })
+  try {
+    const result = await sendRuntimeMessage({ type: 'bark-status' })
+    return result || { status: 'disconnected', lastError: null, relays: [], isHeartwood: false }
+  } catch {
+    return {
+      status: 'disconnected',
+      lastError: 'Extension error',
+      relays: [],
+      isHeartwood: false,
+    }
+  }
 }
 
 /** Truncate a hex pubkey for display: first 8 + "..." + last 8 chars. */
@@ -159,19 +170,35 @@ function showScreen(screen) {
   screen.classList.add('active')
 }
 
+function pairingPermissionOrigin(address) {
+  if (address.startsWith('bunker://')) return null
+  let url = address.trim()
+  if (!/^https?:\/\//.test(url)) url = `http://${url}`
+  return `${new URL(url).origin}/*`
+}
+
+async function requestPairingPermission(address) {
+  const origin = pairingPermissionOrigin(address)
+  if (!origin) return
+
+  const permission = { origins: [origin] }
+  const granted = await requestOptionalPermission(permission)
+  if (!granted) throw new Error('Pairing permission denied.')
+}
+
 // ---------------------------------------------------------------------------
 // Instance card rendering and actions
 // ---------------------------------------------------------------------------
 
 /** Render the instance card list from storage. */
 async function renderInstances() {
-  const { instances = [], activeInstanceId } = await chrome.storage.local.get([
+  const { instances = [], activeInstanceId } = await storageGet([
     'instances', 'activeInstanceId',
   ])
 
   if (instances.length === 0) {
     showScreen(setupScreen)
-    return
+    return false
   }
 
   showScreen(mainScreen)
@@ -207,11 +234,13 @@ async function renderInstances() {
       removeInstance(btn.dataset.id)
     })
   })
+
+  return true
 }
 
 async function pairHeartwood(address) {
   if (!address) {
-    pairError.textContent = 'Enter a Heartwood address (e.g. heartwood.local:3000)'
+    pairError.textContent = 'Enter a signer or bridge address (e.g. heartwood.local:3000)'
     pairError.classList.remove('hidden')
     return
   }
@@ -222,29 +251,14 @@ async function pairHeartwood(address) {
   btn.textContent = 'Connecting...'
 
   try {
-    await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: 'bark-pair', address }, (resp) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message))
-        } else if (!resp) {
-          reject(new Error('No response from background — try reloading the extension'))
-        } else if (!resp.ok) {
-          reject(new Error(resp.error || 'Pairing failed'))
-        } else {
-          resolve(resp)
-        }
-      })
-    })
+    await requestPairingPermission(address)
+
+    const resp = await sendRuntimeMessage({ type: 'bark-pair', address })
+    if (!resp) throw new Error('No response from background - try reloading the extension')
+    if (!resp.ok) throw new Error(resp.error || 'Pairing failed')
 
     await renderInstances()
     await refreshState()
-
-    // After fresh pairing, default to master so the user starts from a known state.
-    const status = await queryStatus()
-    if (status.isHeartwood) {
-      try { await rpc('heartwood_switch', { target: 'master' }) } catch { /* non-fatal */ }
-      await refreshState()
-    }
 
     if (addAddressInput) addAddressInput.value = ''
     if (addInstanceSection) addInstanceSection.style.display = 'none'
@@ -265,24 +279,29 @@ async function switchInstance(instanceId) {
     if (nameEl) nameEl.textContent += ' (connecting...)'
   }
 
-  const result = await new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: 'bark-switch', instanceId }, resolve)
-  })
-
-  if (!result.ok) showError(result.error)
-  await renderInstances()
-  await refreshState()
+  try {
+    const result = await sendRuntimeMessage({ type: 'bark-switch', instanceId })
+    if (!result?.ok) showError(result?.error || 'Could not switch identity.')
+    await renderInstances()
+    await refreshState()
+  } catch (err) {
+    showError(err.message)
+  }
 }
 
 async function removeInstance(instanceId) {
-  if (!confirm('Remove this Heartwood instance?')) return
+  if (!confirm('Remove this signer instance?')) return
 
-  const result = await new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: 'bark-remove', instanceId }, resolve)
-  })
+  let result
+  try {
+    result = await sendRuntimeMessage({ type: 'bark-remove', instanceId })
+  } catch (err) {
+    showError(err.message)
+    return
+  }
 
-  if (!result.ok) {
-    showError(result.error)
+  if (!result?.ok) {
+    showError(result?.error || 'Could not remove instance.')
     return
   }
   await renderInstances()
@@ -405,6 +424,38 @@ function renderSigningStatus(status) {
   signTestBtn.textContent = 'Test'
 }
 
+function identityPubkey(identity) {
+  if (identity?.pubkey) return identity.pubkey
+  if (identity?.npub) {
+    try { return nip19.decode(identity.npub).data } catch { return '' }
+  }
+  return ''
+}
+
+function identityDisplayName(identity) {
+  return identity?.personaName || identity?.name || identity?.purpose || identity?.label || 'master'
+}
+
+function instanceForIdentity(instances, identity) {
+  const pk = identityPubkey(identity)
+  if (!pk) return null
+  return instances.find((instance) => (
+    instance.heartwoodIdentityPubkey === pk ||
+    instance.signingPubkey === pk ||
+    (typeof instance.bunkerUri === 'string' && instance.bunkerUri.startsWith(`bunker://${pk}`))
+  )) || null
+}
+
+async function refreshHeartwoodIdentityInstances(options = {}) {
+  const result = await sendRuntimeMessage({
+    type: 'bark-refresh-heartwood-identities',
+    activatePubkey: options.activatePubkey || '',
+    activateLabel: options.activateLabel || '',
+  })
+  if (!result || !result.ok) throw new Error(result?.error || 'Could not refresh Heartwood identities.')
+  return result
+}
+
 // ---------------------------------------------------------------------------
 // Core state refresh
 // ---------------------------------------------------------------------------
@@ -414,7 +465,7 @@ async function refreshState() {
   try {
     pubkey = await rpc('getPublicKey')
   } catch (err) {
-    if (err.message.includes('No bunker URI')) {
+    if (err.message.includes('No bunker URI') || err.message.includes('No Heartwood instance')) {
       showScreen(setupScreen)
       clearRetryState()
       return
@@ -465,6 +516,20 @@ async function refreshState() {
     personaSection.style.display = ''
     standardBunkerCard.style.display = 'none'
 
+    const { instances = [], activeInstanceId } = await storageGet([
+      'instances',
+      'activeInstanceId',
+    ])
+    const activeInstance = instances.find(instance => instance.id === activeInstanceId)
+    const heartwoodInstances = instances.filter((instance) => (
+      instance.isHeartwood &&
+      instance.heartwoodIdentityPubkey &&
+      (
+        (activeInstance?.address && instance.address === activeInstance.address) ||
+        instance.id === activeInstanceId
+      )
+    ))
+
     let identities = []
     try {
       const result = await rpc('heartwood_list_identities')
@@ -474,34 +539,50 @@ async function refreshState() {
     }
 
     const activeMatch = identities.find((id) => {
-      if (id.pubkey) return id.pubkey === pubkey
-      if (id.npub) {
-        try { return nip19.decode(id.npub).data === pubkey } catch { return false }
-      }
-      return false
+      return identityPubkey(id) === pubkey
     })
-    const onMaster = !activeMatch
-    activeName.textContent = activeMatch
-      ? (activeMatch.personaName || activeMatch.name || activeMatch.purpose || 'default')
-      : 'master'
+    const activeInstanceName = activeInstance?.heartwoodIdentityLabel || activeInstance?.name
+    activeName.textContent = activeInstanceName || (activeMatch ? identityDisplayName(activeMatch) : 'master')
 
-    // Render persona list — master first, then derived identities
+    // Render imported Heartwood bunkers first. Latest Heartwood exposes one
+    // bunker URI per identity; selecting the persona means selecting that URI.
     personaList.innerHTML = ''
 
-    const masterItem = document.createElement('div')
-    masterItem.className = 'persona-item' + (onMaster ? ' active' : '')
-    const masterName = document.createElement('div')
-    masterName.className = 'persona-name'
-    masterName.textContent = 'master'
-    masterItem.appendChild(masterName)
-    masterItem.addEventListener('click', () => switchPersona('master'))
-    personaList.appendChild(masterItem)
+    const renderedPubkeys = new Set()
+    const sortedHeartwoodInstances = [...heartwoodInstances].sort((a, b) => {
+      if (a.heartwoodIdentityLabel === 'master') return -1
+      if (b.heartwoodIdentityLabel === 'master') return 1
+      return String(a.heartwoodIdentityLabel || a.name).localeCompare(String(b.heartwoodIdentityLabel || b.name))
+    })
+
+    for (const instance of sortedHeartwoodInstances) {
+      renderedPubkeys.add(instance.heartwoodIdentityPubkey)
+      const item = document.createElement('div')
+      item.className = 'persona-item' + (instance.id === activeInstanceId ? ' active' : '')
+
+      const name = document.createElement('div')
+      name.className = 'persona-name'
+      name.textContent = instance.heartwoodIdentityLabel || instance.name || 'unnamed'
+      item.appendChild(name)
+
+      const npub = document.createElement('div')
+      npub.className = 'persona-npub'
+      npub.textContent = truncateNpub(instance.npub || instance.heartwoodIdentityPubkey)
+      item.appendChild(npub)
+
+      item.addEventListener('click', () => {
+        if (instance.id !== activeInstanceId) switchInstance(instance.id)
+      })
+      personaList.appendChild(item)
+    }
 
     for (const id of identities) {
-      const pk = id.pubkey || id.npub
-      const displayName = id.personaName || id.name || id.purpose || 'unnamed'
-      const switchTarget = id.personaName || id.name || id.purpose || pk
-      const isActive = !onMaster && !!activeMatch && (id === activeMatch)
+      const pk = identityPubkey(id)
+      if (renderedPubkeys.has(pk)) continue
+      const targetInstance = instanceForIdentity(instances, id)
+      const displayName = identityDisplayName(id)
+      const switchTarget = id.personaName || id.name || id.purpose || id.npub || id.pubkey
+      const isActive = pk === pubkey || targetInstance?.id === activeInstanceId
       const item = document.createElement('div')
       item.className = 'persona-item' + (isActive ? ' active' : '')
 
@@ -512,10 +593,13 @@ async function refreshState() {
 
       const npub = document.createElement('div')
       npub.className = 'persona-npub'
-      npub.textContent = truncateNpub(pk)
+      npub.textContent = truncateNpub(id.npub || pk)
       item.appendChild(npub)
 
-      item.addEventListener('click', () => switchPersona(switchTarget))
+      item.addEventListener('click', () => {
+        if (targetInstance) switchInstance(targetInstance.id)
+        else switchPersona(switchTarget)
+      })
       personaList.appendChild(item)
     }
   } else {
@@ -544,18 +628,27 @@ async function derivePersona() {
   if (!purpose) return
 
   try {
-    await rpc('heartwood_derive', { purpose, index: 0 })
-    const identities = await rpc('heartwood_list_identities')
-    const derived = Array.isArray(identities)
-      ? identities.find((id) => id.purpose === purpose || id.name === purpose || id.personaName === purpose)
-      : null
+    const derived = await rpc('heartwood_derive', { purpose, index: 0 })
+    const derivedPubkey = derived?.pubkey || ''
 
-    if (derived) {
-      const switchTarget = derived.personaName || derived.name || derived.purpose || derived.npub
-      await rpc('heartwood_switch', { target: switchTarget })
+    try {
+      await refreshHeartwoodIdentityInstances({
+        activatePubkey: derivedPubkey,
+        activateLabel: purpose,
+      })
+    } catch {
+      const identities = await rpc('heartwood_list_identities')
+      const match = Array.isArray(identities)
+        ? identities.find((id) => id.purpose === purpose || id.name === purpose || id.personaName === purpose)
+        : null
+      if (match) {
+        const switchTarget = match.personaName || match.name || match.purpose || match.npub
+        await rpc('heartwood_switch', { target: switchTarget })
+      }
     }
 
     deriveInput.value = ''
+    await renderInstances()
     await refreshState()
   } catch (err) {
     showError(err.message)
@@ -586,10 +679,8 @@ function showConnectStatus(msg, connecting = false) {
 
 async function disconnect() {
   try {
-    await chrome.storage.local.remove(['instances', 'activeInstanceId'])
-    await new Promise((resolve) => {
-      chrome.runtime.sendMessage({ type: 'bark-reset' }, resolve)
-    })
+    await storageRemove(['instances', 'activeInstanceId'])
+    await sendRuntimeMessage({ type: 'bark-reset' })
     clearRetryState()
     showScreen(setupScreen)
     statusDot.className = 'status-dot'
@@ -609,12 +700,16 @@ const KIND_NAMES = {
 }
 
 async function loadPolicies() {
-  const { policies } = await chrome.storage.local.get('policies')
-  return policies || DEFAULT_POLICIES
+  const { policies } = await storageGet('policies')
+  const normalised = normalisePolicies(policies)
+  if (policies && policies.version !== normalised.version) {
+    await storageSet({ policies: normalised })
+  }
+  return normalised
 }
 
 async function savePolicies(policies) {
-  await chrome.storage.local.set({ policies })
+  await storageSet({ policies })
 }
 
 function renderKindRules(policies) {
@@ -821,7 +916,7 @@ addSiteInput.addEventListener('keydown', (e) => {
 // Reset policies
 resetPoliciesBtn.addEventListener('click', async () => {
   if (!confirm('Reset all policy rules to defaults?')) return
-  await chrome.storage.local.remove('policies')
+  await storageRemove('policies')
   await renderPolicies()
 })
 
@@ -829,7 +924,9 @@ resetPoliciesBtn.addEventListener('click', async () => {
 // Initialise
 // ---------------------------------------------------------------------------
 
-renderInstances().then(() => refreshState()).catch((err) => {
+renderInstances().then((hasInstances) => {
+  if (hasInstances) return refreshState()
+}).catch((err) => {
   showError(err.message)
 })
 

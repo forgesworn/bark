@@ -1,6 +1,11 @@
 ;(function () {
   if (window.nostr) return
 
+  const DEBUG = false
+  function debug(...args) {
+    if (DEBUG) console.debug(...args)
+  }
+
   const pending = new Map()
   let idCounter = 0
 
@@ -20,7 +25,7 @@
         reject(new Error(timeoutMessage))
       }, REQUEST_TIMEOUT_MS)
       pending.set(id, { resolve, reject, timeoutId })
-      console.log('[bark:provider] →', method, 'id=' + id)
+      debug('[bark:provider] →', method, 'id=' + id)
       window.postMessage({ type: 'bark-request', id, method, params }, window.location.origin)
     })
   }
@@ -30,7 +35,7 @@
     if (event.origin !== window.location.origin) return
     if (event.data?.type !== 'bark-response') return
     const { id, result, error } = event.data
-    console.log('[bark:provider] ←', 'id=' + id, error ? 'error=' + error : 'result=', result)
+    debug('[bark:provider] ←', 'id=' + id, error ? 'error=' + error : 'result=', result)
     const p = pending.get(id)
     if (!p) return
     pending.delete(id)

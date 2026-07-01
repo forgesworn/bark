@@ -3,7 +3,19 @@
 import { BunkerSigner, parseBunkerInput } from 'nostr-tools/nip46'
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
-import { evaluatePolicy, DEFAULT_POLICIES } from './policy.js'
+import {
+  buildTrustedSiteRule,
+  evaluatePolicy,
+  DEFAULT_POLICIES,
+  normalisePolicies,
+} from './policy.js'
+
+const chrome = globalThis.browser || globalThis.chrome
+
+const DEBUG = false
+function debug(...args) {
+  if (DEBUG) console.debug(...args)
+}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -14,6 +26,12 @@ const CONNECT_TIMEOUT_MS = 30_000
 
 /** Timeout for an established NIP-46 request (ms). */
 const BUNKER_REQUEST_TIMEOUT_MS = 45_000
+
+/** Timeout for optional Heartwood capability probing (ms). */
+const HEARTWOOD_PROBE_TIMEOUT_MS = 5_000
+
+/** Timeout for best-effort relay health probes (ms). */
+const RELAY_PROBE_TIMEOUT_MS = 6_000
 
 /** Allowed NIP-07 methods. */
 const NIP07_METHODS = new Set(['getPublicKey', 'signEvent', 'getRelays'])
@@ -46,9 +64,298 @@ function bunkerPubkeyPrefix(uri) {
   return match ? match[1] : 'unknown'
 }
 
+/** Extract the full target pubkey from a bunker URI. */
+function bunkerPubkey(uri) {
+  const match = uri.match(/^bunker:\/\/([0-9a-f]{64})/)
+  return match ? match[1] : ''
+}
+
+export function safeInstanceName(value, fallback = 'heartwood') {
+  const raw = typeof value === 'string' ? value.trim() : ''
+  const cleaned = raw
+    .replace(/[^\w:.-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64)
+  return cleaned || fallback
+}
+
 /** Build a stable instance ID from a name and bunker URI. */
 export function makeInstanceId(name, bunkerUri) {
-  return `${name}-${bunkerPubkeyPrefix(bunkerUri)}`
+  return `${safeInstanceName(name)}-${bunkerPubkeyPrefix(bunkerUri)}`
+}
+
+function identityLabel(identity, fallback = 'heartwood') {
+  const candidates = [
+    identity?.label,
+    identity?.personaName,
+    identity?.name,
+    identity?.purpose,
+  ]
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return safeInstanceName(candidate, fallback)
+    }
+  }
+  return fallback
+}
+
+export function normaliseHeartwoodIdentity(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const uri = value.uri || value.bunker_uri || value.bunkerUri
+  if (!isValidBunkerUri(uri)) return null
+
+  const uriPubkey = bunkerPubkey(uri)
+  const pubkey = typeof value.pubkey === 'string' && isValidHexPubkey(value.pubkey)
+    ? value.pubkey
+    : uriPubkey
+  if (pubkey && uriPubkey && pubkey !== uriPubkey) return null
+
+  const npub = typeof value.npub === 'string' && value.npub.length <= 128 ? value.npub : ''
+  return {
+    label: identityLabel(value, 'identity'),
+    pubkey: pubkey || uriPubkey,
+    npub,
+    uri,
+  }
+}
+
+export function normaliseHeartwoodIdentities(payload) {
+  const raw = Array.isArray(payload)
+    ? payload
+    : (Array.isArray(payload?.identities) ? payload.identities : [])
+  return raw.map(normaliseHeartwoodIdentity).filter(Boolean)
+}
+
+function heartwoodInstanceName(baseName, identity) {
+  const safeBase = safeInstanceName(baseName, 'heartwood')
+  if (!identity?.label || identity.label === 'master') return safeBase
+  return `${safeBase}:${identity.label}`
+}
+
+export function buildHeartwoodIdentityInstances(payload, {
+  address = '',
+  baseName = 'heartwood',
+  clientSecret = '',
+} = {}) {
+  return normaliseHeartwoodIdentities(payload).map((identity) => {
+    const name = heartwoodInstanceName(baseName, identity)
+    return {
+      id: makeInstanceId(name, identity.uri),
+      name,
+      address,
+      bunkerUri: identity.uri,
+      clientSecret,
+      npub: identity.npub,
+      signingPubkey: '',
+      signingVerifiedAt: 0,
+      signingLastError: null,
+      isHeartwood: true,
+      heartwoodBaseName: safeInstanceName(baseName, 'heartwood'),
+      heartwoodIdentityLabel: identity.label,
+      heartwoodIdentityPubkey: identity.pubkey,
+    }
+  })
+}
+
+function findExistingInstance(instances, next) {
+  return instances.find((instance) => {
+    if (instance.bunkerUri === next.bunkerUri) return true
+    return !!(
+      next.address &&
+      next.heartwoodIdentityPubkey &&
+      instance.address === next.address &&
+      instance.heartwoodIdentityPubkey === next.heartwoodIdentityPubkey
+    )
+  })
+}
+
+function upsertInstances(instances, nextInstances, activeInstanceId) {
+  const idMap = new Map()
+
+  for (const next of nextInstances) {
+    const existing = findExistingInstance(instances, next)
+    if (!existing) {
+      instances.push(next)
+      continue
+    }
+
+    const oldId = existing.id
+    const previousSigningPubkey = existing.signingPubkey
+    const previousSigningVerifiedAt = existing.signingVerifiedAt
+    const previousSigningLastError = existing.signingLastError
+    const connectionChanged = existing.bunkerUri !== next.bunkerUri ||
+      existing.clientSecret !== next.clientSecret
+
+    Object.assign(existing, next)
+    if (!connectionChanged) {
+      existing.signingPubkey = previousSigningPubkey || next.signingPubkey
+      existing.signingVerifiedAt = previousSigningVerifiedAt || next.signingVerifiedAt
+      existing.signingLastError = previousSigningLastError ?? next.signingLastError
+    }
+    if (oldId !== existing.id) idMap.set(oldId, existing.id)
+  }
+
+  const mappedActiveId = idMap.get(activeInstanceId) || activeInstanceId
+  return { instances, activeInstanceId: mappedActiveId }
+}
+
+async function fetchJsonResponse(res, fallbackMessage) {
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(body.error || fallbackMessage || `HTTP ${res.status}`)
+  }
+  return body
+}
+
+export async function fetchHeartwoodIdentityPayload(address, fetchImpl = fetch) {
+  const res = await fetchImpl(`${address}/api/identities`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  })
+  return await fetchJsonResponse(
+    res,
+    `Server returned HTTP ${res.status} while loading identities.`,
+  )
+}
+
+export async function importHeartwoodIdentities({
+  address,
+  instances,
+  activeInstanceId,
+  baseName,
+  clientSecret,
+  activatePubkey,
+  activateLabel,
+  fetchImpl = fetch,
+}) {
+  const payload = await fetchHeartwoodIdentityPayload(address, fetchImpl)
+  const nextInstances = buildHeartwoodIdentityInstances(payload, {
+    address,
+    baseName,
+    clientSecret,
+  })
+  if (nextInstances.length === 0) {
+    return {
+      instances,
+      activeInstanceId,
+      imported: 0,
+      activeImportedId: null,
+    }
+  }
+
+  const upserted = upsertInstances(instances, nextInstances, activeInstanceId)
+  let activeImported = nextInstances.find((instance) => (
+    (activatePubkey && instance.heartwoodIdentityPubkey === activatePubkey) ||
+    (activateLabel && instance.heartwoodIdentityLabel === activateLabel)
+  ))
+  if (!activeImported) {
+    activeImported = nextInstances.find(instance => instance.heartwoodIdentityLabel === 'master') || nextInstances[0]
+  }
+
+  return {
+    instances: upserted.instances,
+    activeInstanceId: upserted.activeInstanceId,
+    imported: nextInstances.length,
+    activeImportedId: activeImported?.id || null,
+  }
+}
+
+function validClientSecret(value) {
+  return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value)
+}
+
+export async function pairHeartwoodHttpAddress(address, {
+  instances = [],
+  activeInstanceId = null,
+  fetchImpl = fetch,
+} = {}) {
+  const url = normaliseAddress(address)
+  const existing = instances.find(i => i.address === url)
+  const clientSk = existing && validClientSecret(existing.clientSecret)
+    ? hexToBytes(existing.clientSecret)
+    : generateSecretKey()
+  const clientPk = getPublicKey(clientSk)
+  const clientSecret = bytesToHex(clientSk)
+
+  const res = await fetchImpl(`${url}/api/pair`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: 'bark', pubkey: clientPk }),
+  })
+
+  const data = await fetchJsonResponse(res, `HTTP ${res.status}`)
+
+  if (!data.bunkerUri || !isValidBunkerUri(data.bunkerUri)) {
+    throw new Error('Server returned an invalid bunker URI.')
+  }
+  if (data.instance && (typeof data.instance !== 'string' || data.instance.length > 64)) {
+    throw new Error('Server returned an invalid instance name.')
+  }
+
+  const bunkerUri = data.bunkerUri
+  const instanceName = safeInstanceName(data.instance || 'heartwood', 'heartwood')
+  const npub = typeof data.npub === 'string' && data.npub.length <= 128 ? data.npub : ''
+
+  try {
+    const imported = await importHeartwoodIdentities({
+      address: url,
+      instances,
+      activeInstanceId,
+      baseName: instanceName,
+      clientSecret,
+      activateLabel: 'master',
+      fetchImpl,
+    })
+
+    if (imported.imported > 0) {
+      return {
+        instances: imported.instances,
+        activeInstanceId: imported.activeImportedId || imported.activeInstanceId,
+        imported: imported.imported,
+        address: url,
+      }
+    }
+  } catch (err) {
+    debug('[bark:bg] could not import Heartwood identities:', sanitiseError(err))
+  }
+
+  const id = makeInstanceId(instanceName, bunkerUri)
+  if (existing) {
+    existing.bunkerUri = bunkerUri
+    existing.npub = npub || existing.npub
+    existing.name = instanceName || existing.name
+    existing.id = id
+    existing.clientSecret = clientSecret
+    existing.signingVerifiedAt = 0
+    existing.signingLastError = null
+    existing.signingPubkey = ''
+    existing.heartwoodBaseName = instanceName
+    existing.heartwoodIdentityLabel = 'master'
+    existing.heartwoodIdentityPubkey = bunkerPubkey(bunkerUri)
+  } else {
+    instances.push({
+      id,
+      name: instanceName,
+      address: url,
+      bunkerUri,
+      clientSecret,
+      npub,
+      signingPubkey: '',
+      signingVerifiedAt: 0,
+      signingLastError: null,
+      isHeartwood: true,
+      heartwoodBaseName: instanceName,
+      heartwoodIdentityLabel: 'master',
+      heartwoodIdentityPubkey: bunkerPubkey(bunkerUri),
+    })
+  }
+
+  return {
+    instances,
+    activeInstanceId: id,
+    imported: 0,
+    address: url,
+  }
 }
 
 /**
@@ -92,7 +399,11 @@ export function normaliseAddress(addr) {
 async function loadPolicies() {
   if (typeof chrome === 'undefined' || !chrome.storage) return DEFAULT_POLICIES
   const { policies } = await chrome.storage.local.get('policies')
-  return policies || DEFAULT_POLICIES
+  const normalised = normalisePolicies(policies)
+  if (policies && policies.version !== normalised.version) {
+    await chrome.storage.local.set({ policies: normalised })
+  }
+  return normalised
 }
 
 /**
@@ -107,6 +418,19 @@ async function loadPolicies() {
 export async function checkApproval(method, params, origin) {
   const policies = await loadPolicies()
   return evaluatePolicy(policies, method, params, origin)
+}
+
+async function trustSite(origin) {
+  if (!origin) throw new Error('Invalid request origin.')
+  const policies = await loadPolicies()
+  const siteRules = { ...(policies.siteRules || {}) }
+  siteRules[origin] = buildTrustedSiteRule(siteRules[origin])
+  await chrome.storage.local.set({
+    policies: {
+      ...policies,
+      siteRules,
+    },
+  })
 }
 
 /** Timeout for approval requests (ms). */
@@ -164,7 +488,7 @@ function denyApproval(requestId, reason) {
 /**
  * Allow a pending approval — execute the original request.
  */
-async function allowApproval(requestId) {
+async function allowApproval(requestId, { rememberSite = false } = {}) {
   const entry = pendingApprovals.get(requestId)
   if (!entry) return
   clearTimeout(entry.timeoutId)
@@ -182,6 +506,13 @@ async function allowApproval(requestId) {
 
   try {
     const result = await handleMessage(entry.method, entry.params, entry.origin)
+    if (rememberSite) {
+      try {
+        await trustSite(entry.origin)
+      } catch (err) {
+        debug('[bark:bg] could not persist trusted site:', sanitiseError(err))
+      }
+    }
     entry.sendResponse(result)
   } catch (err) {
     entry.sendResponse({ error: sanitiseError(err) })
@@ -270,10 +601,34 @@ export function appNameFromOrigin(origin) {
 }
 
 /**
+ * Canonicalize a Chrome message sender into a web origin. Only http/https
+ * origins are valid for site policies and web-page NIP-07 requests.
+ *
+ * @param {chrome.runtime.MessageSender|object} sender
+ * @returns {string|null}
+ */
+export function originFromSender(sender = {}) {
+  const candidates = [sender.origin, sender.tab?.url]
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'string') continue
+    try {
+      const url = new URL(candidate)
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        return url.origin
+      }
+    } catch {
+      // Try the next candidate.
+    }
+  }
+  return null
+}
+
+/**
  * Build the NIP-46 connect metadata object from a website origin.
- * The metadata is serialised to JSON and passed as the third param of the
- * NIP-46 "connect" request so that the signer (Heartwood) can label the
- * client policy with meaningful information.
+ * The metadata is serialised to JSON and passed as the fourth param of the
+ * NIP-46 "connect" request so that the signer can label the client policy
+ * with meaningful information. The third param is reserved for requested
+ * permissions and is empty when Bark is not requesting a bundle.
  *
  * @param {string|undefined} origin  The requesting website's origin (e.g. "https://nostrudel.ninja")
  * @returns {{ name: string, url: string }}
@@ -282,6 +637,15 @@ export function buildConnectMetadata(origin) {
   const name = appNameFromOrigin(origin)
   const url = (origin && origin.startsWith('http')) ? origin : 'bark://extension'
   return { name, url }
+}
+
+export function buildConnectParams(bunkerPointer, connectMeta) {
+  return [
+    bunkerPointer.pubkey,
+    bunkerPointer.secret || '',
+    '',
+    JSON.stringify(connectMeta),
+  ]
 }
 
 /** Validate a bunker URI matches the expected format. */
@@ -402,7 +766,7 @@ function scheduleReconnect() {
   if (reconnectTimer) return
   const delay = RECONNECT_DELAYS[Math.min(reconnectAttempt, RECONNECT_DELAYS.length - 1)]
   reconnectAttempt++
-  console.error(`[bark:bg] reconnecting in ${delay / 1000}s (attempt ${reconnectAttempt})`)
+  debug(`[bark:bg] reconnecting in ${delay / 1000}s (attempt ${reconnectAttempt})`)
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null
     ensureConnected().catch(() => {})
@@ -535,7 +899,7 @@ function scheduleSignerPrime(reason = 'initial') {
     autoPrimeTimer = null
     if (connectionState.signingStatus !== 'untested') return
     primeSigner(reason).catch((err) => {
-      console.error('[bark:bg] signer health check failed:', sanitiseError(err))
+      debug('[bark:bg] signer health check failed:', sanitiseError(err))
     })
   }, 1000)
 }
@@ -552,7 +916,11 @@ async function probeRelays(relayUrls) {
   connectionState.relays = await Promise.all(
     relayUrls.map(async (url) => {
       try {
-        await signer.pool.ensureRelay(url, { connectionTimeout: 5000 })
+        await withTimeout(
+          signer.pool.ensureRelay(url, { connectionTimeout: 5000 }),
+          RELAY_PROBE_TIMEOUT_MS,
+          'Relay probe',
+        )
         return { url, connected: true }
       } catch {
         return { url, connected: false }
@@ -573,22 +941,22 @@ async function probeRelays(relayUrls) {
  */
 function isPoolAlive() {
   if (!signer?.pool?.relays) {
-    console.error('[bark:bg] isPoolAlive: no pool or relays')
+    debug('[bark:bg] isPoolAlive: no pool or relays')
     return false
   }
   const relayMap = signer.pool.relays
   if (relayMap.size === 0) {
-    console.error('[bark:bg] isPoolAlive: relay map is empty')
+    debug('[bark:bg] isPoolAlive: relay map is empty')
     return false
   }
   let alive = false
   relayMap.forEach((relay, url) => {
     const wsState = relay?.ws?.readyState
     const connected = relay?.connected
-    console.error('[bark:bg] isPoolAlive:', url, 'connected:', connected, 'ws.readyState:', wsState)
+    debug('[bark:bg] isPoolAlive:', url, 'connected:', connected, 'ws.readyState:', wsState)
     if (connected || wsState === 1) alive = true
   })
-  if (!alive) console.error('[bark:bg] isPoolAlive: no live relays')
+  if (!alive) debug('[bark:bg] isPoolAlive: no live relays')
   return alive
 }
 
@@ -609,11 +977,11 @@ async function ensureConnected(originHint) {
   if (signer) {
     const idleMs = Date.now() - lastActivityTime
     if (idleMs > MAX_IDLE_MS) {
-      console.error(`[bark:bg] idle ${Math.round(idleMs / 1000)}s > ${MAX_IDLE_MS / 1000}s — forcing reconnect`)
+      debug(`[bark:bg] idle ${Math.round(idleMs / 1000)}s > ${MAX_IDLE_MS / 1000}s — forcing reconnect`)
       try { signer.close() } catch { /* ignore */ }
       signer = null
     } else if (!isPoolAlive()) {
-      console.error('[bark:bg] pool connections dead — forcing reconnect')
+      debug('[bark:bg] pool connections dead — forcing reconnect')
       try { signer.close() } catch { /* ignore */ }
       signer = null
     }
@@ -642,7 +1010,7 @@ async function doConnect(originHint) {
       activeInstanceId: migration.activeInstanceId,
     })
     await chrome.storage.local.remove(migration.removeKeys)
-    console.log('[bark] Migrated legacy storage to multi-instance format')
+    debug('[bark] Migrated legacy storage to multi-instance format')
   }
 
   // Read multi-instance state
@@ -722,7 +1090,8 @@ async function doConnect(originHint) {
     await new Promise(r => setTimeout(r, 2000))
 
     // Send the connect request directly so we can include app metadata as the
-    // optional third parameter. Heartwood uses this to label the TOFU policy.
+    // optional fourth parameter. The third parameter is requested permissions;
+    // pass an empty string when no permission bundle is requested.
     //
     // The signer answers in well under a second, so a slow reply almost always
     // means the relay subscription wasn't ready when the response arrived (MV3
@@ -739,7 +1108,7 @@ async function doConnect(originHint) {
     for (let attempt = 1; attempt <= maxConnectAttempts && !connectOk; attempt++) {
       try {
         await Promise.race([
-          signer.sendRequest('connect', [bp.pubkey, bp.secret || '', JSON.stringify(connectMeta)]),
+          signer.sendRequest('connect', buildConnectParams(bp, connectMeta)),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('connect attempt timed out')), CONNECT_ATTEMPT_TIMEOUT_MS),
           ),
@@ -748,7 +1117,7 @@ async function doConnect(originHint) {
       } catch (err) {
         lastConnectErr = err
         if (attempt < maxConnectAttempts) {
-          console.error(`[bark:bg] connect attempt ${attempt}/${maxConnectAttempts} timed out; re-publishing…`)
+          debug(`[bark:bg] connect attempt ${attempt}/${maxConnectAttempts} timed out; re-publishing…`)
         }
       }
     }
@@ -771,8 +1140,15 @@ async function doConnect(originHint) {
   await probeRelays(bp.relays)
 
   // Detect Heartwood mode and approval status.
+  let heartwoodIdentityList = []
   try {
-    await signer.sendRequest('heartwood_list_identities', [])
+    const raw = await withTimeout(
+      signer.sendRequest('heartwood_list_identities', []),
+      HEARTWOOD_PROBE_TIMEOUT_MS,
+      'Heartwood identity probe',
+    )
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) heartwoodIdentityList = parsed
     connectionState.isHeartwood = true
   } catch (err) {
     const msg = String(err?.message || err || '')
@@ -783,14 +1159,24 @@ async function doConnect(originHint) {
       connectionState.lastError = 'Approve this client on your Heartwood device.'
     } else {
       // Only mark as non-Heartwood if the bunker explicitly rejects the method
-      const isMethodRejection = msg.includes('unknown method')
-        || msg.includes('not supported')
-        || msg.includes('unrecognised')
-        || msg.includes('unrecognized')
-      connectionState.isHeartwood = !isMethodRejection
+      connectionState.isHeartwood = !isUnsupportedHeartwoodProbeError(msg)
     }
   }
-  await chrome.storage.local.set({ isHeartwood: connectionState.isHeartwood })
+
+  if (connectionState.isHeartwood) {
+    const targetPubkey = bunkerPubkey(bunkerUri)
+    const matchedIdentity = heartwoodIdentityList.find(identity => identity?.pubkey === targetPubkey)
+    const label = matchedIdentity ? identityLabel(matchedIdentity, 'master') : (active.heartwoodIdentityLabel || 'master')
+
+    active.isHeartwood = true
+    active.heartwoodBaseName = active.heartwoodBaseName || safeInstanceName(active.name || 'heartwood', 'heartwood')
+    active.heartwoodIdentityLabel = label
+    active.heartwoodIdentityPubkey = targetPubkey || active.heartwoodIdentityPubkey
+    if (active.name === 'bunker' && label && label !== 'master') active.name = label
+    await chrome.storage.local.set({ instances, isHeartwood: true })
+  } else {
+    await chrome.storage.local.set({ isHeartwood: false })
+  }
 
   if (!active.signingVerifiedAt) scheduleSignerPrime('initial')
 
@@ -845,6 +1231,20 @@ async function withBunkerRequestTimeout(promise, label) {
   }
 }
 
+async function withTimeout(promise, timeoutMs, label) {
+  let timer
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} timed out.`)), timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Request handlers
 // ---------------------------------------------------------------------------
@@ -867,9 +1267,9 @@ async function handleMessage(method, params, originHint) {
   }
 
   const parsed = parseMethod(method)
-  console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connecting...')
+  debug('[bark:bg] handleMessage', parsed.type, parsed.method, 'connecting...')
   const bunker = await ensureConnected(originHint)
-  console.error('[bark:bg] handleMessage', parsed.type, parsed.method, 'connected, dispatching')
+  debug('[bark:bg] handleMessage', parsed.type, parsed.method, 'connected, dispatching')
 
   // Update activity timestamp so the idle-time reconnect logic knows the
   // relay WebSockets were recently used and probably still alive.
@@ -885,13 +1285,13 @@ async function handleMessage(method, params, originHint) {
       }
       if (parsed.method === 'signEvent') {
         const event = normaliseSignEventTemplate(params)
-        console.error('[bark:bg] signEvent: calling bunker.signEvent()', {
+        debug('[bark:bg] signEvent: calling bunker.signEvent()', {
           kind: event.kind,
           created_at: event.created_at,
           tags: Array.isArray(event.tags) ? event.tags.length : 0,
         })
         const signed = await signWithHealthTracking(bunker, event, 'signEvent', 'site-request')
-        console.error('[bark:bg] signEvent: bunker returned', {
+        debug('[bark:bg] signEvent: bunker returned', {
           kind: signed?.kind,
           pubkey: typeof signed?.pubkey === 'string' ? `${signed.pubkey.slice(0, 12)}…` : typeof signed?.pubkey,
           id: typeof signed?.id === 'string' ? `${signed.id.slice(0, 12)}…` : typeof signed?.id,
@@ -959,7 +1359,7 @@ async function handleMessage(method, params, originHint) {
 
     case 'heartwood': {
       const args = buildHeartwoodArgs(parsed.method, params)
-      console.error('[bark:bg] heartwood request:', parsed.method, JSON.stringify(args))
+      debug('[bark:bg] heartwood request:', parsed.method, JSON.stringify(args))
       let raw
       try {
         raw = await withBunkerRequestTimeout(
@@ -967,10 +1367,10 @@ async function handleMessage(method, params, originHint) {
           parsed.method,
         )
       } catch (hwErr) {
-        console.error('[bark:bg] heartwood error:', parsed.method, String(hwErr))
+        debug('[bark:bg] heartwood error:', parsed.method, String(hwErr))
         throw hwErr
       }
-      console.error('[bark:bg] heartwood response:', parsed.method, typeof raw === 'string' ? raw.slice(0, 200) : typeof raw)
+      debug('[bark:bg] heartwood response:', parsed.method, typeof raw === 'string' ? raw.slice(0, 200) : typeof raw)
       // After a switch, clear the cached pubkey so getPublicKey() fetches
       // the new active identity from the bunker.
       if (parsed.method === 'heartwood_switch') {
@@ -1052,6 +1452,7 @@ const SAFE_ERROR_PREFIXES = [
   'Bunker URI must',
   'Connection timed out',
   'Invalid method',
+  'Invalid request origin',
   'signEvent requires',
   'nip04.',
   'nip44.',
@@ -1084,6 +1485,15 @@ export function sanitiseError(err) {
   return 'Request failed.'
 }
 
+export function isUnsupportedHeartwoodProbeError(message) {
+  const msg = String(message || '')
+  return msg.includes('Heartwood identity probe timed out')
+    || msg.includes('unknown method')
+    || msg.includes('not supported')
+    || msg.includes('unrecognised')
+    || msg.includes('unrecognized')
+}
+
 // ---------------------------------------------------------------------------
 // Chrome message listener — guarded so vitest can import this module
 // ---------------------------------------------------------------------------
@@ -1104,7 +1514,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     // Only accept messages from our own extension context (content scripts
     // and the popup). Reject messages from other extensions or external
     // sources.
-    if (sender.id !== chrome.runtime.id) return
+    if (sender.id && sender.id !== chrome.runtime.id) return
+    if (!sender.id && !sender.tab && sender.url && !sender.url.startsWith(chrome.runtime.getURL(''))) return
 
     if (message.type === 'bark-status') {
       sendResponse({ ...connectionState })
@@ -1122,7 +1533,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       const { address } = message;
       (async () => {
         try {
-          const { instances = [] } = await chrome.storage.local.get('instances')
+          const { instances = [], activeInstanceId } = await chrome.storage.local.get([
+            'instances',
+            'activeInstanceId',
+          ])
           let bunkerUri, instanceName, npub, pairAddress
 
           if (address.startsWith('bunker://')) {
@@ -1136,68 +1550,17 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             npub = ''
             pairAddress = address
           } else {
-            // HTTP pairing — fetch bunker URI from the device web API.
-            const url = normaliseAddress(address)
-            pairAddress = url
-
-            const existing = instances.find(i => i.address === url)
-            const clientSk = existing && existing.clientSecret && /^[0-9a-f]{64}$/.test(existing.clientSecret)
-              ? hexToBytes(existing.clientSecret)
-              : generateSecretKey()
-            const clientPk = getPublicKey(clientSk)
-
-            const res = await fetch(`${url}/api/pair`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: 'bark', pubkey: clientPk }),
+            const result = await pairHeartwoodHttpAddress(address, {
+              instances,
+              activeInstanceId,
             })
-
-            if (!res.ok) {
-              const body = await res.json().catch(() => ({}))
-              throw new Error(body.error || `HTTP ${res.status}`)
-            }
-
-            const data = await res.json()
-
-            if (!data.bunkerUri || !isValidBunkerUri(data.bunkerUri)) {
-              throw new Error('Server returned an invalid bunker URI.')
-            }
-            if (data.instance && (typeof data.instance !== 'string' || data.instance.length > 64)) {
-              throw new Error('Server returned an invalid instance name.')
-            }
-
-            bunkerUri = data.bunkerUri
-            instanceName = data.instance || 'heartwood'
-            npub = data.npub || ''
-
-            // Save client secret for HTTP-paired instances
-            const id = makeInstanceId(instanceName, bunkerUri)
-            if (existing) {
-              existing.bunkerUri = bunkerUri
-              existing.npub = npub || existing.npub
-              existing.name = instanceName || existing.name
-              existing.id = id
-              existing.signingVerifiedAt = 0
-              existing.signingLastError = null
-              existing.signingPubkey = ''
-            } else {
-              instances.push({
-                id,
-                name: instanceName,
-                address: url,
-                bunkerUri,
-                clientSecret: bytesToHex(clientSk),
-                npub,
-                signingPubkey: '',
-                signingVerifiedAt: 0,
-                signingLastError: null,
-                isHeartwood: true,
-              })
-            }
-            await chrome.storage.local.set({ instances, activeInstanceId: id })
+            await chrome.storage.local.set({
+              instances: result.instances,
+              activeInstanceId: result.activeInstanceId,
+            })
             signer = null
             connectPromise = null
-            sendResponse({ ok: true })
+            sendResponse({ ok: true, imported: result.imported })
             ensureConnected().catch(() => {})
             return
           }
@@ -1238,6 +1601,60 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           connectPromise = null
           sendResponse({ ok: true })
           ensureConnected().catch(() => {})
+        } catch (err) {
+          sendResponse({ ok: false, error: sanitiseError(err) })
+        }
+      })()
+      return true
+    }
+
+    if (message.type === 'bark-refresh-heartwood-identities') {
+      const { activatePubkey, activateLabel } = message;
+      (async () => {
+        try {
+          const { instances = [], activeInstanceId } = await chrome.storage.local.get([
+            'instances',
+            'activeInstanceId',
+          ])
+          const active = instances.find(i => i.id === activeInstanceId)
+          if (!active?.address || !active?.clientSecret) {
+            throw new Error('No Heartwood instance configured. Pair with a Heartwood address first.')
+          }
+          if (!/^https?:\/\//.test(active.address)) {
+            throw new Error('No Heartwood instance configured. Pair with a Heartwood address first.')
+          }
+
+          const imported = await importHeartwoodIdentities({
+            address: active.address,
+            instances,
+            activeInstanceId,
+            baseName: active.heartwoodBaseName || active.name || 'heartwood',
+            clientSecret: active.clientSecret,
+            activatePubkey,
+            activateLabel,
+          })
+
+          const nextActiveId = imported.activeImportedId || imported.activeInstanceId
+          await chrome.storage.local.set({
+            instances: imported.instances,
+            activeInstanceId: nextActiveId,
+          })
+
+          if (nextActiveId !== activeInstanceId) {
+            if (signer) {
+              try { signer.close() } catch {}
+              signer = null
+            }
+            connectPromise = null
+            connectionState.status = 'connecting'
+            ensureConnected().catch(() => {})
+          }
+
+          sendResponse({
+            ok: true,
+            imported: imported.imported,
+            activeInstanceId: nextActiveId,
+          })
         } catch (err) {
           sendResponse({ ok: false, error: sanitiseError(err) })
         }
@@ -1318,14 +1735,17 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         pubkey: entry.pubkey,
         personaName: entry.personaName,
         origin: entry.origin,
+        canTrustSite: !!entry.origin,
       })
       return true
     }
 
     if (message.type === 'bark-approval-response') {
       const { requestId: rid, decision } = message
-      if (decision === 'allow') {
+      if (decision === 'allow' || decision === 'allow-once') {
         allowApproval(rid)
+      } else if (decision === 'allow-site') {
+        allowApproval(rid, { rememberSite: true })
       } else {
         denyApproval(rid, 'Request denied by user.')
       }
@@ -1343,7 +1763,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             id: signed?.id || '',
           })
         } catch (err) {
-          console.error('[bark:bg] ✗ signer health check error', err, sanitiseError(err))
+          debug('[bark:bg] ✗ signer health check error', err, sanitiseError(err))
           sendResponse({ ok: false, error: sanitiseError(err) })
         }
       })()
@@ -1351,32 +1771,37 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     }
 
     if (message.type === 'bark-request') {
-      console.error('[bark:bg] ← request', message.method, 'from', sender.tab ? 'tab' : 'extension');
+      debug('[bark:bg] ← request', message.method, 'from', sender.tab ? 'tab' : 'extension');
       (async () => {
         // Extension-internal requests (e.g. from popup) bypass policy checks.
         if (!sender.tab) {
           try {
             const result = await handleMessage(message.method, message.params)
-            console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
+            debug('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
             sendResponse(result)
           } catch (err) {
-            console.error('[bark:bg] ✗ error', message.method, err, sanitiseError(err))
+            debug('[bark:bg] ✗ error', message.method, err, sanitiseError(err))
             sendResponse({ error: sanitiseError(err) })
           }
           return
         }
 
-        const origin = sender.origin || sender.tab?.url
+        const origin = originFromSender(sender)
+        if (!origin) {
+          sendResponse({ error: 'Invalid request origin.' })
+          return
+        }
+
         const decision = await checkApproval(message.method, message.params, origin)
 
         if (decision === 'deny') {
-          console.error('[bark:bg] request denied by policy for', message.method)
+          debug('[bark:bg] request denied by policy for', message.method)
           sendResponse({ error: 'Request denied by policy.' })
           return
         }
 
         if (decision === 'ask') {
-          console.error('[bark:bg] approval required for', message.method)
+          debug('[bark:bg] approval required for', message.method)
           // Guard: only one approval at a time
           if (activeApprovalId) {
             sendResponse({ error: 'An approval request is already in progress.' })
@@ -1414,11 +1839,11 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               pubkey,
               personaName,
               instanceId: approvalInstanceId,
-              origin: origin || 'Unknown',
+              origin,
               sendResponse,
             })
           } catch (err) {
-            console.error('[bark:bg] ✗ approval setup error', message.method, err, sanitiseError(err))
+            debug('[bark:bg] ✗ approval setup error', message.method, err, sanitiseError(err))
             sendResponse({ error: sanitiseError(err) })
           }
           return
@@ -1427,10 +1852,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         // decision === 'allow'
         try {
           const result = await handleMessage(message.method, message.params, origin)
-          console.error('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
+          debug('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)
           sendResponse(result)
         } catch (err) {
-          console.error('[bark:bg] ✗ error', message.method, err, sanitiseError(err))
+          debug('[bark:bg] ✗ error', message.method, err, sanitiseError(err))
           sendResponse({ error: sanitiseError(err) })
         }
       })()

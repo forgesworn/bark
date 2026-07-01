@@ -6,10 +6,25 @@
   "type": "module",
   "scripts": {
     "build": "node esbuild.config.js",
+    "build:chromium": "node esbuild.config.js --target=chromium",
+    "build:firefox": "node esbuild.config.js --target=firefox",
+    "build:safari": "node esbuild.config.js --target=safari",
+    "build:all": "npm run build:chromium && npm run build:firefox && npm run build:safari",
     "watch": "node esbuild.config.js --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "package": "node esbuild.config.js --package"
+    "test": "vitest run test",
+    "test:watch": "vitest test",
+    "e2e": "npm run e2e:chromium",
+    "e2e:chromium": "npm run build:chromium && playwright test",
+    "e2e:deterministic": "npm run build:chromium && playwright test e2e/nip46-relay-signer.spec.js",
+    "e2e:live": "npm run build:chromium && playwright test e2e/live-relay-signer.spec.js",
+    "audit:prod": "npm audit --omit=dev",
+    "verify": "npm test && npm run build:all && npm audit",
+    "verify:full": "npm run verify && npm run e2e:chromium",
+    "package": "node esbuild.config.js --package",
+    "package:chromium": "node esbuild.config.js --target=chromium --package",
+    "package:firefox": "node esbuild.config.js --target=firefox --package",
+    "package:safari": "node esbuild.config.js --target=safari --package",
+    "package:all": "npm run package:chromium && npm run package:firefox && npm run package:safari"
   },
   "keywords": [
     "nostr",
@@ -23,9 +38,14 @@
     "signer"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=22 <25"
+  },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "esbuild": "^0.28.1",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "ws": "^8.21.0"
   },
   "dependencies": {
     "nostr-tools": "^2.23.8"
