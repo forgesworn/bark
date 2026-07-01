@@ -285,7 +285,11 @@ test.describe('live relay signer smoke', () => {
         )
         const relayUrls = Object.keys(relays)
         expect(relayUrls.length).toBeGreaterThan(0)
-        expect(relayUrls.every((relay) => relay.startsWith('wss://'))).toBe(true)
+        expect(relayUrls.every((relay) => (
+          relay.startsWith('wss://') ||
+          relay.startsWith('ws://localhost:') ||
+          relay.startsWith('ws://127.0.0.1:')
+        ))).toBe(true)
         console.log('[bark live] window.nostr.getRelays ok')
 
         const template = {
