@@ -38,6 +38,9 @@ Implemented smoke scenarios:
 - Deterministic local NIP-46 relay/signer smoke seeds a `bunker://` URI with a
   localhost WebSocket relay and verifies `getPublicKey`, `getRelays`, and
   `signEvent` through the real extension/provider path.
+- Approval popup smoke drives the real extension approval window and verifies
+  deny, allow-once, trust-site persistence, trusted routine signing without a
+  second popup, and protected kind 0 re-approval.
 - Optional live relay/signer smoke pairs Bark by direct storage seeding and
   verifies `getPublicKey`, `getRelays`, and `signEvent` against a real
   configured bunker URI.
@@ -66,20 +69,18 @@ run on its own:
 
 ```bash
 npm run e2e:deterministic
+npm run e2e:approval
 ```
 
 It runs entirely on loopback and has no real keys, public relays, signer
-approval, or hardware dependency. This is the CI gate for the Bark-owned NIP-46
-extension path. The live smoke remains the manual proof that public relays and a
-real signer are reachable.
+approval, or hardware dependency. These are the CI gates for the Bark-owned
+NIP-46 extension path and approval policy surface. The live smoke remains the
+manual proof that public relays and a real signer are reachable.
 
 Next release-blocking scenarios:
 
 - Popup pairs to a fake Heartwood HTTP host and imports two identities.
 - Clicking a Heartwood identity switches the active Bark instance.
-- Unknown-site `signEvent` opens the approval popup.
-- `Allow Once` signs the current event without persisting site trust.
-- `Trust Site` persists routine method trust while protected kinds still ask.
 - A request after service worker idle reconnects instead of hanging.
 - Direct Sapwood/bridge `bunker://` URI pairing does not request HTTP host
   permission.

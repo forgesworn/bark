@@ -14,6 +14,7 @@ npm test             # vitest unit tests (run before any PR)
 npm run test:watch   # vitest in watch mode
 npm run e2e:chromium # Playwright extension smoke tests against dist/
 npm run e2e:deterministic # deterministic local NIP-46 signer smoke
+npm run e2e:approval # approval popup deny/allow/trust/protected-kind smoke
 npm run e2e:live     # optional live relay/signer smoke; requires BARK_LIVE_BUNKER_URI
 npm run audit:prod   # production dependency audit
 npm run verify       # test + all browser builds + full npm audit
@@ -33,8 +34,8 @@ CI runs `npm ci`, `npm test`, `npm run build:all`, `npm audit`, and
 
 The Heartwood/bridge HTTP contract tests run as part of `npm test`. Chromium
 extension smoke tests run with `npm run e2e:chromium`, including the
-deterministic local NIP-46 relay signer. The broader browser E2E matrix is
-tracked in [docs/e2e-hardening.md](docs/e2e-hardening.md).
+deterministic local NIP-46 relay signer and approval popup flows. The broader
+browser E2E matrix is tracked in [docs/e2e-hardening.md](docs/e2e-hardening.md).
 
 ## Code style
 

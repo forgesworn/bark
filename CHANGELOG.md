@@ -49,6 +49,8 @@ All notable changes to Bark are documented here.
   connection, gated by `BARK_LIVE_BUNKER_URI`.
 - Deterministic local NIP-46 relay/signer Playwright smoke test that runs in CI
   without public relays, hardware, or real secrets.
+- Approval popup Playwright smoke test covering deny, allow-once, trust-site
+  persistence, and protected-kind re-approval through the real extension UI.
 - Extension-internal diagnostics page for E2E storage seeding and runtime
   messaging without loading popup UI.
 

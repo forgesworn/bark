@@ -16,6 +16,7 @@
     "e2e": "npm run e2e:chromium",
     "e2e:chromium": "npm run build:chromium && playwright test",
     "e2e:deterministic": "npm run build:chromium && playwright test e2e/nip46-relay-signer.spec.js",
+    "e2e:approval": "npm run build:chromium && playwright test e2e/approval-popup.spec.js",
     "e2e:live": "npm run build:chromium && playwright test e2e/live-relay-signer.spec.js",
     "audit:prod": "npm audit --omit=dev",
     "verify": "npm test && npm run build:all && npm audit",

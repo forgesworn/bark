@@ -53,10 +53,13 @@ Run the release checks with:
 npm run verify
 npm run e2e:chromium
 npm run e2e:deterministic
+npm run e2e:approval
 ```
 
 `npm run e2e:chromium` includes the deterministic local NIP-46 relay/signer
-smoke. `npm run e2e:deterministic` runs only that CI-friendly signer path.
+smoke and approval popup flow. `npm run e2e:deterministic` runs only that
+CI-friendly signer path. `npm run e2e:approval` runs only the deny,
+allow-once, trust-site, and protected-kind approval checks.
 
 Run an optional live relay/signer smoke with a real approved bunker URI:
 
