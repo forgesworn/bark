@@ -48,7 +48,6 @@ const HEARTWOOD_METHODS = new Set([
   'heartwood_derive',
   'heartwood_derive_persona',
   'heartwood_switch',
-  'heartwood_lsag_sign',
 ])
 
 /** Regex for validating a bunker URI (bunker://<64-hex-chars>?<params>). */
@@ -1422,13 +1421,6 @@ export function buildHeartwoodArgs(method, params) {
         throw new Error('heartwood_switch requires a target (npub, persona name, purpose, or "master").')
       }
       return [params.target]
-    }
-    case 'heartwood_lsag_sign': {
-      if (!params || !Array.isArray(params.ring) || typeof params.message !== 'string' ||
-          typeof params.signerIndex !== 'number' || typeof params.electionId !== 'string') {
-        throw new Error('heartwood_lsag_sign requires { ring: string[], message: string, signerIndex: number, electionId: string, domain?: string }.')
-      }
-      return [JSON.stringify(params)]
     }
     default:
       throw new Error(`Unknown heartwood method: ${method}`)
