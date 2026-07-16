@@ -67,17 +67,31 @@ the local `escapeHtml` helper first.
 
 ## Positioning
 
-The nearest competitor is Bunker46 (same NIP-07 → NIP-46 bridge concept).
-Bark's listing should make the contrast easy to see without naming it:
+The nearest competitor is Bunker46 (same NIP-07 → NIP-46 bridge; Vue/WXT;
+companion to the self-hosted Bunker46 server). On both stores (~107 CWS
+users, 1 AMO, 0 reviews), last updated 2026-04. It has bunker URI +
+nostrconnect QR pairing, multi-profile, per-domain/per-method permissions,
+NIP-04/44, a privacy whitelist mode, and 44 locales.
 
-- Bunker46 requests **tabs + all-websites data**; Bark's Chromium build
-  requests only `storage`. Lead with the minimal-permissions bullet.
-- Bark adds QR (nostrconnect) pairing, a policy engine with per-kind and
-  per-site rules, an approval queue with badge, multi-instance switching,
-  and Heartwood personas — none of which Bunker46 lists.
-- Bark ships store-quality screenshots, a promo tile, CI, e2e coverage,
-  and a changelog; keep the listing updated each release so freshness is
-  visibly better.
+Where Bark leads — make these visible in the listing without naming them:
+
+- **Permissions**: Bunker46 requests `storage + tabs (+ windows)`; Bark's
+  Chromium build requests only `storage`. Lead with this bullet.
+- **Policy depth**: event-kind-level rules and protected kinds (0, 3,
+  10002) with per-site overrides; Bunker46 stops at domain/method level.
+- **Injection correctness**: MAIN-world declarative content script — no
+  `window.nostr`-undefined race; Bunker46 uses script-tag injection via
+  web-accessible resources.
+- **UX under load**: approval queue with badge count, keep-alive pings,
+  `auth_url` handling for nsec.app-style bunkers.
+- **Hardware**: Heartwood personas, HTTP pairing for local signers, live
+  verification against physical hardware; plus a Safari build ready.
+
+Known gaps to close (candidate fast-follows, not launch blockers):
+
+- Privacy whitelist mode — Bark currently injects `window.nostr` on every
+  https page, so any site can fingerprint that the extension exists.
+- Localisation — Bunker46 ships 44 locales; Bark is English-only.
 
 ## Assets checklist
 
