@@ -109,6 +109,33 @@ export function normalisePolicies(policies) {
 }
 
 /**
+ * Decide whether `window.nostr` should be exposed to a page at all.
+ *
+ * With privacy mode off (the default) every http/https page gets the
+ * provider, exactly as before. With privacy mode on, only origins the user
+ * has a live site rule for are exposed: a rule counts if any of its method
+ * or kind actions is 'allow' or 'ask'. A deny-only rule keeps the site
+ * blocked AND invisible — a blocked site has no business knowing Bark
+ * exists.
+ *
+ * @param {object}  policies        Policy set (same shape as DEFAULT_POLICIES)
+ * @param {boolean} privacyEnabled  The privacy-mode toggle
+ * @param {string}  origin          Page origin, e.g. "https://primal.net"
+ * @returns {boolean}
+ */
+export function isOriginExposed(policies, privacyEnabled, origin) {
+  if (!privacyEnabled) return true
+  if (!origin || typeof origin !== 'string') return false
+  const site = normalisePolicies(policies).siteRules[origin]
+  if (!site) return false
+  const actions = Object.entries(site)
+    .filter(([key]) => key !== 'kindRules')
+    .map(([, value]) => value)
+    .concat(Object.values(site.kindRules || {}))
+  return actions.some((action) => action === 'allow' || action === 'ask')
+}
+
+/**
  * Cycle a policy action for click-to-change UI: allow → ask → deny → allow.
  * Invalid input starts the cycle at 'allow'.
  */

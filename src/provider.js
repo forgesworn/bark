@@ -73,7 +73,7 @@
     document.body.appendChild(banner)
   }
 
-  window.nostr = {
+  const nostrApi = {
     async getPublicKey() { return call('getPublicKey') },
     async getRelays() { return call('getRelays') },
     async signEvent(event) { return call('signEvent', event) },
@@ -91,4 +91,19 @@
       async derivePersona(name, index = 0) { return call('heartwood_derive_persona', { name, index }) },
     },
   }
+
+  window.nostr = nostrApi
+
+  // Privacy mode: the content script tells us the user has hidden Bark from
+  // this origin. Retract window.nostr (only if it is still ours) so the page
+  // cannot detect the extension. The content script independently drops any
+  // requests from hidden origins, so this is presentation, not enforcement.
+  window.addEventListener('message', (event) => {
+    if (event.source !== window) return
+    if (event.origin !== window.location.origin) return
+    if (event.data?.type !== 'bark-expose') return
+    if (event.data.exposed === false && window.nostr === nostrApi) {
+      delete window.nostr
+    }
+  })
 })()

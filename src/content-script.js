@@ -1,7 +1,19 @@
+import { isOriginExposed } from './policy.js'
+
 const extensionApi = globalThis.chrome || globalThis.browser
 
 function runtimeGetURL(path) {
   return extensionApi.runtime.getURL(path)
+}
+
+function storageGet(keys) {
+  if (globalThis.chrome?.storage?.local?.get) {
+    return new Promise((resolve) => {
+      globalThis.chrome.storage.local.get(keys, (items) => resolve(items || {}))
+    })
+  }
+  if (globalThis.browser?.storage?.local?.get) return globalThis.browser.storage.local.get(keys)
+  return Promise.resolve({})
 }
 
 function runtimeSendMessage(payload) {
@@ -23,12 +35,34 @@ function runtimeSendMessage(payload) {
 // page scripts run before window.nostr exists. Safari builds fall back to
 // script-tag injection (the define is set per build target by esbuild).
 const INJECT_PROVIDER = typeof __BARK_INJECT_PROVIDER__ === 'undefined' || __BARK_INJECT_PROVIDER__
-if (INJECT_PROVIDER) {
-  const script = document.createElement('script')
-  script.src = runtimeGetURL('provider.js')
-  script.onload = () => script.remove()
-  ;(document.head || document.documentElement).appendChild(script)
+
+// Privacy mode: when enabled, window.nostr is exposed only to origins the
+// user has a site rule for. The verdict is computed here from storage (no
+// service worker wake-up) and travels to the MAIN-world provider via
+// postMessage. Dropping requests below is the real enforcement point —
+// deleting window.nostr alone would not stop a page that synthesises
+// bark-request messages by hand. On a storage failure we fail open: privacy
+// mode off is the default state, and a transient error must not kill NIP-07.
+let siteHidden = false
+
+async function applyExposure() {
+  let exposed = true
+  try {
+    const { privacy, policies } = await storageGet(['privacy', 'policies'])
+    exposed = isOriginExposed(policies, Boolean(privacy?.enabled), window.location.origin)
+  } catch { /* fail open */ }
+  siteHidden = !exposed
+  if (INJECT_PROVIDER) {
+    if (!exposed) return
+    const script = document.createElement('script')
+    script.src = runtimeGetURL('provider.js')
+    script.onload = () => script.remove()
+    ;(document.head || document.documentElement).appendChild(script)
+  } else if (!exposed) {
+    window.postMessage({ type: 'bark-expose', exposed: false }, window.location.origin)
+  }
 }
+applyExposure()
 
 const DEBUG = false
 function debug(...args) {
@@ -98,6 +132,10 @@ window.addEventListener('message', async (event) => {
   if (event.source !== window) return
   if (event.origin !== window.location.origin) return
   if (event.data?.type !== 'bark-request') return
+
+  // Hidden origins get silence, not an error — an error would itself be a
+  // fingerprint that Bark is installed.
+  if (siteHidden) return
 
   const { id, method, params } = event.data
 

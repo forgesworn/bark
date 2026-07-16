@@ -3,6 +3,7 @@ import {
   buildTrustedSiteRule,
   DEFAULT_POLICIES,
   evaluatePolicy,
+  isOriginExposed,
   nextPolicyAction,
   normalisePolicies,
   POLICY_VERSION,
@@ -18,6 +19,65 @@ describe('nextPolicyAction', () => {
   it('starts the cycle at allow for invalid input', () => {
     expect(nextPolicyAction(undefined)).toBe('allow')
     expect(nextPolicyAction('nonsense')).toBe('allow')
+  })
+})
+
+describe('per-site method overrides', () => {
+  it('lets a site-specific allow override the global ask, including Heartwood methods', () => {
+    const policies = {
+      ...DEFAULT_POLICIES,
+      siteRules: { 'https://primal.net': { heartwood_switch: 'allow', getRelays: 'allow' } },
+    }
+    expect(evaluatePolicy(policies, 'heartwood_switch', {}, 'https://primal.net')).toBe('allow')
+    expect(evaluatePolicy(policies, 'getRelays', null, 'https://primal.net')).toBe('allow')
+    // Other sites keep the global default.
+    expect(evaluatePolicy(policies, 'heartwood_switch', {}, 'https://other.example')).toBe('ask')
+  })
+
+  it('lets a site-specific deny override everything else for that method', () => {
+    const policies = {
+      ...DEFAULT_POLICIES,
+      siteRules: { 'https://primal.net': { 'nip44.decrypt': 'deny', signEvent: 'allow' } },
+    }
+    expect(evaluatePolicy(policies, 'nip44.decrypt', {}, 'https://primal.net')).toBe('deny')
+    expect(evaluatePolicy(policies, 'signEvent', { kind: 1 }, 'https://primal.net')).toBe('allow')
+  })
+})
+
+describe('isOriginExposed', () => {
+  const withSite = (rule) => ({
+    ...DEFAULT_POLICIES,
+    siteRules: { 'https://primal.net': rule },
+  })
+
+  it('exposes every origin when privacy mode is off', () => {
+    expect(isOriginExposed(DEFAULT_POLICIES, false, 'https://anywhere.example')).toBe(true)
+    expect(isOriginExposed(undefined, false, 'https://anywhere.example')).toBe(true)
+  })
+
+  it('hides origins without a site rule when privacy mode is on', () => {
+    expect(isOriginExposed(DEFAULT_POLICIES, true, 'https://anywhere.example')).toBe(false)
+  })
+
+  it('exposes origins with an allow or ask rule when privacy mode is on', () => {
+    expect(isOriginExposed(withSite({ signEvent: 'allow' }), true, 'https://primal.net')).toBe(true)
+    expect(isOriginExposed(withSite({ signEvent: 'ask' }), true, 'https://primal.net')).toBe(true)
+    expect(isOriginExposed(withSite(buildTrustedSiteRule()), true, 'https://primal.net')).toBe(true)
+  })
+
+  it('counts kind overrides as a live rule', () => {
+    expect(isOriginExposed(withSite({ kindRules: { 1: 'ask' } }), true, 'https://primal.net')).toBe(true)
+  })
+
+  it('keeps deny-only sites hidden', () => {
+    const denyAll = Object.fromEntries(['getPublicKey', 'signEvent'].map((m) => [m, 'deny']))
+    expect(isOriginExposed(withSite(denyAll), true, 'https://primal.net')).toBe(false)
+    expect(isOriginExposed(withSite({ kindRules: { 1: 'deny' } }), true, 'https://primal.net')).toBe(false)
+  })
+
+  it('hides missing or malformed origins when privacy mode is on', () => {
+    expect(isOriginExposed(DEFAULT_POLICIES, true, null)).toBe(false)
+    expect(isOriginExposed(DEFAULT_POLICIES, true, '')).toBe(false)
   })
 })
 

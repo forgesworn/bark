@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "Bark",
   "version": "1.1.1",
-  "description": "Remote Nostr signing via NIP-46. Keys never touch the browser. Works with any bunker; Heartwood adds derived identities.",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "permissions": ["storage"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": {

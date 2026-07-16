@@ -668,23 +668,23 @@
       <h1>Bark</h1>
     </div>
     <div style="padding: 16px;">
-      <h2 style="margin-bottom: 8px;">Add Signer</h2>
-      <p style="font-size: 0.82rem; opacity: 0.5; margin-bottom: 12px;">Enter a signer or bridge address, or paste a bunker URI.</p>
+      <h2 style="margin-bottom: 8px;" data-i18n="addSigner">Add Signer</h2>
+      <p style="font-size: 0.82rem; opacity: 0.5; margin-bottom: 12px;" data-i18n="setupIntro">Enter a signer or bridge address, or paste a bunker URI.</p>
       <input id="heartwood-address" type="text" placeholder="heartwood.local:3000 or bunker://..." spellcheck="false" autocomplete="off" style="width:100%; padding:8px; background:#111; border:1px solid #333; border-radius:6px; color:#e0e0e0; font-family:monospace; font-size:0.85rem; margin-bottom:8px;">
-      <button class="btn btn-primary" id="pair-btn">Connect</button>
+      <button class="btn btn-primary" id="pair-btn" data-i18n="connect">Connect</button>
       <div id="pair-error" class="msg msg-err hidden" style="margin-top:8px;"></div>
 
       <div id="nostrconnect-section">
-        <div class="qr-divider">or pair by QR</div>
-        <button class="btn btn-secondary" id="qr-show-btn">Pair by QR (nostrconnect)</button>
+        <div class="qr-divider" data-i18n="orPairByQr">or pair by QR</div>
+        <button class="btn btn-secondary" id="qr-show-btn" data-i18n="pairByQrBtn">Pair by QR (nostrconnect)</button>
         <div id="qr-flow" style="display:none">
-          <input id="qr-relay-input" type="text" value="wss://relay.nsec.app" spellcheck="false" autocomplete="off" title="Relay(s) for the pairing handshake">
-          <button class="btn btn-primary" id="qr-start-btn">Generate QR</button>
+          <input id="qr-relay-input" type="text" value="wss://relay.nsec.app" spellcheck="false" autocomplete="off" title="Relay(s) for the pairing handshake" data-i18n-title="qrRelayTitle">
+          <button class="btn btn-primary" id="qr-start-btn" data-i18n="generateQr">Generate QR</button>
           <div id="qr-code"></div>
           <div id="qr-uri" class="qr-uri" style="display:none"></div>
           <div class="qr-actions" style="display:none">
-            <button class="btn-sm btn-save" id="qr-copy-btn">Copy URI</button>
-            <button class="btn-sm" id="qr-cancel-btn">Cancel</button>
+            <button class="btn-sm btn-save" id="qr-copy-btn" data-i18n="copyUri">Copy URI</button>
+            <button class="btn-sm" id="qr-cancel-btn" data-i18n="cancel">Cancel</button>
           </div>
           <div id="qr-status" class="qr-status"></div>
         </div>
@@ -702,20 +702,20 @@
     <div style="padding: 16px;">
       <div id="instance-list" class="instance-list"></div>
       <div id="add-instance-section" style="display:none;">
-        <input id="add-address" type="text" placeholder="Add another signer..." spellcheck="false" autocomplete="off">
-        <button class="btn-sm btn-save" id="add-pair-btn">Add</button>
+        <input id="add-address" type="text" placeholder="Add another signer..." spellcheck="false" autocomplete="off" data-i18n-placeholder="addAnotherSigner">
+        <button class="btn-sm btn-save" id="add-pair-btn" data-i18n="add">Add</button>
         <div id="qr-host-main"></div>
       </div>
-      <button class="btn-sm btn-add" id="show-add-btn" style="margin-bottom:12px;">+ Add Signer</button>
+      <button class="btn-sm btn-add" id="show-add-btn" style="margin-bottom:12px;" data-i18n="showAddSigner">+ Add Signer</button>
 
       <div id="reconnect-status" class="reconnect-status" style="display:none">
         <div id="reconnect-msg" class="reconnect-msg"></div>
-        <button id="auth-url-btn" class="btn btn-primary" style="margin-top:8px;display:none">Open approval page</button>
-        <button id="retry-btn" class="btn btn-primary" style="margin-top:8px;display:none">Retry</button>
+        <button id="auth-url-btn" class="btn btn-primary" style="margin-top:8px;display:none" data-i18n="openApprovalPage">Open approval page</button>
+        <button id="retry-btn" class="btn btn-primary" style="margin-top:8px;display:none" data-i18n="retry">Retry</button>
       </div>
 
       <div id="connected-content" style="display:none">
-        <div class="section-label">Active persona</div>
+        <div class="section-label" data-i18n="activePersona">Active persona</div>
         <div class="active-persona">
           <div id="active-name" class="persona-name">--</div>
           <div id="active-npub" class="persona-npub">--</div>
@@ -725,67 +725,75 @@
           <div class="sign-status-row">
             <span id="sign-status-dot" class="sign-status-dot"></span>
             <div class="sign-status-copy">
-              <div id="sign-status-text" class="sign-status-text">Signing not tested</div>
-              <div id="sign-status-detail" class="sign-status-detail">Run a sign test before using sites.</div>
+              <div id="sign-status-text" class="sign-status-text" data-i18n="signingNotTested">Signing not tested</div>
+              <div id="sign-status-detail" class="sign-status-detail" data-i18n="runSignTestHint">Run a sign test before using sites.</div>
             </div>
-            <button id="sign-test-btn" class="btn-sm btn-save">Test</button>
+            <button id="sign-test-btn" class="btn-sm btn-save" data-i18n="test">Test</button>
           </div>
         </div>
 
         <div id="relay-info" class="relay-info">
-          <div class="relay-summary" id="relay-summary">0 relays</div>
+          <div class="relay-summary" id="relay-summary" data-i18n="zeroRelays">0 relays</div>
           <div class="relay-details" id="relay-details"></div>
         </div>
 
         <div id="persona-section">
-          <div class="section-label">Personas</div>
+          <div class="section-label" data-i18n="personas">Personas</div>
           <div id="persona-list" class="persona-list"></div>
 
           <div id="derive-row" class="derive-row">
-            <input id="derive-input" type="text" placeholder="purpose name" spellcheck="false">
-            <button id="derive-btn" class="btn btn-primary">Derive</button>
+            <input id="derive-input" type="text" placeholder="purpose name" spellcheck="false" data-i18n-placeholder="purposeNamePlaceholder">
+            <button id="derive-btn" class="btn btn-primary" data-i18n="derive">Derive</button>
           </div>
         </div>
 
         <div id="standard-bunker-card" class="standard-bunker-card" style="display:none">
-          <div class="section-label">Personas</div>
-          <p style="margin-top:6px">Persona management requires <a href="https://github.com/forgesworn/heartwood" target="_blank" rel="noopener">Heartwood</a></p>
+          <div class="section-label" data-i18n="personas">Personas</div>
+          <p style="margin-top:6px"><span data-i18n="personaRequiresHeartwood">Persona management requires</span> <a href="https://github.com/forgesworn/heartwood" target="_blank" rel="noopener">Heartwood</a></p>
         </div>
 
         <!-- Policy settings -->
         <div id="policy-section" style="margin-bottom: 16px;">
           <div class="section-label" style="cursor: pointer; user-select: none;" id="policy-toggle">
-            Signing Policies <span id="policy-arrow" style="font-size: 8px;">&#9654;</span>
+            <span data-i18n="signingPolicies">Signing Policies</span> <span id="policy-arrow" style="font-size: 8px;">&#9654;</span>
           </div>
           <div id="policy-content" style="display: none;">
             <div class="policy-subsection">
-              <div class="policy-label">Protected kinds (ask before signing)</div>
+              <div class="policy-label" data-i18n="protectedKinds">Protected kinds (ask before signing)</div>
               <div id="kind-rules-list" class="policy-list"></div>
               <div class="policy-add-row">
-                <input id="add-kind-input" type="number" placeholder="Kind number" min="0" max="65535" style="width: 80px;">
-                <button id="add-kind-btn" class="btn-sm btn-save">Add</button>
+                <input id="add-kind-input" type="number" placeholder="Kind number" min="0" max="65535" style="width: 80px;" data-i18n-placeholder="kindNumberPlaceholder">
+                <button id="add-kind-btn" class="btn-sm btn-save" data-i18n="add">Add</button>
               </div>
             </div>
 
             <div class="policy-subsection">
-              <div class="policy-label">Site rules</div>
+              <label class="privacy-toggle-row" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input id="privacy-mode-toggle" type="checkbox" style="accent-color: #339933;">
+                <span class="policy-label" style="margin: 0;" data-i18n="privacyMode">Privacy mode</span>
+              </label>
+              <div class="site-kind-hint" style="margin-top: 4px;" data-i18n="privacyModeHint">Hide Bark from every site except those with a site rule below</div>
+            </div>
+
+            <div class="policy-subsection">
+              <div class="policy-label" data-i18n="siteRules">Site rules</div>
               <div id="site-rules-list" class="policy-list"></div>
               <div class="policy-add-row">
                 <input id="add-site-input" type="text" placeholder="https://example.com" style="flex: 1;">
                 <select id="add-site-action">
-                  <option value="allow">Allow</option>
-                  <option value="ask">Ask</option>
-                  <option value="deny">Deny</option>
+                  <option value="allow" data-i18n="optionAllow">Allow</option>
+                  <option value="ask" data-i18n="optionAsk">Ask</option>
+                  <option value="deny" data-i18n="optionDeny">Deny</option>
                 </select>
-                <button id="add-site-btn" class="btn-sm btn-save">Add</button>
+                <button id="add-site-btn" class="btn-sm btn-save" data-i18n="add">Add</button>
               </div>
             </div>
 
-            <button id="reset-policies-btn" class="btn-sm" style="margin-top: 8px; color: #888; background: none; border: 1px solid #333; width: 100%;">Reset to defaults</button>
+            <button id="reset-policies-btn" class="btn-sm" style="margin-top: 8px; color: #888; background: none; border: 1px solid #333; width: 100%;" data-i18n="resetToDefaults">Reset to defaults</button>
           </div>
         </div>
 
-        <button id="disconnect-btn" class="btn btn-danger">Disconnect</button>
+        <button id="disconnect-btn" class="btn btn-danger" data-i18n="disconnect">Disconnect</button>
       </div>
 
       <div id="error-msg" class="error-msg"></div>

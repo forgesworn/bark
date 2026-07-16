@@ -75,6 +75,7 @@ function copyStatic() {
   cpSync(resolve(srcDir, 'icons'), resolve(distDir, 'icons'), { recursive: true })
   cpSync(resolve(srcDir, 'approve.html'), resolve(distDir, 'approve.html'))
   cpSync(resolve(srcDir, 'diagnostic.html'), resolve(distDir, 'diagnostic.html'))
+  cpSync(resolve(srcDir, '_locales'), resolve(distDir, '_locales'), { recursive: true })
 }
 
 copyStatic()

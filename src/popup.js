@@ -3,9 +3,13 @@
 import { nip19 } from 'nostr-tools'
 import { renderSVG } from 'uqr'
 import { DEFAULT_POLICIES, nextPolicyAction, normalisePolicies, TRUSTED_SITE_METHODS } from './policy.js'
+import { localiseDocument, t } from './i18n.js'
 
 const callbackApi = globalThis.chrome
 const promiseApi = globalThis.browser && !globalThis.chrome ? globalThis.browser : null
+
+// Swap the static English markup for the active locale before anything renders.
+localiseDocument()
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -128,6 +132,7 @@ const addSiteInput = document.getElementById('add-site-input')
 const addSiteAction = document.getElementById('add-site-action')
 const addSiteBtn = document.getElementById('add-site-btn')
 const resetPoliciesBtn = document.getElementById('reset-policies-btn')
+const privacyModeToggle = document.getElementById('privacy-mode-toggle')
 
 /** Ask the background worker to do a real local sign probe. */
 async function primeSigner() {
@@ -155,7 +160,7 @@ async function queryStatus() {
   } catch {
     return {
       status: 'disconnected',
-      lastError: 'Extension error',
+      lastError: t('extensionError'),
       relays: [],
       isHeartwood: false,
     }
@@ -207,7 +212,7 @@ async function requestPairingPermission(address) {
 
   const permission = { origins: [origin] }
   const granted = await requestOptionalPermission(permission)
-  if (!granted) throw new Error('Pairing permission denied.')
+  if (!granted) throw new Error(t('pairingPermissionDenied'))
 }
 
 // ---------------------------------------------------------------------------
@@ -230,7 +235,7 @@ async function renderInstances() {
     const isActive = inst.id === activeInstanceId
     const statusClass = isActive ? 'connected' : 'inactive'
     const cardClass = isActive ? 'instance-card active' : 'instance-card'
-    const npubShort = inst.npub ? inst.npub.slice(0, 20) + '...' : 'connecting...'
+    const npubShort = inst.npub ? inst.npub.slice(0, 20) + '...' : t('connectingEllipsis')
     const safeId = escapeHtml(inst.id)
     return `<div class="${cardClass}" data-id="${safeId}">
       <span class="inst-status ${statusClass}"></span>
@@ -238,7 +243,7 @@ async function renderInstances() {
         <div class="inst-name">${escapeHtml(inst.name)}</div>
         <div class="inst-npub">${escapeHtml(npubShort)}</div>
       </div>
-      <button class="inst-remove" data-id="${safeId}" title="Remove">&times;</button>
+      <button class="inst-remove" data-id="${safeId}" title="${escapeHtml(t('remove'))}">&times;</button>
     </div>`
   }).join('')
 
@@ -264,7 +269,7 @@ async function renderInstances() {
 
 async function pairHeartwood(address) {
   if (!address) {
-    pairError.textContent = 'Enter a signer or bridge address (e.g. heartwood.local:3000)'
+    pairError.textContent = t('enterSignerAddress')
     pairError.classList.remove('hidden')
     return
   }
@@ -272,14 +277,14 @@ async function pairHeartwood(address) {
   const btn = document.activeElement === addPairBtn ? addPairBtn : pairBtn
   const origText = btn.textContent
   btn.disabled = true
-  btn.textContent = 'Connecting...'
+  btn.textContent = t('connectingBtn')
 
   try {
     await requestPairingPermission(address)
 
     const resp = await sendRuntimeMessage({ type: 'bark-pair', address })
-    if (!resp) throw new Error('No response from background - try reloading the extension')
-    if (!resp.ok) throw new Error(resp.error || 'Pairing failed')
+    if (!resp) throw new Error(t('noResponseFromBackground'))
+    if (!resp.ok) throw new Error(resp.error || t('pairingFailed'))
 
     await renderInstances()
     await refreshState()
@@ -300,12 +305,12 @@ async function switchInstance(instanceId) {
   const card = instanceListEl.querySelector(`[data-id="${instanceId}"]`)
   if (card) {
     const nameEl = card.querySelector('.inst-name')
-    if (nameEl) nameEl.textContent += ' (connecting...)'
+    if (nameEl) nameEl.textContent += ` (${t('connectingEllipsis')})`
   }
 
   try {
     const result = await sendRuntimeMessage({ type: 'bark-switch', instanceId })
-    if (!result?.ok) showError(result?.error || 'Could not switch identity.')
+    if (!result?.ok) showError(result?.error || t('couldNotSwitchIdentity'))
     await renderInstances()
     await refreshState()
   } catch (err) {
@@ -314,7 +319,7 @@ async function switchInstance(instanceId) {
 }
 
 async function removeInstance(instanceId) {
-  if (!confirm('Remove this signer instance?')) return
+  if (!confirm(t('removeSignerConfirm'))) return
 
   let result
   try {
@@ -325,7 +330,7 @@ async function removeInstance(instanceId) {
   }
 
   if (!result?.ok) {
-    showError(result?.error || 'Could not remove instance.')
+    showError(result?.error || t('couldNotRemoveInstance'))
     return
   }
   await renderInstances()
@@ -358,13 +363,13 @@ function resetQrFlow() {
   qrActions.style.display = 'none'
   setQrStatus('')
   qrStartBtn.disabled = false
-  qrStartBtn.textContent = 'Generate QR'
+  qrStartBtn.textContent = t('generateQr')
 }
 
 async function startQrPairing() {
   resetQrFlow()
   qrStartBtn.disabled = true
-  qrStartBtn.textContent = 'Waiting...'
+  qrStartBtn.textContent = t('waitingEllipsis')
 
   let resp
   try {
@@ -373,9 +378,9 @@ async function startQrPairing() {
     resp = { ok: false, error: err.message }
   }
   if (!resp?.ok) {
-    setQrStatus(resp?.error || 'Could not start pairing.', 'err')
+    setQrStatus(resp?.error || t('couldNotStartPairing'), 'err')
     qrStartBtn.disabled = false
-    qrStartBtn.textContent = 'Generate QR'
+    qrStartBtn.textContent = t('generateQr')
     return
   }
 
@@ -383,7 +388,7 @@ async function startQrPairing() {
   qrUri.textContent = resp.uri
   qrUri.style.display = ''
   qrActions.style.display = ''
-  setQrStatus('Scan with your signer, or paste the URI into it.')
+  setQrStatus(t('scanWithSigner'))
   pollQrStatus()
 }
 
@@ -395,14 +400,14 @@ async function pollQrStatus() {
     status = null
   }
   if (!status) {
-    setQrStatus('Pairing expired. Generate a new QR.', 'err')
+    setQrStatus(t('pairingExpired'), 'err')
     qrStartBtn.disabled = false
-    qrStartBtn.textContent = 'Generate QR'
+    qrStartBtn.textContent = t('generateQr')
     return
   }
 
   if (status.status === 'connected') {
-    setQrStatus('Connected.', 'ok')
+    setQrStatus(t('connectedStatus'), 'ok')
     await sendRuntimeMessage({ type: 'bark-nostrconnect-cancel' }).catch(() => {})
     resetQrFlow()
     qrFlow.style.display = 'none'
@@ -413,9 +418,9 @@ async function pollQrStatus() {
   }
 
   if (status.status === 'error') {
-    setQrStatus(status.error || 'Pairing failed.', 'err')
+    setQrStatus(status.error || t('pairingFailedDot'), 'err')
     qrStartBtn.disabled = false
-    qrStartBtn.textContent = 'Generate QR'
+    qrStartBtn.textContent = t('generateQr')
     return
   }
 
@@ -478,11 +483,11 @@ function showReconnecting(msg, autoRetrying, authUrl = null) {
 
 async function scheduleRetry() {
   if (retryCount >= MAX_AUTO_RETRIES) {
-    showReconnecting('Connection lost.', false)
+    showReconnecting(t('connectionLost'), false)
     return
   }
   const delay = RETRY_DELAYS[Math.min(retryCount, RETRY_DELAYS.length - 1)]
-  showReconnecting(`Reconnecting in ${delay / 1000}s...`, true)
+  showReconnecting(t('reconnectingIn', [String(delay / 1000)]), true)
   retryTimer = setTimeout(async () => {
     retryCount++
     await refreshState()
@@ -500,7 +505,7 @@ function renderRelays(relays) {
   }
   relayInfo.style.display = ''
   const upCount = relays.filter((r) => r.connected).length
-  relaySummary.textContent = `${upCount}/${relays.length} relays connected`
+  relaySummary.textContent = t('relaysConnected', [String(upCount), String(relays.length)])
 
   relayDetails.innerHTML = ''
   for (const r of relays) {
@@ -539,31 +544,31 @@ function renderSigningStatus(status) {
   signTestBtn.disabled = state === 'pending'
 
   if (state === 'ready') {
-    signStatusText.textContent = 'Signing ready'
+    signStatusText.textContent = t('signingReady')
     signStatusDetail.textContent = status.signingLastOkAt
-      ? `Last tested ${formatTime(status.signingLastOkAt)}`
-      : 'Signer returned a valid event.'
-    signTestBtn.textContent = 'Test'
+      ? t('lastTested', [formatTime(status.signingLastOkAt)])
+      : t('signerReturnedValid')
+    signTestBtn.textContent = t('test')
     return
   }
 
   if (state === 'pending') {
-    signStatusText.textContent = 'Waiting for signer'
-    signStatusDetail.textContent = 'Approve the request on your signer device.'
-    signTestBtn.textContent = 'Waiting'
+    signStatusText.textContent = t('waitingForSigner')
+    signStatusDetail.textContent = t('approveOnSigner')
+    signTestBtn.textContent = t('waitingBtn')
     return
   }
 
   if (state === 'error') {
-    signStatusText.textContent = 'Signing failed'
-    signStatusDetail.textContent = status.signingLastError || 'Run the sign test again.'
-    signTestBtn.textContent = 'Retry'
+    signStatusText.textContent = t('signingFailed')
+    signStatusDetail.textContent = status.signingLastError || t('runSignTestAgain')
+    signTestBtn.textContent = t('retry')
     return
   }
 
-  signStatusText.textContent = 'Signing not tested'
-  signStatusDetail.textContent = 'Run a sign test before using sites.'
-  signTestBtn.textContent = 'Test'
+  signStatusText.textContent = t('signingNotTested')
+  signStatusDetail.textContent = t('runSignTestHint')
+  signTestBtn.textContent = t('test')
 }
 
 function identityPubkey(identity) {
@@ -594,7 +599,7 @@ async function refreshHeartwoodIdentityInstances(options = {}) {
     activatePubkey: options.activatePubkey || '',
     activateLabel: options.activateLabel || '',
   })
-  if (!result || !result.ok) throw new Error(result?.error || 'Could not refresh Heartwood identities.')
+  if (!result || !result.ok) throw new Error(result?.error || t('couldNotRefreshIdentities'))
   return result
 }
 
@@ -617,11 +622,11 @@ async function refreshState() {
     if (status.status === 'awaiting-approval') {
       showScreen(mainScreen)
       showReconnecting(
-        status.lastError || 'Approve this connection on your signer.',
+        status.lastError || t('approveConnectionOnSigner'),
         false,
         status.authUrl,
       )
-      retryBtn.textContent = 'Check again'
+      retryBtn.textContent = t('checkAgain')
       retryBtn.style.display = ''
       renderRelays(status.relays)
       return
@@ -681,7 +686,7 @@ async function refreshState() {
       const result = await rpc('heartwood_list_identities')
       if (Array.isArray(result)) identities = result
     } catch (err) {
-      showError('Could not load personas: ' + err.message)
+      showError(t('couldNotLoadPersonas', [err.message]))
     }
 
     const activeMatch = identities.find((id) => {
@@ -708,7 +713,7 @@ async function refreshState() {
 
       const name = document.createElement('div')
       name.className = 'persona-name'
-      name.textContent = instance.heartwoodIdentityLabel || instance.name || 'unnamed'
+      name.textContent = instance.heartwoodIdentityLabel || instance.name || t('unnamed')
       item.appendChild(name)
 
       const npub = document.createElement('div')
@@ -752,7 +757,7 @@ async function refreshState() {
     // Standard bunker mode — show greyed persona card
     personaSection.style.display = 'none'
     standardBunkerCard.style.display = ''
-    activeName.textContent = 'default'
+    activeName.textContent = t('defaultName')
   }
 }
 
@@ -803,10 +808,10 @@ async function derivePersona() {
 
 async function testSigner() {
   signTestBtn.disabled = true
-  signTestBtn.textContent = 'Waiting'
+  signTestBtn.textContent = t('waitingBtn')
   signStatusDot.className = 'sign-status-dot pending'
-  signStatusText.textContent = 'Waiting for signer'
-  signStatusDetail.textContent = 'Approve the request on your signer device.'
+  signStatusText.textContent = t('waitingForSigner')
+  signStatusDetail.textContent = t('approveOnSigner')
 
   try {
     await primeSigner()
@@ -840,9 +845,17 @@ async function disconnect() {
 // ---------------------------------------------------------------------------
 
 const KIND_NAMES = {
-  0: 'Profile metadata',
-  3: 'Contact list',
-  10002: 'Relay list',
+  0: t('kindProfileMetadata'),
+  3: t('kindContactList'),
+  10002: t('kindRelayList'),
+}
+
+/** Localised display text for a policy action badge. */
+function actionLabel(action) {
+  if (action === 'allow') return t('actionAllow')
+  if (action === 'ask') return t('actionAsk')
+  if (action === 'deny') return t('actionDeny')
+  return action
 }
 
 async function loadPolicies() {
@@ -862,8 +875,8 @@ async function savePolicies(policies) {
 function makeActionBadge(action, onCycle) {
   const badge = document.createElement('span')
   badge.className = `policy-action cyclable ${escapeHtml(action)}`
-  badge.textContent = action
-  badge.title = 'Click to change: allow → ask → deny'
+  badge.textContent = actionLabel(action)
+  badge.title = t('clickToChange')
   badge.addEventListener('click', (e) => {
     e.stopPropagation()
     onCycle(nextPolicyAction(action))
@@ -877,7 +890,7 @@ function renderKindRules(policies) {
   if (entries.length === 0) {
     const placeholder = document.createElement('div')
     placeholder.className = 'policy-placeholder'
-    placeholder.textContent = 'No kind rules configured'
+    placeholder.textContent = t('noKindRules')
     kindRulesList.appendChild(placeholder)
     return
   }
@@ -917,15 +930,100 @@ function renderKindRules(policies) {
 /** Origins whose per-site kind override panel is expanded. */
 const expandedSites = new Set()
 
+/** Methods a site rule can override individually. Heartwood identity
+ *  operations are included so a user can hard-deny them per site. */
+const SITE_METHOD_OPTIONS = [
+  ...TRUSTED_SITE_METHODS,
+  'heartwood_list_identities',
+  'heartwood_derive',
+  'heartwood_derive_persona',
+  'heartwood_switch',
+]
+
+function panelHeading(text) {
+  const heading = document.createElement('div')
+  heading.className = 'site-kind-hint'
+  heading.style.marginTop = '6px'
+  heading.textContent = text
+  return heading
+}
+
 function renderSiteKindPanel(origin, rule) {
   const panel = document.createElement('div')
   panel.className = 'site-kind-panel'
+
+  // --- Per-method overrides ---
+  panel.appendChild(panelHeading(t('methods')))
+
+  const methodEntries = Object.entries(rule).filter(([key]) => key !== 'kindRules')
+  for (const [method, action] of methodEntries) {
+    const row = document.createElement('div')
+    row.className = 'policy-item'
+
+    const label = document.createElement('span')
+    label.className = 'policy-label'
+    label.textContent = method
+    row.appendChild(label)
+
+    row.appendChild(makeActionBadge(action, async (next) => {
+      const current = await loadPolicies()
+      const site = current.siteRules[origin]
+      if (!site) return
+      site[method] = next
+      await savePolicies(current)
+      renderSiteRules(current)
+    }))
+
+    const removeBtn = document.createElement('button')
+    removeBtn.className = 'policy-remove'
+    removeBtn.textContent = '×'
+    removeBtn.addEventListener('click', async () => {
+      const current = await loadPolicies()
+      const site = current.siteRules[origin]
+      if (site) delete site[method]
+      await savePolicies(current)
+      renderSiteRules(current)
+    })
+    row.appendChild(removeBtn)
+
+    panel.appendChild(row)
+  }
+
+  const unsetMethods = SITE_METHOD_OPTIONS.filter((method) => !(method in rule))
+  if (unsetMethods.length > 0) {
+    const addMethodRow = document.createElement('div')
+    addMethodRow.className = 'site-kind-add'
+    const select = document.createElement('select')
+    for (const method of unsetMethods) {
+      const option = document.createElement('option')
+      option.value = method
+      option.textContent = method
+      select.appendChild(option)
+    }
+    const addMethodBtn = document.createElement('button')
+    addMethodBtn.className = 'btn-sm btn-save'
+    addMethodBtn.textContent = t('add')
+    addMethodBtn.addEventListener('click', async () => {
+      const current = await loadPolicies()
+      const site = current.siteRules[origin]
+      if (!site) return
+      site[select.value] = 'ask'
+      await savePolicies(current)
+      renderSiteRules(current)
+    })
+    addMethodRow.appendChild(select)
+    addMethodRow.appendChild(addMethodBtn)
+    panel.appendChild(addMethodRow)
+  }
+
+  // --- Per-kind overrides ---
+  panel.appendChild(panelHeading(t('kindOverrides')))
 
   const kindEntries = Object.entries(rule.kindRules || {})
   if (kindEntries.length === 0) {
     const hint = document.createElement('div')
     hint.className = 'site-kind-hint'
-    hint.textContent = 'No kind overrides for this site'
+    hint.textContent = t('noKindOverrides')
     panel.appendChild(hint)
   }
 
@@ -967,11 +1065,11 @@ function renderSiteKindPanel(origin, rule) {
   addRow.className = 'site-kind-add'
   const input = document.createElement('input')
   input.type = 'text'
-  input.placeholder = 'Kind number'
+  input.placeholder = t('kindNumberPlaceholder')
   input.inputMode = 'numeric'
   const addBtn = document.createElement('button')
   addBtn.className = 'btn-sm btn-save'
-  addBtn.textContent = 'Add'
+  addBtn.textContent = t('add')
   const addKindOverride = async () => {
     const num = Number(input.value.trim())
     if (!input.value.trim() || isNaN(num) || !Number.isInteger(num) || num < 0 || num > 65535) return
@@ -999,7 +1097,7 @@ function renderSiteRules(policies) {
   if (entries.length === 0) {
     const placeholder = document.createElement('div')
     placeholder.className = 'policy-placeholder'
-    placeholder.textContent = 'No site rules configured'
+    placeholder.textContent = t('noSiteRules')
     siteRulesList.appendChild(placeholder)
     return
   }
@@ -1070,6 +1168,16 @@ async function renderPolicies() {
   const policies = await loadPolicies()
   renderKindRules(policies)
   renderSiteRules(policies)
+  if (privacyModeToggle) {
+    const { privacy } = await storageGet('privacy')
+    privacyModeToggle.checked = Boolean(privacy?.enabled)
+  }
+}
+
+if (privacyModeToggle) {
+  privacyModeToggle.addEventListener('change', async () => {
+    await storageSet({ privacy: { enabled: privacyModeToggle.checked } })
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -1081,7 +1189,7 @@ deriveBtn.addEventListener('click', derivePersona)
 signTestBtn.addEventListener('click', testSigner)
 retryBtn.addEventListener('click', () => {
   clearRetryState()
-  retryBtn.textContent = 'Retry'
+  retryBtn.textContent = t('retry')
   refreshState()
 })
 

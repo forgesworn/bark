@@ -1,8 +1,12 @@
 // Approval popup logic — queries background for pending request details,
 // renders them, and sends the user's allow/deny decision back.
 
+import { localiseDocument, t } from './i18n.js'
+
 const callbackApi = globalThis.chrome
 const promiseApi = globalThis.browser && !globalThis.chrome ? globalThis.browser : null
+
+localiseDocument()
 
 function sendRuntimeMessage(message) {
   if (callbackApi?.runtime?.sendMessage) {
@@ -95,7 +99,7 @@ function escapeHtml(str) {
 
 async function init() {
   if (!requestId) {
-    loading.textContent = 'Missing request ID.'
+    loading.textContent = t('missingRequestId')
     return
   }
 
@@ -106,7 +110,7 @@ async function init() {
     details = null
   }
   if (!details) {
-    loading.textContent = 'Request not found or expired.'
+    loading.textContent = t('requestNotFound')
     return
   }
 
@@ -115,53 +119,57 @@ async function init() {
 
   // Method-specific title and description
   const kindNames = {
-    0: 'Profile Metadata',
-    3: 'Contact List',
-    10002: 'Relay List',
+    0: t('approveKindProfile'),
+    3: t('approveKindContacts'),
+    10002: t('approveKindRelays'),
   }
+
+  // Substitutions carry pre-escaped markup for the origin; the message
+  // templates themselves ship with the extension and are trusted.
+  const boldOrigin = '<strong>' + escapeHtml(details.origin) + '</strong>'
 
   if (details.method === 'signEvent' && details.event) {
     const kind = details.event.kind
-    const kindLabel = kindNames[kind] || `Kind ${kind}`
-    title.textContent = `Sign ${kindLabel}?`
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to sign a ' + escapeHtml(kindLabel) + ' event'
+    const kindLabel = kindNames[kind] || t('kindN', [String(kind)])
+    title.textContent = t('signTitle', [kindLabel])
+    originText.innerHTML = t('wantsToSignEvent', [boldOrigin, escapeHtml(kindLabel)])
     if (kind === 0 && details.event.content) {
       renderProfileFields(details.event.content)
     }
   } else if (details.method === 'getPublicKey') {
-    title.textContent = 'Share Identity?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to know your public key'
+    title.textContent = t('shareIdentityTitle')
+    originText.innerHTML = t('wantsPublicKey', [boldOrigin])
   } else if (details.method === 'getRelays') {
-    title.textContent = 'Share Relays?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to know your relay list'
+    title.textContent = t('shareRelaysTitle')
+    originText.innerHTML = t('wantsRelayList', [boldOrigin])
   } else if (details.method === 'nip04.encrypt') {
-    title.textContent = 'Encrypt Message?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to encrypt a legacy message'
+    title.textContent = t('encryptTitle')
+    originText.innerHTML = t('wantsEncryptLegacy', [boldOrigin])
   } else if (details.method === 'nip04.decrypt') {
-    title.textContent = 'Decrypt Message?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to decrypt a legacy message'
+    title.textContent = t('decryptTitle')
+    originText.innerHTML = t('wantsDecryptLegacy', [boldOrigin])
   } else if (details.method === 'nip44.encrypt') {
-    title.textContent = 'Encrypt Message?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to encrypt a message'
+    title.textContent = t('encryptTitle')
+    originText.innerHTML = t('wantsEncrypt', [boldOrigin])
   } else if (details.method === 'nip44.decrypt') {
-    title.textContent = 'Decrypt Message?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to decrypt a message'
+    title.textContent = t('decryptTitle')
+    originText.innerHTML = t('wantsDecrypt', [boldOrigin])
   } else if (details.method === 'heartwood_list_identities') {
-    title.textContent = 'List Identities?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to list the identities on your Heartwood device'
+    title.textContent = t('listIdentitiesTitle')
+    originText.innerHTML = t('wantsListIdentities', [boldOrigin])
   } else if (details.method === 'heartwood_derive' || details.method === 'heartwood_derive_persona') {
-    title.textContent = 'Derive Identity?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to derive a new identity on your Heartwood device'
+    title.textContent = t('deriveIdentityTitle')
+    originText.innerHTML = t('wantsDeriveIdentity', [boldOrigin])
   } else if (details.method === 'heartwood_switch') {
-    title.textContent = 'Switch Identity?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to switch your active signing identity'
+    title.textContent = t('switchIdentityTitle')
+    originText.innerHTML = t('wantsSwitchIdentity', [boldOrigin])
   } else {
-    title.textContent = 'Approve Request?'
-    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to call <code>' + escapeHtml(details.method) + '</code>'
+    title.textContent = t('approveRequestTitle')
+    originText.innerHTML = t('wantsCallMethod', [boldOrigin, '<code>' + escapeHtml(details.method) + '</code>'])
   }
 
   // Persona info
-  personaName.textContent = details.personaName || 'default'
+  personaName.textContent = details.personaName || t('defaultName')
   personaNpub.textContent = truncate(details.pubkey)
   trustBtn.style.display = details.canTrustSite ? '' : 'none'
 
