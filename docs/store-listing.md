@@ -74,6 +74,25 @@ Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hard
 | `optional_host_permissions` http/https | Requested only when the user pairs with a local Heartwood/bridge device by HTTP address (e.g. `heartwood.local:3000`). Never requested otherwise. |
 | Content scripts on `https://*/*` | NIP-07 requires injecting the `window.nostr` provider so Nostr web apps can request signatures. The isolated content script validates origin and message shape before anything reaches the service worker. |
 
+CWS's "Host permission justification" field counts content-script match
+patterns as host permissions. Paste this (covers both):
+
+> Bark is a NIP-07 signing provider: it must inject the window.nostr object
+> before page scripts run on any site the user visits, because Nostr web
+> apps can be hosted on any domain, so a narrower match list is impossible.
+> That is the sole reason for the content script matches on https://*/*
+> (plus localhost/127.0.0.1 for local development and loopback bridge
+> pages). The provider only exposes the standard NIP-07 API; the isolated
+> content script validates origin and message shape, reads nothing from
+> pages, and transmits nothing except the user's own signing requests to
+> their configured signer over encrypted NIP-46. An optional privacy mode
+> further restricts injection to user-whitelisted sites only.
+>
+> The optional host permissions (http/https) are requested at runtime for
+> the single origin the user types when pairing a local Heartwood or bridge
+> device by HTTP address (e.g. heartwood.local:3000), and never otherwise.
+> The manifest declares no other host access.
+
 Firefox additionally declares `wss://*/*` and loopback `ws://` host
 permissions for relay WebSockets (user-optional under MV3). The Chromium
 build needs no host permissions for WebSockets.
