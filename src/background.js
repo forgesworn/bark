@@ -840,6 +840,7 @@ function cancelReconnect() {
 let connectionState = {
   status: 'disconnected',
   lastError: null,
+  authUrl: null,
   relays: [],
   isHeartwood: false,
   signingStatus: 'untested',
@@ -1128,7 +1129,7 @@ async function doConnect(originHint) {
   signer = BunkerSigner.fromBunker(clientSk, bp, {
     onauth(authUrl) {
       connectionState.status = 'awaiting-approval'
-      connectionState.lastError = 'Approve this client on your Heartwood device.'
+      connectionState.lastError = 'Approve this connection on your signer.'
       connectionState.authUrl = authUrl || null
     },
   })
@@ -1185,6 +1186,7 @@ async function doConnect(originHint) {
   cancelReconnect()
   connectionState.status = 'connected'
   connectionState.lastError = null
+  connectionState.authUrl = null
   lastActivityTime = Date.now()
 
   // Probe relay health
@@ -1250,6 +1252,7 @@ async function resetConnection({ clearSigning = true } = {}) {
   connectPromise = null
   connectionState.status = 'disconnected'
   connectionState.lastError = null
+  connectionState.authUrl = null
   connectionState.relays = []
   connectionState.isHeartwood = false
   if (clearSigning) {

@@ -88,6 +88,7 @@ const signTestBtn = document.getElementById('sign-test-btn')
 const reconnectStatus = document.getElementById('reconnect-status')
 const reconnectMsg = document.getElementById('reconnect-msg')
 const retryBtn = document.getElementById('retry-btn')
+const authUrlBtn = document.getElementById('auth-url-btn')
 const relayInfo = document.getElementById('relay-info')
 const relaySummary = document.getElementById('relay-summary')
 const relayDetails = document.getElementById('relay-details')
@@ -325,13 +326,27 @@ function clearRetryState() {
   }
 }
 
-function showReconnecting(msg, autoRetrying) {
+/** Only http(s) auth URLs from the signer are opened in a tab. */
+function safeAuthUrl(value) {
+  if (typeof value !== 'string') return null
+  try {
+    const url = new URL(value)
+    if (url.protocol === 'https:' || url.protocol === 'http:') return url.href
+  } catch { /* not a URL */ }
+  return null
+}
+
+function showReconnecting(msg, autoRetrying, authUrl = null) {
   reconnectStatus.style.display = ''
   connectedContent.style.display = 'none'
   reconnectMsg.textContent = msg
   reconnectMsg.classList.toggle('active', autoRetrying)
   retryBtn.style.display = autoRetrying ? 'none' : ''
   statusDot.className = autoRetrying ? 'status-dot reconnecting' : 'status-dot'
+
+  const safeUrl = safeAuthUrl(authUrl)
+  authUrlBtn.style.display = safeUrl ? '' : 'none'
+  authUrlBtn.dataset.url = safeUrl || ''
 }
 
 async function scheduleRetry() {
@@ -474,7 +489,11 @@ async function refreshState() {
     const status = await queryStatus()
     if (status.status === 'awaiting-approval') {
       showScreen(mainScreen)
-      showReconnecting('Approve this client on your Heartwood device.', false)
+      showReconnecting(
+        status.lastError || 'Approve this connection on your signer.',
+        false,
+        status.authUrl,
+      )
       retryBtn.textContent = 'Check again'
       retryBtn.style.display = ''
       renderRelays(status.relays)
@@ -819,6 +838,13 @@ retryBtn.addEventListener('click', () => {
   clearRetryState()
   retryBtn.textContent = 'Retry'
   refreshState()
+})
+
+authUrlBtn.addEventListener('click', () => {
+  const url = safeAuthUrl(authUrlBtn.dataset.url)
+  if (!url) return
+  if (callbackApi?.tabs?.create) callbackApi.tabs.create({ url })
+  else if (promiseApi?.tabs?.create) promiseApi.tabs.create({ url })
 })
 
 // Toggle relay details
