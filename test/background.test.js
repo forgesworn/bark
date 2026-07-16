@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -638,6 +638,26 @@ describe('sanitiseError — safe prefix coverage', () => {
     expect(sanitiseError(new Error('Instance not found.'))).toBe('Instance not found.')
     expect(sanitiseError(new Error('Server returned an invalid bunker URI.'))).toBe('Server returned an invalid bunker URI.')
     expect(sanitiseError(new Error('Active identity changed. Please retry.'))).toBe('Active identity changed. Please retry.')
+  })
+})
+
+describe('isInternalSender', () => {
+  const base = 'chrome-extension://abcdefghijklmnop/'
+
+  it('treats tabless senders as internal', () => {
+    expect(isInternalSender({}, base)).toBe(true)
+    expect(isInternalSender({ origin: 'https://evil.example' }, base)).toBe(true)
+  })
+
+  it('treats extension pages opened in a tab as internal', () => {
+    expect(isInternalSender({ tab: { id: 1 }, origin: 'chrome-extension://abcdefghijklmnop' }, base)).toBe(true)
+  })
+
+  it('treats web pages as external', () => {
+    expect(isInternalSender({ tab: { id: 1 }, origin: 'https://snort.social' }, base)).toBe(false)
+    expect(isInternalSender({ tab: { id: 1 }, origin: 'chrome-extension://otherextension' }, base)).toBe(false)
+    expect(isInternalSender({ tab: { id: 1 } }, base)).toBe(false)
+    expect(isInternalSender({ tab: { id: 1 }, origin: '' }, base)).toBe(false)
   })
 })
 

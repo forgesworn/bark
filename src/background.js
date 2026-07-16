@@ -807,6 +807,24 @@ export function appNameFromOrigin(origin) {
 }
 
 /**
+ * Determine whether a message came from the extension's own UI. Messages
+ * without a tab (action popup, service worker peers) are internal, and so
+ * are extension pages opened in a tab (popup.html or diagnostic.html in a
+ * pinned tab) — their sender origin is the extension origin itself.
+ *
+ * @param {chrome.runtime.MessageSender|object} sender
+ * @param {string} extensionBaseUrl  chrome.runtime.getURL('') — e.g. "chrome-extension://abc/"
+ * @returns {boolean}
+ */
+export function isInternalSender(sender, extensionBaseUrl) {
+  if (!sender?.tab) return true
+  return typeof sender.origin === 'string' &&
+    typeof extensionBaseUrl === 'string' &&
+    sender.origin.length > 0 &&
+    extensionBaseUrl.startsWith(`${sender.origin}/`)
+}
+
+/**
  * Canonicalize a Chrome message sender into a web origin. Only http/https
  * origins are valid for site policies and web-page NIP-07 requests.
  *
@@ -2068,8 +2086,9 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     if (message.type === 'bark-request') {
       debug('[bark:bg] ← request', message.method, 'from', sender.tab ? 'tab' : 'extension');
       (async () => {
-        // Extension-internal requests (e.g. from popup) bypass policy checks.
-        if (!sender.tab) {
+        // Extension-internal requests (popup, or extension pages opened in a
+        // tab) bypass policy checks.
+        if (isInternalSender(sender, chrome.runtime.getURL(''))) {
           try {
             const result = await handleMessage(message.method, message.params)
             debug('[bark:bg] → response', message.method, typeof result === 'string' ? result.slice(0, 40) : typeof result)

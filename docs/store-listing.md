@@ -60,12 +60,16 @@ npm run build:firefox   # output in dist-firefox/
 
 `npm run package:firefox` produces the exact submitted zip.
 
+`web-ext lint` reports 0 errors. The remaining UNSAFE_VAR_ASSIGNMENT
+warnings are innerHTML assignments whose dynamic values all pass through
+the local `escapeHtml` helper first.
+
 ## Assets checklist
 
-- [ ] Screenshots (1280×800): setup screen, QR pairing, approval popup,
-      policy settings, Heartwood persona list
-- [ ] CWS promo tile 440×280
-- [ ] Icon 128×128 (already in `src/icons/`)
+- [x] Screenshots (1280×800) in `docs/store-assets/` — regenerate with
+      `npm run build && node scripts/store-screenshots.mjs`
+- [x] CWS promo tile 440×280 (`docs/store-assets/promo-tile-440x280.png`)
+- [x] Icon 128×128 (already in `src/icons/`)
 
 ## Submission checklist
 
