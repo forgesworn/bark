@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bark — remote Nostr signing for your browser</title>
+  <meta name="description" content="Bark is a NIP-07 browser extension that signs Nostr events through your remote NIP-46 signer. No keys in the browser. Ever.">
+  <link rel="icon" type="image/png" href="assets/bark-48.png">
+  <meta property="og:title" content="Bark — remote Nostr signing for your browser">
+  <meta property="og:description" content="Sign Nostr events with keys that never touch the browser. Works with any NIP-46 bunker; Heartwood adds derived identities.">
+  <meta property="og:image" content="https://bark.forgesworn.dev/assets/01-connected.png">
+  <link rel="canonical" href="https://bark.forgesworn.dev/">
+  <style>
+    :root {
+      --bg: #0a0a12;
+      --panel: #12121c;
+      --line: #24242f;
+      --ink: #eef4ee;
+      --muted: #9db89d;
+      --accent: #339933;
+      --accent-ink: #cfe3cf;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--accent-ink); }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    header {
+      background: radial-gradient(1100px 640px at 70% -20%, #22371e, var(--bg) 62%);
+      padding: 28px 0 96px;
+    }
+    nav { display: flex; align-items: center; gap: 14px; margin-bottom: 88px; }
+    nav img { width: 40px; height: 40px; }
+    nav .name { font-size: 22px; font-weight: 700; color: var(--accent-ink); flex: 1; }
+    nav a { color: var(--muted); text-decoration: none; margin-left: 22px; font-size: 15px; }
+    nav a:hover { color: var(--ink); }
+
+    .hero h1 { font-size: clamp(40px, 6vw, 64px); font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; max-width: 720px; }
+    .hero p.tag { font-size: clamp(18px, 2.4vw, 23px); color: var(--muted); margin: 22px 0 36px; max-width: 620px; }
+    .cta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 13px 26px; border-radius: 10px; text-decoration: none;
+      font-weight: 600; font-size: 16px; border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #2e8a2e; }
+    .btn-ghost { border-color: var(--line); color: var(--ink); }
+    .btn-ghost:hover { border-color: var(--muted); }
+    .hero .note { margin-top: 18px; font-size: 14px; color: #6b7c6b; }
+
+    section { padding: 72px 0; }
+    section.alt { background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    h2 { font-size: 34px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.01em; }
+    .lede { color: var(--muted); font-size: 18px; max-width: 640px; margin-bottom: 44px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+    .card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
+    }
+    section.alt .card { background: var(--bg); }
+    .card h3 { font-size: 19px; margin-bottom: 10px; color: var(--accent-ink); }
+    .card p { color: var(--muted); font-size: 15px; }
+
+    .shots { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; }
+    .shots img {
+      width: min(860px, 88vw); flex: 0 0 auto; scroll-snap-align: center;
+      border-radius: 14px; border: 1px solid var(--line);
+    }
+
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; counter-reset: step; }
+    .step { border-left: 3px solid var(--accent); padding: 4px 0 4px 20px; }
+    .step h3 { font-size: 18px; margin-bottom: 8px; }
+    .step h3::before { counter-increment: step; content: counter(step) ". "; color: var(--accent); }
+    .step p { color: var(--muted); font-size: 15px; }
+    .step code { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 13px; }
+
+    .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+    .dl {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .dl h3 { font-size: 19px; color: var(--accent-ink); }
+    .dl .sub { color: var(--muted); font-size: 14px; flex: 1; }
+    .dl .btn { text-align: center; margin-top: 14px; }
+    .badge { display: inline-block; font-size: 12px; color: #b8a24a; border: 1px solid #4a4224; border-radius: 999px; padding: 2px 10px; margin-left: 8px; vertical-align: 2px; }
+    pre {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+      padding: 18px 20px; overflow-x: auto; font-size: 14px; color: var(--accent-ink); margin-top: 26px;
+    }
+
+    footer { border-top: 1px solid var(--line); padding: 40px 0 60px; color: #6b7c6b; font-size: 14px; }
+    footer .links { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--ink); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <img src="assets/bark-128.png" alt="Bark logo">
+      <span class="name">Bark</span>
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/forgesworn/bark">GitHub</a>
+    </nav>
+    <div class="hero">
+      <h1>Sign Nostr events with keys that never touch the browser</h1>
+      <p class="tag">Bark bridges <code>window.nostr</code> to your remote NIP-46 signer: a hardware device, a self-hosted bunker, or nsec.app. Only signatures cross the wire.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#download">Download</a>
+        <a class="btn btn-ghost" href="https://github.com/forgesworn/bark">View source</a>
+      </div>
+      <p class="note">Free and open source. MIT licensed. No analytics, no accounts, no wallet.</p>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <h2>Everything a signer extension should be</h2>
+    <p class="lede">Bark does one job: let Nostr web apps request signatures without ever seeing your keys. Everything else exists to make that safe.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>No keys in the browser</h3>
+        <p>Bark never generates, stores, or touches private key material. Requests travel over encrypted NIP-46 to your signer, and only signatures come back.</p>
+      </div>
+      <div class="card">
+        <h3>Works with any NIP-46 bunker</h3>
+        <p>nsecBunker, Amber, nsec.app, Heartwood, or your own signer. Pair by pasting a bunker URI, scanning a nostrconnect QR, or a local Heartwood address.</p>
+      </div>
+      <div class="card">
+        <h3>Policies down to method and kind</h3>
+        <p>Per-site allow, ask, or deny rules with per-method and per-kind overrides. Profile, contacts, and relay-list events stay protected unless you say otherwise.</p>
+      </div>
+      <div class="card">
+        <h3>Privacy mode</h3>
+        <p>Hide Bark from every site except the ones you whitelist. Unlisted pages cannot detect that a Nostr extension is installed at all.</p>
+      </div>
+      <div class="card">
+        <h3>Approvals that respect you</h3>
+        <p>Nothing signs without your say. Allow once, trust a site for routine signing, or deny. Concurrent requests queue with a toolbar badge instead of failing.</p>
+      </div>
+      <div class="card">
+        <h3>Speaks your language</h3>
+        <p>The interface ships in 53 languages, and the minimal permission footprint means the only Chrome permission Bark asks for is storage.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="screenshots">
+  <div class="wrap">
+    <h2>A quick look</h2>
+    <p class="lede">Scroll through the popup, the approval window, and the policy editor.</p>
+    <div class="shots">
+      <img src="assets/01-connected.png" alt="Bark popup connected to a remote signer" loading="lazy">
+      <img src="assets/02-approval.png" alt="Approval window asking before signing" loading="lazy">
+      <img src="assets/03-policies.png" alt="Policy editor with per-site method and kind overrides" loading="lazy">
+      <img src="assets/04-qr-pairing.png" alt="QR pairing with nostrconnect" loading="lazy">
+      <img src="assets/05-personas.png" alt="Heartwood persona management" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lede">Three steps from install to your first signed event.</p>
+    <div class="steps">
+      <div class="step">
+        <h3>Install Bark</h3>
+        <p>Add it to your browser from the store or load the release zip as an unpacked extension.</p>
+      </div>
+      <div class="step">
+        <h3>Pair your signer</h3>
+        <p>Paste a <code>bunker://</code> URI, scan a nostrconnect QR from the popup, or enter a local Heartwood address.</p>
+      </div>
+      <div class="step">
+        <h3>Approve and sign</h3>
+        <p>Open any Nostr web app. Bark asks before a new site can use your identity; approve once or trust the site for routine signing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="download">
+  <div class="wrap">
+    <h2>Download</h2>
+    <p class="lede">Version 1.2.0. Store listings are in review; direct downloads work today.</p>
+    <div class="downloads">
+      <div class="dl">
+        <h3>Chrome, Brave, Edge <span class="badge">store review pending</span></h3>
+        <p class="sub">Until the Chrome Web Store listing is live, download the zip, extract it, enable Developer mode at <code>chrome://extensions</code>, and Load unpacked.</p>
+        <a class="btn btn-primary" href="https://github.com/forgesworn/bark/releases/download/v1.2.0/bark-v1.2.0.zip">Download for Chromium</a>
+      </div>
+      <div class="dl">
+        <h3>Firefox <span class="badge">store review pending</span></h3>
+        <p class="sub">Until the Firefox Add-ons listing is live, download the zip and load it temporarily via <code>about:debugging</code>, or wait for the signed listing.</p>
+        <a class="btn btn-primary" href="https://github.com/forgesworn/bark/releases/download/v1.2.0/bark-firefox-v1.2.0.zip">Download for Firefox</a>
+      </div>
+      <div class="dl">
+        <h3>Safari</h3>
+        <p class="sub">The Safari build converts with Apple's Safari Web Extension tooling. An App Store listing is planned.</p>
+        <a class="btn btn-ghost" href="https://github.com/forgesworn/bark/releases/download/v1.2.0/bark-safari-v1.2.0.zip">Download for Safari</a>
+      </div>
+    </div>
+    <pre><code># or build from source
+git clone https://github.com/forgesworn/bark.git
+cd bark &amp;&amp; npm install &amp;&amp; npm run build:all</code></pre>
+    <p style="margin-top:16px; font-size:14px; color:#6b7c6b;">All releases and checksums: <a href="https://github.com/forgesworn/bark/releases">github.com/forgesworn/bark/releases</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="links">
+      <a href="https://github.com/forgesworn/bark">GitHub</a>
+      <a href="https://github.com/forgesworn/bark/blob/main/PRIVACY.md">Privacy</a>
+      <a href="https://github.com/forgesworn/bark/blob/main/SECURITY.md">Security</a>
+      <a href="https://github.com/forgesworn/bark/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/forgesworn/heartwood">Heartwood</a>
+      <a href="https://github.com/forgesworn">ForgeSworn</a>
+    </div>
+    <p>Bark is part of the ForgeSworn open-source ecosystem for sovereign identity on Nostr. MIT licence.</p>
+  </div>
+</footer>
+
+</body>
+</html>

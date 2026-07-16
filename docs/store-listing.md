@@ -10,7 +10,8 @@ Add-ons (AMO). Keep this in sync with the manifest and README.
 - **Single purpose:** NIP-07 signing provider for Nostr web apps, backed by a
   remote NIP-46 signer. No keys are stored in the browser.
 - **Privacy policy URL:** https://github.com/forgesworn/bark/blob/main/PRIVACY.md
-- **Homepage:** https://github.com/forgesworn/bark
+- **Homepage:** https://bark.forgesworn.dev (marketing site; source in `site/`,
+  deployed by the Pages workflow on push to main)
 
 ## Short description (CWS, max 132 chars)
 
@@ -19,24 +20,47 @@ Add-ons (AMO). Keep this in sync with the manifest and README.
 
 ## Long description
 
-Bark bridges `window.nostr` to a remote NIP-46 signer, so Nostr web apps can
-request signatures without your private key ever entering the browser.
+CWS allows up to 16,000 characters and preserves line breaks (no markdown).
+Paste the block below verbatim.
 
-- Works with any NIP-46 bunker: nsecBunker, Amber, nsec.app, Heartwood, or
-  your own signer
-- Pair by pasting a bunker:// URI, scanning a QR (nostrconnect), or a local
-  Heartwood HTTP address
-- Per-site approval with allow/ask/deny policies, per-kind rules, and
-  protected event kinds (profile, contacts, relay list)
-- Approval requests queue with a toolbar badge; nothing signs without your say
-- NIP-04 and NIP-44 encryption forwarded to the signer
-- Multiple signer instances with one-click switching; Heartwood devices add
-  unlimited derived identities
-- Privacy mode: hide Bark from every site except the ones you whitelist, so
-  pages cannot fingerprint that a Nostr extension is installed
-- Localised into 53 languages
-- Minimal footprint: the only Chrome permission is `storage` — no tabs
-  access, no remote code, no analytics, no tracking, no accounts, no wallet
+```
+Bark bridges window.nostr to a remote NIP-46 signer, so Nostr web apps can request signatures without your private key ever entering the browser. Your keys stay on your signer: a hardware device, a self-hosted bunker, or a hosted service like nsec.app. Only signatures cross the wire.
+
+NO KEYS IN THE BROWSER. EVER.
+Bark never generates, stores, or touches private key material. There is no key import, no seed phrase screen, and nothing for a malicious page or a browser compromise to steal. Every signing and encryption request travels over the encrypted NIP-46 protocol to a signer you control, and only the result comes back.
+
+WORKS WITH ANY NIP-46 BUNKER
+Bark is a standard NIP-07 provider backed by standard NIP-46. It works with nsecBunker, Amber, nsec.app, Heartwood, and any other compliant signer. Three ways to pair:
+• Paste a bunker:// URI from any signer.
+• Pair by QR: Bark generates a nostrconnect:// URI and QR code with a fresh key and secret per attempt; scan it with your signer and it connects back over the relay. Signers that need a browser approval step (such as nsec.app) get an "Open approval page" button.
+• Enter a local Heartwood device address for HTTP pairing.
+
+NOTHING SIGNS WITHOUT YOUR SAY
+The first time a site asks for your identity, a signature, or encryption, Bark asks you. Allow the request once, trust the site for routine signing, or deny it. Sensitive event kinds (your profile, contact list, and relay list) keep asking even on trusted sites unless you explicitly override them. Concurrent requests queue in order with a toolbar badge instead of failing.
+
+POLICY CONTROL DOWN TO METHOD AND EVENT KIND
+The policy editor gives every site an allow/ask/deny rule, and each rule can override individual methods (for example, deny nip44.decrypt on one site while allowing signing) and individual event kinds. Sensible defaults protect newcomers; full control is there when you want it.
+
+PRIVACY MODE
+Turn on privacy mode and Bark reveals window.nostr only to sites you have a rule for. Every other page sees nothing: no provider object, no error responses, no way to fingerprint that a Nostr extension is installed.
+
+HEARTWOOD IDENTITIES
+Paired with a Heartwood signer, Bark lists, derives, and switches unlimited identities derived from a single seed, each with its own keys. Post as different personas without ever exposing a key. With any other bunker, Bark works as a clean single-identity signer.
+
+ENCRYPTION SUPPORT
+NIP-44 and legacy NIP-04 encrypt/decrypt are forwarded to your signer, so DMs and encrypted app data work everywhere your signer does.
+
+BUILT TO STAY OUT OF THE WAY
+• Multiple signer instances with one-click switching.
+• Keep-alive pings hold the relay connection open while you browse, so actions stay fast.
+• Provider injected before page scripts run: apps never see window.nostr as undefined.
+• Localised into 53 languages.
+
+MINIMAL FOOTPRINT
+The only Chrome permission Bark requests is storage. No tabs access, no browsing history, no remote code, no analytics, no tracking, no accounts, no wallet. The extension is fully open source (MIT) at github.com/forgesworn/bark, with a CI-tested build you can reproduce yourself.
+
+Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hardware signer, and works just as well without it.
+```
 
 ## Permissions justification (reviewer notes)
 
