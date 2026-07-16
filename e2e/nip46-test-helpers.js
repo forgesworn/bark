@@ -394,6 +394,17 @@ export class DeterministicNip46Signer {
       return { result: 'pong' }
     }
 
+    if (request.method === 'nip44_encrypt' || request.method === 'nip44_decrypt') {
+      const [thirdPartyPubkey, text] = request.params || []
+      if (!/^[0-9a-f]{64}$/.test(thirdPartyPubkey || '')) return { error: 'bad third-party pubkey' }
+      const conversationKey = getConversationKey(this.secretKey, thirdPartyPubkey)
+      return {
+        result: request.method === 'nip44_encrypt'
+          ? encrypt(text, conversationKey)
+          : decrypt(text, conversationKey),
+      }
+    }
+
     return { error: 'unsupported method' }
   }
 
