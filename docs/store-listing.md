@@ -32,7 +32,8 @@ request signatures without your private key ever entering the browser.
 - NIP-04 and NIP-44 encryption forwarded to the signer
 - Multiple signer instances with one-click switching; Heartwood devices add
   unlimited derived identities
-- No analytics, no tracking, no accounts, no wallet
+- Minimal footprint: the only Chrome permission is `storage` — no tabs
+  access, no remote code, no analytics, no tracking, no accounts, no wallet
 
 ## Permissions justification (reviewer notes)
 
@@ -64,10 +65,28 @@ npm run build:firefox   # output in dist-firefox/
 warnings are innerHTML assignments whose dynamic values all pass through
 the local `escapeHtml` helper first.
 
+## Positioning
+
+The nearest competitor is Bunker46 (same NIP-07 → NIP-46 bridge concept).
+Bark's listing should make the contrast easy to see without naming it:
+
+- Bunker46 requests **tabs + all-websites data**; Bark's Chromium build
+  requests only `storage`. Lead with the minimal-permissions bullet.
+- Bark adds QR (nostrconnect) pairing, a policy engine with per-kind and
+  per-site rules, an approval queue with badge, multi-instance switching,
+  and Heartwood personas — none of which Bunker46 lists.
+- Bark ships store-quality screenshots, a promo tile, CI, e2e coverage,
+  and a changelog; keep the listing updated each release so freshness is
+  visibly better.
+
 ## Assets checklist
 
 - [x] Screenshots (1280×800) in `docs/store-assets/` — regenerate with
       `npm run build && node scripts/store-screenshots.mjs`
+- [x] CWS allows **max 5 screenshots** — upload these, in this order:
+      `03-connected`, `06-approval`, `04-policies`, `02-qr-pairing`,
+      `05-personas`. Omit `01-setup` (a subset of `02-qr-pairing`).
+      AMO allows up to 10 — upload all six there.
 - [x] CWS promo tile 440×280 (`docs/store-assets/promo-tile-440x280.png`)
 - [x] CWS store icon (`docs/store-assets/store-icon-128.png`) — 96×96
       artwork centred on a transparent 128×128 canvas per Google's image
