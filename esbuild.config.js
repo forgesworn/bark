@@ -22,6 +22,14 @@ mkdirSync(resolve(distDir, 'icons'), { recursive: true })
 function manifestForTarget() {
   const manifest = JSON.parse(readFileSync(resolve(srcDir, 'manifest.json'), 'utf8'))
 
+  // The Chromium manifest avoids broad host matches (a CWS in-depth review
+  // trigger): content scripts run on a curated list of Nostr clients plus
+  // localhost, and any other site is enabled at runtime via activeTab +
+  // optional host grant + dynamic registration. AMO and Safari have no such
+  // review trigger, so those targets keep the simpler broad injection and
+  // need neither scripting nor activeTab.
+  const BROAD_MATCHES = ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*']
+
   if (target === 'firefox') {
     // Firefox MV3 uses event-page background scripts while Chromium uses
     // service workers. The bundled background is an IIFE, so no module flag is
@@ -29,6 +37,8 @@ function manifestForTarget() {
     manifest.background = {
       scripts: ['background.js'],
     }
+    manifest.permissions = ['storage']
+    for (const cs of manifest.content_scripts) cs.matches = BROAD_MATCHES
     // Chromium never gates WebSockets on host permissions, so the base
     // manifest omits these. Firefox's behaviour is less clearly documented;
     // keep the declared (user-optional in MV3) relay permissions there.
@@ -51,9 +61,11 @@ function manifestForTarget() {
     manifest.background = {
       service_worker: 'background.js',
     }
+    manifest.permissions = ['storage']
     // Safari lacks reliable MAIN-world content script support, so it keeps
     // the script-tag injection path (see __BARK_INJECT_PROVIDER__ below).
     manifest.content_scripts = manifest.content_scripts.filter(cs => cs.world !== 'MAIN')
+    for (const cs of manifest.content_scripts) cs.matches = BROAD_MATCHES
     manifest.web_accessible_resources = [
       {
         resources: ['provider.js'],

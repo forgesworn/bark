@@ -61,7 +61,7 @@ BUILT TO STAY OUT OF THE WAY
 • Localised into 53 languages.
 
 MINIMAL FOOTPRINT
-The only permission Bark requests is storage. No tabs access, no browsing history, no remote code, no analytics, no tracking, no accounts, no wallet. Like every NIP-07 provider, Bark runs a small content script on websites so Nostr apps can find window.nostr (that is what the install warning about site data refers to); it reads nothing from the pages you visit and sends nothing anywhere except NIP-46 traffic to your own signer. Host access for HTTP pairing is optional and requested only for the address you enter. The extension is fully open source (MIT) at github.com/forgesworn/bark, with a CI-tested build you can reproduce yourself.
+Bark requests no blanket access to your browsing. Out of the box its content script runs only on a named list of popular Nostr clients; any other site gets access the moment you click Enable in the popup, one origin at a time, revocable just as easily. No browsing history, no remote code, no analytics, no tracking, no accounts, no wallet. The script reads nothing from the pages you visit and sends nothing anywhere except NIP-46 traffic to your own signer. The extension is fully open source (MIT) at github.com/forgesworn/bark, with a CI-tested build you can reproduce yourself.
 
 Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hardware signer, and works just as well without it.
 ```
@@ -70,28 +70,28 @@ Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hard
 
 | Permission | Why |
 |---|---|
-| `storage` | Persists signer connection details (bunker URI, client auth key), site policies, and connection health locally. Nothing leaves the machine except NIP-46 relay traffic to the user's own signer. |
-| `optional_host_permissions` http/https | Requested only when the user pairs with a local Heartwood/bridge device by HTTP address (e.g. `heartwood.local:3000`). Never requested otherwise. |
-| Content scripts on `https://*/*` | NIP-07 requires injecting the `window.nostr` provider so Nostr web apps can request signatures. The isolated content script validates origin and message shape before anything reaches the service worker. |
+| `storage` | Persists signer connection details (bunker URI, client auth key), site policies, enabled-site list, and connection health locally. Nothing leaves the machine except NIP-46 relay traffic to the user's own signer. |
+| `scripting` | Registers the NIP-07 provider content scripts for origins the user explicitly enables from the popup, and injects them into the invoking tab so the site works without a reload. Never used to read or modify page content. |
+| `activeTab` | Lets the popup show which site the user is on so they can enable Bark for it, and covers the immediate injection into that tab after they click Enable. No tab data is used beyond the origin shown to the user. |
+| `optional_host_permissions` http/https | Requested one origin at a time: when the user clicks Enable for a site, or pairs a local Heartwood/bridge device by HTTP address. Never requested wholesale. |
+| Content scripts (curated list) | Baked-in matches for twelve well-known Nostr web clients plus localhost, so Bark works out of the box where most users need it, with no broad host access. |
 
 CWS's "Host permission justification" field counts content-script match
-patterns as host permissions. Paste this (covers both):
+patterns as host permissions. Paste this:
 
-> Bark is a NIP-07 signing provider: it must inject the window.nostr object
-> before page scripts run on any site the user visits, because Nostr web
-> apps can be hosted on any domain, so a narrower match list is impossible.
-> That is the sole reason for the content script matches on https://*/*
-> (plus localhost/127.0.0.1 for local development and loopback bridge
-> pages). The provider only exposes the standard NIP-07 API; the isolated
-> content script validates origin and message shape, reads nothing from
-> pages, and transmits nothing except the user's own signing requests to
+> Bark requests no broad host access. Its content scripts are baked in only
+> for a fixed list of well-known Nostr web clients named in the manifest
+> (snort.social, primal.net, iris.to, coracle.social, nostrudel.ninja,
+> jumble.social, yakihonne.com, habla.news, zap.stream, njump.me,
+> nostter.app, satellite.earth) plus localhost for local development. Bark
+> is a NIP-07 signing provider and these sites need the window.nostr object
+> injected before their scripts run. For any other site, the user clicks
+> Enable in the popup: Bark then requests an optional host permission for
+> that single origin, registers the same two scripts for that origin only,
+> and activeTab covers the tab the user invoked. The scripts read nothing
+> from pages and transmit nothing except the user's own signing requests to
 > their configured signer over encrypted NIP-46. An optional privacy mode
-> further restricts injection to user-whitelisted sites only.
->
-> The optional host permissions (http/https) are requested at runtime for
-> the single origin the user types when pairing a local Heartwood or bridge
-> device by HTTP address (e.g. heartwood.local:3000), and never otherwise.
-> The manifest declares no other host access.
+> can further hide Bark from any site without an explicit rule.
 
 Firefox additionally declares `wss://*/*` and loopback `ws://` host
 permissions for relay WebSockets (user-optional under MV3). The Chromium
@@ -147,8 +147,10 @@ NIP-04/44, a privacy whitelist mode, and 44 locales.
 
 Where Bark leads — make these visible in the listing without naming them:
 
-- **Permissions**: Bunker46 requests `storage + tabs (+ windows)`; Bark's
-  Chromium build requests only `storage`. Lead with this bullet.
+- **Permissions**: Bunker46 requests `storage + tabs (+ windows)` and runs
+  its scripts on every website; Bark's Chromium build has no broad host
+  access at all — a curated site list plus one-origin-at-a-time opt-in.
+  Lead with this bullet.
 - **Policy depth**: event-kind-level rules and protected kinds (0, 3,
   10002) with per-site overrides; Bunker46 stops at domain/method level.
 - **Injection correctness**: MAIN-world declarative content script — no

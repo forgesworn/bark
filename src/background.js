@@ -877,6 +877,154 @@ export function isValidBunkerUri(value) {
   return typeof value === 'string' && value.length <= 2048 && BUNKER_URI_RE.test(value)
 }
 
+// ---------------------------------------------------------------------------
+// Per-site enablement (Chromium opt-in injection)
+//
+// The Chromium manifest deliberately avoids broad host matches — a CWS
+// in-depth-review trigger. Content scripts are baked in for a curated list
+// of Nostr clients plus localhost; every other site is enabled at runtime:
+// the popup requests an optional host grant for the one origin, then the
+// scripts are registered dynamically (persisting across sessions) and
+// injected into the requesting tab immediately via activeTab. Firefox and
+// Safari builds keep broad static matches, so none of this runs there.
+// ---------------------------------------------------------------------------
+
+/** Convert an http(s) origin into the match pattern covering it, or null. */
+export function originToMatchPattern(origin) {
+  if (typeof origin !== 'string') return null
+  try {
+    const url = new URL(origin)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    if (url.origin !== origin) return null
+    return `${origin}/*`
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Whether an origin is already covered by a set of manifest match patterns.
+ * Match patterns ignore ports, so only scheme and host are compared.
+ */
+export function originCoveredByPatterns(origin, patterns) {
+  let url
+  try {
+    url = new URL(origin)
+  } catch {
+    return false
+  }
+  const scheme = url.protocol.replace(':', '')
+  if (scheme !== 'http' && scheme !== 'https') return false
+  return (patterns || []).some((pattern) => {
+    const parsed = /^(https?|\*):\/\/([^/]+)\//.exec(pattern)
+    if (!parsed) return false
+    const [, patternScheme, patternHost] = parsed
+    if (patternScheme !== '*' && patternScheme !== scheme) return false
+    if (patternHost === '*') return true
+    if (patternHost.startsWith('*.')) {
+      const base = patternHost.slice(2)
+      return url.hostname === base || url.hostname.endsWith(`.${base}`)
+    }
+    return url.hostname === patternHost
+  })
+}
+
+/** True when this build injects long-tail sites by dynamic registration. */
+function supportsDynamicSites() {
+  return Boolean(globalThis.chrome?.scripting?.registerContentScripts)
+}
+
+function siteScriptIds(origin) {
+  return [`bark-bridge:${origin}`, `bark-provider:${origin}`]
+}
+
+function manifestMatchPatterns() {
+  const manifest = chrome.runtime.getManifest()
+  return (manifest.content_scripts || []).flatMap((cs) => cs.matches || [])
+}
+
+async function registeredSiteScripts(origin) {
+  try {
+    return await chrome.scripting.getRegisteredContentScripts({ ids: siteScriptIds(origin) })
+  } catch {
+    return []
+  }
+}
+
+async function registerSiteScripts(origin) {
+  const pattern = originToMatchPattern(origin)
+  if (!pattern) throw new Error('Only http(s) sites can be enabled.')
+  const [bridgeId, providerId] = siteScriptIds(origin)
+  const existing = await registeredSiteScripts(origin)
+  if (existing.length > 0) {
+    await chrome.scripting.unregisterContentScripts({ ids: existing.map((s) => s.id) }).catch(() => {})
+  }
+  await chrome.scripting.registerContentScripts([
+    {
+      id: bridgeId,
+      matches: [pattern],
+      js: ['content-script.js'],
+      runAt: 'document_start',
+      persistAcrossSessions: true,
+    },
+    {
+      id: providerId,
+      matches: [pattern],
+      js: ['provider.js'],
+      runAt: 'document_start',
+      world: 'MAIN',
+      persistAcrossSessions: true,
+    },
+  ])
+}
+
+async function enableSite(origin, tabId) {
+  if (!supportsDynamicSites()) throw new Error('Per-site enablement is not available on this browser.')
+  await registerSiteScripts(origin)
+  const { enabledSites = [] } = await chrome.storage.local.get('enabledSites')
+  if (!enabledSites.includes(origin)) {
+    await chrome.storage.local.set({ enabledSites: [...enabledSites, origin] })
+  }
+  // Make the current page work without a reload. activeTab covers the tab
+  // the user invoked the popup on even before the optional grant lands.
+  if (typeof tabId === 'number') {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['content-script.js'] }).catch(() => {})
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['provider.js'], world: 'MAIN' }).catch(() => {})
+  }
+}
+
+async function disableSite(origin) {
+  if (!supportsDynamicSites()) return
+  const existing = await registeredSiteScripts(origin)
+  if (existing.length > 0) {
+    await chrome.scripting.unregisterContentScripts({ ids: existing.map((s) => s.id) }).catch(() => {})
+  }
+  const { enabledSites = [] } = await chrome.storage.local.get('enabledSites')
+  await chrome.storage.local.set({ enabledSites: enabledSites.filter((o) => o !== origin) })
+  const pattern = originToMatchPattern(origin)
+  if (pattern && chrome.permissions?.remove) {
+    try { await chrome.permissions.remove({ origins: [pattern] }) } catch { /* keep grant */ }
+  }
+}
+
+/**
+ * Dynamic registrations survive browser restarts but not extension updates,
+ * so rebuild them from the stored list whenever the extension is installed
+ * or updated.
+ */
+async function reconcileSiteRegistrations() {
+  if (!supportsDynamicSites()) return
+  const { enabledSites = [] } = await chrome.storage.local.get('enabledSites')
+  for (const origin of enabledSites) {
+    try {
+      await registerSiteScripts(origin)
+    } catch {
+      // Grant revoked or origin invalid — leave it listed; enabling again
+      // from the popup repairs it.
+    }
+  }
+}
+
 /** Validate a purpose string for derivation (alphanumeric, hyphens, underscores, 1-64 chars). */
 export function isValidPurpose(value) {
   return typeof value === 'string' && /^[\w:.-]{1,64}$/.test(value)
@@ -1791,6 +1939,12 @@ if (typeof chrome !== 'undefined' && chrome.windows?.onRemoved) {
   })
 }
 
+if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
+  chrome.runtime.onInstalled.addListener(() => {
+    reconcileSiteRegistrations().catch(() => {})
+  })
+}
+
 if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Only accept messages from our own extension context (content scripts
@@ -1801,6 +1955,46 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
     if (message.type === 'bark-status') {
       sendResponse({ ...connectionState })
+      return true
+    }
+
+    if (message.type === 'bark-site-status') {
+      (async () => {
+        try {
+          const { origin } = message
+          if (!originToMatchPattern(origin)) {
+            sendResponse({ supported: false })
+            return
+          }
+          if (!supportsDynamicSites()) {
+            // Broad-injection builds (Firefox/Safari) cover every site.
+            sendResponse({ supported: true, enabled: true, builtIn: true })
+            return
+          }
+          if (originCoveredByPatterns(origin, manifestMatchPatterns())) {
+            sendResponse({ supported: true, enabled: true, builtIn: true })
+            return
+          }
+          const scripts = await registeredSiteScripts(origin)
+          sendResponse({ supported: true, enabled: scripts.length > 0, builtIn: false })
+        } catch (err) {
+          sendResponse({ error: sanitiseError(err) })
+        }
+      })()
+      return true
+    }
+
+    if (message.type === 'bark-site-enable') {
+      enableSite(message.origin, message.tabId)
+        .then(() => sendResponse({ ok: true }))
+        .catch((err) => sendResponse({ error: sanitiseError(err) }))
+      return true
+    }
+
+    if (message.type === 'bark-site-disable') {
+      disableSite(message.origin)
+        .then(() => sendResponse({ ok: true }))
+        .catch((err) => sendResponse({ error: sanitiseError(err) }))
       return true
     }
 

@@ -133,6 +133,92 @@ const addSiteAction = document.getElementById('add-site-action')
 const addSiteBtn = document.getElementById('add-site-btn')
 const resetPoliciesBtn = document.getElementById('reset-policies-btn')
 const privacyModeToggle = document.getElementById('privacy-mode-toggle')
+const siteCard = document.getElementById('site-card')
+const siteCardHost = document.getElementById('site-card-host')
+const siteCardState = document.getElementById('site-card-state')
+const siteCardBtn = document.getElementById('site-card-btn')
+const siteCardHint = document.getElementById('site-card-hint')
+
+// ---------------------------------------------------------------------------
+// Per-site enablement card (Chromium opt-in injection builds)
+// ---------------------------------------------------------------------------
+
+function queryActiveTab() {
+  if (callbackApi?.tabs?.query) {
+    return new Promise((resolve) => {
+      callbackApi.tabs.query({ active: true, currentWindow: true }, (tabs) => resolve(tabs?.[0] || null))
+    })
+  }
+  if (promiseApi?.tabs?.query) {
+    return promiseApi.tabs.query({ active: true, currentWindow: true }).then((tabs) => tabs?.[0] || null)
+  }
+  return Promise.resolve(null)
+}
+
+function requestOriginPermission(pattern) {
+  if (callbackApi?.permissions?.request) {
+    return new Promise((resolve) => {
+      callbackApi.permissions.request({ origins: [pattern] }, (granted) => {
+        void callbackApi.runtime.lastError // swallow "user gesture" errors
+        resolve(Boolean(granted))
+      })
+    })
+  }
+  if (promiseApi?.permissions?.request) {
+    return promiseApi.permissions.request({ origins: [pattern] }).catch(() => false)
+  }
+  return Promise.resolve(false)
+}
+
+async function initSiteCard() {
+  if (!siteCard) return
+  const tab = await queryActiveTab()
+  let origin = null
+  try {
+    const url = new URL(tab?.url || '')
+    if (url.protocol === 'https:' || url.protocol === 'http:') origin = url.origin
+  } catch { /* not a web page */ }
+  if (!origin) return
+
+  const status = await sendRuntimeMessage({ type: 'bark-site-status', origin }).catch(() => null)
+  // Curated and broad-injection builds need no card; only the long tail does.
+  if (!status?.supported || status.builtIn) return
+
+  const renderState = (enabled) => {
+    siteCard.style.display = ''
+    siteCardHost.textContent = new URL(origin).hostname
+    siteCardState.textContent = enabled ? t('siteCardOn') : t('siteCardOff')
+    siteCardBtn.textContent = enabled ? t('disableOnSite') : t('enableOnSite')
+    siteCardBtn.onclick = async () => {
+      siteCardBtn.disabled = true
+      try {
+        if (enabled) {
+          await sendRuntimeMessage({ type: 'bark-site-disable', origin })
+          siteCardHint.style.display = 'none'
+          renderState(false)
+        } else {
+          const granted = await requestOriginPermission(`${origin}/*`)
+          if (!granted) {
+            showError(t('sitePermissionDeclined'))
+            return
+          }
+          const resp = await sendRuntimeMessage({ type: 'bark-site-enable', origin, tabId: tab?.id })
+          if (resp?.error) {
+            showError(resp.error)
+            return
+          }
+          siteCardHint.style.display = ''
+          renderState(true)
+        }
+      } finally {
+        siteCardBtn.disabled = false
+      }
+    }
+  }
+  renderState(Boolean(status.enabled))
+}
+
+initSiteCard()
 
 /** Ask the background worker to do a real local sign probe. */
 async function primeSigner() {

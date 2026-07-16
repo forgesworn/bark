@@ -17,6 +17,8 @@ Bark stores local extension state in the browser extension local storage API
 - **Signing policies** — per-site allow/ask/deny choices, per-method and
   per-kind overrides, protected event kind rules, and the privacy mode
   toggle.
+- **Enabled sites** — on Chromium, the list of origins you have enabled
+  Bark on beyond the built-in list of well-known Nostr clients.
 
 These values stay on your machine in your browser's extension storage. The
 bunker URI and client secret are used only to communicate with the signer

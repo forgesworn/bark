@@ -159,7 +159,7 @@ Latest Heartwood treats identity selection as per-connection, based on the `bunk
 | Hide from unlisted sites | Yes (privacy mode) | No | No | Yes (whitelist) | No |
 | Derived identities | Unlimited (Heartwood) | None | None | None | None |
 | Hardware signer path | Yes (bridge to tethered boards) | No | No | No | Phone |
-| Host permissions (Chromium) | None | Broad | None | Varies | None |
+| Site access (Chromium) | Curated Nostr apps + per-site opt-in | All sites | All sites | All sites | All sites |
 | Languages | 53 | English | English | 44 | English |
 | Lightning | No | Yes | No | No | No |
 

@@ -114,6 +114,13 @@
 
   "disconnect": { "message": "Disconnect" },
 
+  "siteCardOn": { "message": "Bark is on for this site" },
+  "siteCardOff": { "message": "Bark is off for this site" },
+  "enableOnSite": { "message": "Enable", "description": "Button enabling Bark on the current site." },
+  "disableOnSite": { "message": "Disable", "description": "Button disabling Bark on the current site." },
+  "reloadHint": { "message": "Reload the page if it was already open." },
+  "sitePermissionDeclined": { "message": "Permission was declined." },
+
   "loadingRequest": { "message": "Loading request...", "description": "Approval window placeholder while the request loads." },
   "missingRequestId": { "message": "Missing request ID." },
   "requestNotFound": { "message": "Request not found or expired." },

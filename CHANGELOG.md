@@ -2,6 +2,26 @@
 
 All notable changes to Bark are documented here.
 
+## [1.3.0] — 2026-07-16
+
+### Changed
+
+- The Chromium build no longer requests broad host access (a Chrome Web
+  Store in-depth-review trigger). Content scripts are baked in for a
+  curated list of popular Nostr web clients plus localhost; any other site
+  is enabled with one click from the popup, which requests an optional
+  host grant for that single origin and registers the scripts persistently
+  (`scripting` + `activeTab`, with immediate injection so the current page
+  works without a reload). Registrations are rebuilt after extension
+  updates. Firefox and Safari keep automatic injection everywhere.
+
+### Added
+
+- Per-site card in the popup showing whether Bark runs on the current
+  site, with Enable/Disable controls for sites outside the curated list.
+- `bark-site-status` / `bark-site-enable` / `bark-site-disable` runtime
+  messages, and unit-tested origin/match-pattern helpers.
+
 ## [1.2.0] — 2026-07-16
 
 ### Added

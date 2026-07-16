@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, originToMatchPattern, originCoveredByPatterns } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -776,5 +776,51 @@ describe('isUnsupportedHeartwoodProbeError', () => {
     expect(isUnsupportedHeartwoodProbeError('client not approved')).toBe(false)
     expect(isUnsupportedHeartwoodProbeError('Request failed.')).toBe(false)
     expect(isUnsupportedHeartwoodProbeError('')).toBe(false)
+  })
+})
+
+describe('originToMatchPattern', () => {
+  it('converts http(s) origins into match patterns', () => {
+    expect(originToMatchPattern('https://example.com')).toBe('https://example.com/*')
+    expect(originToMatchPattern('http://localhost:8080')).toBe('http://localhost:8080/*')
+  })
+
+  it('rejects non-origins and non-web schemes', () => {
+    expect(originToMatchPattern('https://example.com/path')).toBe(null)
+    expect(originToMatchPattern('chrome-extension://abc')).toBe(null)
+    expect(originToMatchPattern('not a url')).toBe(null)
+    expect(originToMatchPattern(undefined)).toBe(null)
+  })
+})
+
+describe('originCoveredByPatterns', () => {
+  const patterns = [
+    'https://*.snort.social/*',
+    'https://*.primal.net/*',
+    'http://localhost/*',
+    'http://127.0.0.1/*',
+  ]
+
+  it('matches curated hosts including bare domains and subdomains', () => {
+    expect(originCoveredByPatterns('https://snort.social', patterns)).toBe(true)
+    expect(originCoveredByPatterns('https://www.snort.social', patterns)).toBe(true)
+    expect(originCoveredByPatterns('https://primal.net', patterns)).toBe(true)
+  })
+
+  it('matches localhost regardless of port (match patterns ignore ports)', () => {
+    expect(originCoveredByPatterns('http://localhost:7877', patterns)).toBe(true)
+    expect(originCoveredByPatterns('http://127.0.0.1:3000', patterns)).toBe(true)
+  })
+
+  it('does not match unlisted hosts or lookalike suffixes', () => {
+    expect(originCoveredByPatterns('https://example.com', patterns)).toBe(false)
+    expect(originCoveredByPatterns('https://notsnort.social', patterns)).toBe(false)
+    expect(originCoveredByPatterns('https://snort.social.evil.com', patterns)).toBe(false)
+  })
+
+  it('respects the scheme and handles wildcards', () => {
+    expect(originCoveredByPatterns('http://snort.social', patterns)).toBe(false)
+    expect(originCoveredByPatterns('https://anything.example', ['https://*/*'])).toBe(true)
+    expect(originCoveredByPatterns('https://anything.example', [])).toBe(false)
   })
 })

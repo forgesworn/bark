@@ -662,6 +662,18 @@
 </head>
 <body>
 
+  <!-- Per-site enablement card (Chromium opt-in injection builds only) -->
+  <div id="site-card" style="display:none; margin: 10px 12px 0; padding: 10px 12px; background: #101a10; border: 1px solid #274427; border-radius: 8px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div style="flex:1; min-width:0;">
+        <div id="site-card-host" style="font-size:13px; font-weight:600; color:#cfe3cf; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+        <div id="site-card-state" class="site-kind-hint"></div>
+      </div>
+      <button id="site-card-btn" class="btn-sm btn-save"></button>
+    </div>
+    <div id="site-card-hint" class="site-kind-hint" style="display:none; margin-top:6px;" data-i18n="reloadHint">Reload the page if it was already open.</div>
+  </div>
+
   <!-- Setup screen: shown when no instances are paired -->
   <div id="setup-screen" class="screen active">
     <div class="header">
