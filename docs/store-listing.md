@@ -12,6 +12,8 @@ Add-ons (AMO). Keep this in sync with the manifest and README.
 - **Privacy policy URL:** https://github.com/forgesworn/bark/blob/main/PRIVACY.md
 - **Homepage:** https://bark.forgesworn.dev (marketing site; source in `site/`,
   deployed by the Pages workflow on push to main)
+- **Support URL:** https://bark.forgesworn.dev/support.html (common fixes,
+  issues/discussions links, private security contact)
 
 ## Short description (CWS, max 132 chars)
 

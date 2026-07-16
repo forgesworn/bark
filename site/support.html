@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bark support: get help, report bugs</title>
+  <meta name="description" content="How to get help with Bark: common pairing and signing fixes, where to report bugs, and how to report security issues privately.">
+  <link rel="icon" type="image/png" href="assets/bark-48.png">
+  <link rel="canonical" href="https://bark.forgesworn.dev/support.html">
+  <style>
+    :root {
+      --bg: #0a0a12; --panel: #12121c; --line: #24242f; --ink: #eef4ee;
+      --muted: #9db89d; --dim: #6b7c6b; --accent: #339933; --accent-ink: #cfe3cf;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.65; }
+    a { color: var(--accent-ink); }
+    code { font-size: 0.92em; background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+    header { background: radial-gradient(900px 500px at 70% -20%, #22371e, var(--bg) 62%); padding: 28px 0 64px; }
+    nav { display: flex; align-items: center; gap: 14px; margin-bottom: 64px; flex-wrap: wrap; }
+    nav img { width: 40px; height: 40px; }
+    nav .name { font-size: 22px; font-weight: 700; color: var(--accent-ink); flex: 1; }
+    nav .name a { color: inherit; text-decoration: none; }
+    nav a { color: var(--muted); text-decoration: none; margin-left: 22px; font-size: 15px; }
+    nav a:hover { color: var(--ink); }
+    h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 800; line-height: 1.1; }
+    .tag { font-size: 18px; color: var(--muted); margin-top: 16px; max-width: 620px; }
+    section { padding: 48px 0; }
+    h2 { font-size: 26px; font-weight: 800; margin-bottom: 18px; }
+    details {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+      padding: 18px 22px; margin-bottom: 12px;
+    }
+    details summary { cursor: pointer; font-weight: 600; color: var(--accent-ink); font-size: 16px; }
+    details p { color: var(--muted); font-size: 15px; margin-top: 12px; }
+    details p + p { margin-top: 10px; }
+    .channels { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+    .ch { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+    .ch h3 { font-size: 18px; color: var(--accent-ink); margin-bottom: 8px; }
+    .ch p { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+    .btn { display: inline-block; padding: 11px 20px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; background: var(--accent); color: #fff; }
+    .btn:hover { background: #2e8a2e; }
+    footer { border-top: 1px solid var(--line); padding: 40px 0 60px; color: var(--dim); font-size: 14px; }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <img src="assets/bark-128.png" alt="Bark logo">
+      <span class="name"><a href="index.html">Bark</a></span>
+      <a href="index.html#features">Features</a>
+      <a href="index.html#download">Download</a>
+      <a href="donate.html">Donate</a>
+      <a href="https://github.com/forgesworn/bark">GitHub</a>
+    </nav>
+    <h1>Support</h1>
+    <p class="tag">Quick fixes for the common snags, and where to reach us when they aren't enough.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Common snags</h2>
+    <details>
+      <summary>Pairing sits on "Connecting..." and times out</summary>
+      <p>Bark and your signer must share at least one relay. Check the relay list in your bunker URI matches one your signer actually connects to, and that the signer is unlocked and online.</p>
+      <p>If the signer needs you to approve new clients, approve Bark there (Heartwood shows a button prompt; hosted bunkers show a queue). Then hit Retry in the popup.</p>
+    </details>
+    <details>
+      <summary>A website says window.nostr is missing</summary>
+      <p>If privacy mode is on, Bark is hidden from every site without a site rule. Open the popup, expand Signing Policies, and add the site (or untick privacy mode), then reload the page.</p>
+      <p>Bark also only injects on https pages (plus localhost), so http-only sites won't see it.</p>
+    </details>
+    <details>
+      <summary>Signing works, then stalls after the browser sits idle</summary>
+      <p>The first request after a long idle can take a few seconds while the service worker wakes and reconnects to the relay; Bark retries this automatically. If it hangs beyond that, open the popup and run the sign Test, which reports exactly where the chain is stuck.</p>
+    </details>
+    <details>
+      <summary>The approval window never appears</summary>
+      <p>Check the toolbar badge: queued approvals show a count, and clicking the Bark icon surfaces the queue. Some window managers open the approval behind the browser; it's a small 420px window titled Bark.</p>
+    </details>
+    <details>
+      <summary>I want to move to a new signer</summary>
+      <p>Add the new signer with "+ Add Signer" (URI or QR), confirm signing works with the Test button, then remove the old instance. Site policies are kept; they belong to Bark, not the signer.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Reach us</h2>
+    <div class="channels">
+      <div class="ch">
+        <h3>Bugs and feature requests</h3>
+        <p>GitHub issues is the fastest route. A good report includes your browser, signer type, and what the popup's sign Test says.</p>
+        <a class="btn" href="https://github.com/forgesworn/bark/issues">Open an issue</a>
+      </div>
+      <div class="ch">
+        <h3>Questions and discussion</h3>
+        <p>Not sure it's a bug? Start a discussion and we'll figure it out together.</p>
+        <a class="btn" href="https://github.com/forgesworn/bark/discussions">Start a discussion</a>
+      </div>
+      <div class="ch">
+        <h3>Security issues</h3>
+        <p>Never post vulnerabilities publicly. The security policy explains how to reach the maintainer privately.</p>
+        <a class="btn" href="https://github.com/forgesworn/bark/blob/main/SECURITY.md">Security policy</a>
+      </div>
+    </div>
+    <p style="margin-top: 32px; color: var(--muted); font-size: 15px;">One thing we will never ask you for: your nsec, your seed phrase, or your bunker URI with its secret. Anyone who does is not us.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><a href="index.html">← Back to Bark</a> · Part of <a href="https://github.com/forgesworn">ForgeSworn</a>. MIT licence.</p>
+  </div>
+</footer>
+
+</body>
+</html>

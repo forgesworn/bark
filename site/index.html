@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bark — remote Nostr signing for your browser</title>
-  <meta name="description" content="Bark is a NIP-07 browser extension that signs Nostr events through your remote NIP-46 signer. No keys in the browser. Ever.">
+  <title>Bark: sign Nostr events without keys in your browser</title>
+  <meta name="description" content="Bark is a NIP-07 browser extension that hands signing to a device you control. Web apps get their signatures. They never get your keys.">
   <link rel="icon" type="image/png" href="assets/bark-48.png">
-  <meta property="og:title" content="Bark — remote Nostr signing for your browser">
-  <meta property="og:description" content="Sign Nostr events with keys that never touch the browser. Works with any NIP-46 bunker; Heartwood adds derived identities.">
+  <meta property="og:title" content="Bark: sign Nostr events without keys in your browser">
+  <meta property="og:description" content="A small extension that hands signing to a device you control. Web apps get signatures. They never get your keys.">
   <meta property="og:image" content="https://bark.forgesworn.dev/assets/01-connected.png">
   <link rel="canonical" href="https://bark.forgesworn.dev/">
   <style>
@@ -17,8 +17,10 @@
       --line: #24242f;
       --ink: #eef4ee;
       --muted: #9db89d;
+      --dim: #6b7c6b;
       --accent: #339933;
       --accent-ink: #cfe3cf;
+      --warn: #c05b4d;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -26,43 +28,53 @@
       background: var(--bg);
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      line-height: 1.6;
+      line-height: 1.65;
     }
     a { color: var(--accent-ink); }
+    code { font-size: 0.92em; }
     .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
     header {
       background: radial-gradient(1100px 640px at 70% -20%, #22371e, var(--bg) 62%);
       padding: 28px 0 96px;
     }
-    nav { display: flex; align-items: center; gap: 14px; margin-bottom: 88px; }
+    nav { display: flex; align-items: center; gap: 14px; margin-bottom: 88px; flex-wrap: wrap; }
     nav img { width: 40px; height: 40px; }
     nav .name { font-size: 22px; font-weight: 700; color: var(--accent-ink); flex: 1; }
     nav a { color: var(--muted); text-decoration: none; margin-left: 22px; font-size: 15px; }
     nav a:hover { color: var(--ink); }
 
-    .hero h1 { font-size: clamp(40px, 6vw, 64px); font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; max-width: 720px; }
-    .hero p.tag { font-size: clamp(18px, 2.4vw, 23px); color: var(--muted); margin: 22px 0 36px; max-width: 620px; }
+    .hero h1 { font-size: clamp(38px, 6vw, 62px); font-weight: 800; line-height: 1.08; letter-spacing: -0.01em; max-width: 760px; }
+    .hero p.tag { font-size: clamp(18px, 2.4vw, 22px); color: var(--muted); margin: 24px 0 36px; max-width: 640px; }
     .cta { display: flex; gap: 14px; flex-wrap: wrap; }
     .btn {
       display: inline-block; padding: 13px 26px; border-radius: 10px; text-decoration: none;
-      font-weight: 600; font-size: 16px; border: 1px solid transparent;
+      font-weight: 600; font-size: 16px; border: 1px solid transparent; transition: all .15s ease;
     }
     .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: #2e8a2e; }
+    .btn-primary:hover { background: #2e8a2e; transform: translateY(-1px); }
     .btn-ghost { border-color: var(--line); color: var(--ink); }
     .btn-ghost:hover { border-color: var(--muted); }
-    .hero .note { margin-top: 18px; font-size: 14px; color: #6b7c6b; }
+    .hero .note { margin-top: 18px; font-size: 14px; color: var(--dim); }
 
-    section { padding: 72px 0; }
+    section { padding: 76px 0; }
     section.alt { background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-    h2 { font-size: 34px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.01em; }
-    .lede { color: var(--muted); font-size: 18px; max-width: 640px; margin-bottom: 44px; }
+    h2 { font-size: 34px; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.01em; }
+    .lede { color: var(--muted); font-size: 18px; max-width: 680px; margin-bottom: 40px; }
+    .prose { color: var(--muted); font-size: 17px; max-width: 680px; }
+    .prose + .prose { margin-top: 18px; }
+    .prose strong { color: var(--ink); }
+
+    .diagram { margin: 44px 0 8px; }
+    .diagram svg { width: 100%; height: auto; display: block; }
+    .caption { font-size: 14px; color: var(--dim); margin-top: 10px; }
 
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
     .card {
       background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
+      transition: border-color .15s ease;
     }
+    .card:hover { border-color: #35354a; }
     section.alt .card { background: var(--bg); }
     .card h3 { font-size: 19px; margin-bottom: 10px; color: var(--accent-ink); }
     .card p { color: var(--muted); font-size: 15px; }
@@ -80,6 +92,11 @@
     .step p { color: var(--muted); font-size: 15px; }
     .step code { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 13px; }
 
+    .family { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 44px; }
+    .family .card p { min-height: 66px; }
+    .family a.more { font-size: 14px; text-decoration: none; }
+    .family a.more:hover { text-decoration: underline; }
+
     .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
     .dl {
       background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
@@ -94,7 +111,16 @@
       padding: 18px 20px; overflow-x: auto; font-size: 14px; color: var(--accent-ink); margin-top: 26px;
     }
 
-    footer { border-top: 1px solid var(--line); padding: 40px 0 60px; color: #6b7c6b; font-size: 14px; }
+    .v4v {
+      margin-top: 76px; border: 1px solid var(--line); border-radius: 16px; padding: 36px;
+      background: radial-gradient(700px 300px at 20% -30%, #22371e, var(--panel) 70%);
+      display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    }
+    .v4v .txt { flex: 1; min-width: 260px; }
+    .v4v h2 { margin-bottom: 8px; font-size: 26px; }
+    .v4v p { color: var(--muted); font-size: 16px; }
+
+    footer { border-top: 1px solid var(--line); padding: 40px 0 60px; color: var(--dim); font-size: 14px; }
     footer .links { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
     footer a { color: var(--muted); text-decoration: none; }
     footer a:hover { color: var(--ink); }
@@ -107,51 +133,145 @@
     <nav>
       <img src="assets/bark-128.png" alt="Bark logo">
       <span class="name">Bark</span>
+      <a href="#why">Why</a>
       <a href="#features">Features</a>
-      <a href="#screenshots">Screenshots</a>
+      <a href="#family">The family</a>
       <a href="#download">Download</a>
+      <a href="donate.html">Donate</a>
+      <a href="support.html">Support</a>
       <a href="https://github.com/forgesworn/bark">GitHub</a>
     </nav>
     <div class="hero">
-      <h1>Sign Nostr events with keys that never touch the browser</h1>
-      <p class="tag">Bark bridges <code>window.nostr</code> to your remote NIP-46 signer: a <a href="https://github.com/forgesworn/heartwood">Heartwood</a> device, your own self-hosted <a href="https://github.com/forgesworn/heartwood-esp32">heartwoodd</a> bunker, or a hosted signer like nsec.app. Only signatures cross the wire.</p>
+      <h1>Your Nostr keys don't belong in a browser</h1>
+      <p class="tag">Bark is a small extension that hands signing to a device you control. Web apps get their signatures. They never get your keys.</p>
       <div class="cta">
-        <a class="btn btn-primary" href="#download">Download</a>
-        <a class="btn btn-ghost" href="https://github.com/forgesworn/bark">View source</a>
+        <a class="btn btn-primary" href="#download">Get Bark</a>
+        <a class="btn btn-ghost" href="#why">See why it matters</a>
       </div>
-      <p class="note">Free and open source. MIT licensed. No analytics, no accounts, no wallet.</p>
+      <p class="note">Free. Open source. No analytics, no accounts, no wallet, no nonsense.</p>
     </div>
   </div>
 </header>
 
-<section id="features">
+<section id="why">
   <div class="wrap">
-    <h2>Everything a signer extension should be</h2>
-    <p class="lede">Bark does one job: let Nostr web apps request signatures without ever seeing your keys. Everything else exists to make that safe.</p>
+    <h2>There is no password reset on Nostr</h2>
+    <p class="prose">Your private key is your identity. Lose it and you start again from nothing; leak it and someone else is you, forever. Yet the most common way people use Nostr is to paste that key into a browser extension and hope.</p>
+    <p class="prose">Browsers are where phishing pages, malicious scripts, and rogue extension updates live. Keeping your most unrecoverable secret there is a bet that nothing in your browser will ever go wrong. <strong>Bark refuses the bet.</strong> It holds no key at all: signing happens on a signer you control, and the browser only ever carries requests out and signatures back, encrypted end to end with NIP-46.</p>
+    <p class="prose">If your laptop were stolen tomorrow, the thief would find a connection string that can ask your signer for permission. Yours to revoke. That is the whole point.</p>
+
+    <div class="diagram" role="img" aria-label="Diagram comparing a key stored in the browser, exposed to malicious scripts and rogue updates, with Bark's model where the key stays on a separate signer device">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+        <!-- Left: keys in the browser -->
+        <rect x="20" y="30" width="380" height="230" rx="14" fill="#12121c" stroke="#3a2a2a"/>
+        <rect x="20" y="30" width="380" height="34" rx="14" fill="#1a1420"/>
+        <circle cx="44" cy="47" r="5" fill="#c05b4d"/><circle cx="62" cy="47" r="5" fill="#b8a24a"/><circle cx="80" cy="47" r="5" fill="#3a5a3a"/>
+        <text x="210" y="52" fill="#8a7a7a" font-size="13" text-anchor="middle">a typical signer extension</text>
+        <!-- key -->
+        <g transform="translate(180,140)">
+          <circle cx="0" cy="0" r="16" fill="none" stroke="#d8b84a" stroke-width="5"/>
+          <rect x="12" y="-3" width="44" height="6" fill="#d8b84a"/>
+          <rect x="40" y="-3" width="6" height="14" fill="#d8b84a"/>
+          <rect x="50" y="-3" width="6" height="10" fill="#d8b84a"/>
+        </g>
+        <text x="210" y="185" fill="#d8b84a" font-size="13" text-anchor="middle">nsec lives here</text>
+        <!-- threats -->
+        <text x="60" y="105" fill="#c05b4d" font-size="13">malicious page</text>
+        <path d="M 105 112 L 160 132" stroke="#c05b4d" stroke-width="2" marker-end="url(#arr-r)"/>
+        <text x="255" y="105" fill="#c05b4d" font-size="13">rogue update</text>
+        <path d="M 290 112 L 245 132" stroke="#c05b4d" stroke-width="2" marker-end="url(#arr-r)"/>
+        <text x="86" y="228" fill="#c05b4d" font-size="13">one paste, one leak</text>
+        <path d="M 150 218 L 178 172" stroke="#c05b4d" stroke-width="2" marker-end="url(#arr-r)"/>
+        <text x="210" y="295" fill="#8a7a7a" font-size="14" text-anchor="middle">everything in one place, including the risk</text>
+
+        <!-- Right: Bark model -->
+        <rect x="460" y="30" width="180" height="230" rx="14" fill="#12121c" stroke="#24422a"/>
+        <rect x="460" y="30" width="180" height="34" rx="14" fill="#141d22"/>
+        <circle cx="484" cy="47" r="5" fill="#c05b4d"/><circle cx="502" cy="47" r="5" fill="#b8a24a"/><circle cx="520" cy="47" r="5" fill="#3a5a3a"/>
+        <text x="550" y="52" fill="#7a8a7a" font-size="13" text-anchor="middle">Bark</text>
+        <text x="550" y="140" fill="#9db89d" font-size="14" text-anchor="middle">no keys</text>
+        <text x="550" y="162" fill="#6b7c6b" font-size="12" text-anchor="middle">requests out,</text>
+        <text x="550" y="178" fill="#6b7c6b" font-size="12" text-anchor="middle">signatures back</text>
+
+        <!-- relay -->
+        <path d="M 660 132 q 14 -26 40 -18 q 8 -22 34 -14 q 26 -8 30 16 q 20 8 8 26 q 2 20 -24 18 q -12 16 -34 8 q -26 10 -38 -10 q -22 0 -16 -26 z" fill="#161624" stroke="#2a2a3a"/>
+        <text x="723" y="145" fill="#7a7a9a" font-size="12" text-anchor="middle">relay</text>
+        <path d="M 645 145 L 662 145" stroke="#339933" stroke-width="2.5" marker-end="url(#arr-g)"/>
+        <path d="M 792 145 L 776 145" stroke="#339933" stroke-width="2.5" marker-start="url(#arr-g2)"/>
+        <text x="718" y="112" fill="#5a7a5a" font-size="11" text-anchor="middle">NIP-46, encrypted</text>
+
+        <!-- signer -->
+        <rect x="795" y="95" width="70" height="100" rx="10" fill="#0f1a12" stroke="#2e4a2e" stroke-width="1.5"/>
+        <g transform="translate(818,130) scale(0.62)">
+          <circle cx="0" cy="0" r="16" fill="none" stroke="#d8b84a" stroke-width="5"/>
+          <rect x="12" y="-3" width="44" height="6" fill="#d8b84a"/>
+          <rect x="40" y="-3" width="6" height="14" fill="#d8b84a"/>
+          <rect x="50" y="-3" width="6" height="10" fill="#d8b84a"/>
+        </g>
+        <circle cx="830" cy="172" r="8" fill="#339933"/>
+        <text x="830" y="215" fill="#9db89d" font-size="12" text-anchor="middle">your signer</text>
+        <text x="830" y="232" fill="#6b7c6b" font-size="11" text-anchor="middle">key + button</text>
+        <text x="663" y="295" fill="#7a8a7a" font-size="14" text-anchor="middle">the key never crosses the gap</text>
+
+        <defs>
+          <marker id="arr-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#c05b4d"/></marker>
+          <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#339933"/></marker>
+          <marker id="arr-g2" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6 z" fill="#339933"/></marker>
+        </defs>
+      </svg>
+      <p class="caption">Left: the usual model. Right: Bark's model. The difference is what a thief gets.</p>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="features">
+  <div class="wrap">
+    <h2>Small extension, strong opinions</h2>
+    <p class="lede">Bark does one job and takes it seriously: let Nostr web apps request signatures without ever seeing your keys. Everything else is there to make that safe and unannoying.</p>
     <div class="grid">
       <div class="card">
-        <h3>No keys in the browser</h3>
-        <p>Bark never generates, stores, or touches private key material. Requests travel over encrypted NIP-46 to your signer, and only signatures come back.</p>
+        <h3>It asks first</h3>
+        <p>The first time a site wants your identity or a signature, you decide: once, always, or never. Your profile, contact list, and relay list stay protected even on trusted sites. Multiple requests queue politely instead of failing.</p>
       </div>
       <div class="card">
-        <h3>Works with any NIP-46 bunker</h3>
-        <p>Heartwood, heartwoodd, nsecBunker, Amber, nsec.app, or your own signer. Pair by pasting a bunker URI, scanning a nostrconnect QR, or a local Heartwood address.</p>
+        <h3>Rules you set once</h3>
+        <p>Allow, ask, or deny per site, per method, per event kind. Let a client sign notes but never touch your DMs. Sensible defaults if you never open the settings; full control if you do.</p>
       </div>
       <div class="card">
-        <h3>Policies down to method and kind</h3>
-        <p>Per-site allow, ask, or deny rules with per-method and per-kind overrides. Profile, contacts, and relay-list events stay protected unless you say otherwise.</p>
+        <h3>Invisible until invited</h3>
+        <p>Privacy mode hides Bark from every site you haven't whitelisted. No provider object, no error messages, nothing to fingerprint. Sites you've never heard of can't even tell you use Nostr.</p>
       </div>
       <div class="card">
-        <h3>Privacy mode</h3>
-        <p>Hide Bark from every site except the ones you whitelist. Unlisted pages cannot detect that a Nostr extension is installed at all.</p>
+        <h3>Any bunker, not just ours</h3>
+        <p>Heartwood, heartwoodd, nsecBunker, Amber, nsec.app, or anything else that speaks NIP-46. Paste a bunker URI, scan a QR, or pair a local device. No lock-in, ever.</p>
       </div>
       <div class="card">
-        <h3>Approvals that respect you</h3>
-        <p>Nothing signs without your say. Allow once, trust a site for routine signing, or deny. Concurrent requests queue with a toolbar badge instead of failing.</p>
+        <h3>Nothing to leak</h3>
+        <p>The only permission Bark requests is storage. No tabs access, no browsing history, no remote code, no analytics. The content script exists solely to offer window.nostr and reads nothing from the pages you visit.</p>
       </div>
       <div class="card">
         <h3>Speaks your language</h3>
-        <p>The interface ships in 53 languages. The only permission Bark requests is storage; its content script exists solely to offer window.nostr and reads nothing from the pages you visit.</p>
+        <p>The interface ships in 53 languages, from Arabic to Vietnamese. Fast, too: the connection stays warm while you browse, so signing doesn't make you wait.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>Up and running in two minutes</h2>
+    <div class="steps" style="margin-top: 40px;">
+      <div class="step">
+        <h3>Install Bark</h3>
+        <p>From the store, or grab the zip below and load it unpacked. It's tiny.</p>
+      </div>
+      <div class="step">
+        <h3>Pair your signer</h3>
+        <p>Paste a <code>bunker://</code> URI, or hit "Pair by QR" and scan it with your signer. Bark generates a fresh key and secret for every attempt.</p>
+      </div>
+      <div class="step">
+        <h3>Use Nostr anywhere</h3>
+        <p>Open any Nostr web app and log in with the extension. Bark asks before a new site can do anything; after that it stays out of your way.</p>
       </div>
     </div>
   </div>
@@ -160,7 +280,7 @@
 <section class="alt" id="screenshots">
   <div class="wrap">
     <h2>A quick look</h2>
-    <p class="lede">Scroll through the popup, the approval window, and the policy editor.</p>
+    <p class="lede">The popup, the approval window, and the policy editor. Dark theme only, because we know our audience.</p>
     <div class="shots">
       <img src="assets/01-connected.png" alt="Bark popup connected to a remote signer" loading="lazy">
       <img src="assets/02-approval.png" alt="Approval window asking before signing" loading="lazy">
@@ -171,22 +291,64 @@
   </div>
 </section>
 
-<section id="how">
+<section id="family">
   <div class="wrap">
-    <h2>How it works</h2>
-    <p class="lede">Three steps from install to your first signed event.</p>
-    <div class="steps">
-      <div class="step">
-        <h3>Install Bark</h3>
-        <p>Add it to your browser from the store or load the release zip as an unpacked extension.</p>
+    <h2>Named after a tree for a reason</h2>
+    <p class="prose">Bark is the outer layer of something bigger. ForgeSworn builds the whole trunk: a hardware signer at the core, and a layer for every place you use Nostr. Each part is open source, each works on its own, and together they mean your key can live on a chip on your desk while you post from anywhere.</p>
+
+    <div class="diagram" role="img" aria-label="Tree cross-section showing Heartwood at the core, surrounded by Sapwood, Cambium, and Bark as the outer layer">
+      <svg viewBox="0 0 880 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+        <!-- rings -->
+        <ellipse cx="250" cy="190" rx="215" ry="165" fill="#1a2416" stroke="#2e4a2e" stroke-width="2"/>
+        <ellipse cx="250" cy="190" rx="172" ry="130" fill="#141d12" stroke="#39632f" stroke-width="3"/>
+        <ellipse cx="250" cy="190" rx="128" ry="96" fill="#18231a" stroke="#2a3a2a" stroke-width="1.5"/>
+        <ellipse cx="250" cy="190" rx="70" ry="52" fill="#0f1a12" stroke="#4a7a3a" stroke-width="2.5"/>
+        <text x="250" y="196" fill="#cfe3cf" font-size="15" font-weight="700" text-anchor="middle">Heartwood</text>
+        <!-- ring grain -->
+        <ellipse cx="250" cy="190" rx="98" ry="73" fill="none" stroke="#22301f" stroke-width="1"/>
+        <ellipse cx="250" cy="190" rx="150" ry="113" fill="none" stroke="#22301f" stroke-width="1"/>
+
+        <!-- labels -->
+        <g font-size="15">
+          <line x1="447" y1="120" x2="530" y2="92" stroke="#3a4a3a"/>
+          <text x="540" y="88" fill="#cfe3cf" font-weight="700">Bark</text>
+          <text x="540" y="108" fill="#9db89d" font-size="13">the protective outer layer: this browser extension</text>
+
+          <line x1="405" y1="167" x2="530" y2="162" stroke="#3a4a3a"/>
+          <text x="540" y="158" fill="#cfe3cf" font-weight="700">Cambium</text>
+          <text x="540" y="178" fill="#9db89d" font-size="13">the living layer: Android signer for Amethyst, Primal and friends</text>
+
+          <line x1="372" y1="222" x2="530" y2="232" stroke="#3a4a3a"/>
+          <text x="540" y="228" fill="#cfe3cf" font-weight="700">Sapwood</text>
+          <text x="540" y="248" fill="#9db89d" font-size="13">carries what the tree needs: web UI to manage your signer</text>
+
+          <line x1="318" y1="205" x2="530" y2="302" stroke="#3a4a3a"/>
+          <text x="540" y="298" fill="#cfe3cf" font-weight="700">Heartwood</text>
+          <text x="540" y="318" fill="#9db89d" font-size="13">the core: hardware signer that holds your keys, with a real button</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="family">
+      <div class="card">
+        <h3>Heartwood</h3>
+        <p>An open hardware signer built on ESP32. Keys are generated on the device and never leave it; a physical button approves what policies don't. This is what Bark was built for.</p>
+        <a class="more" href="https://github.com/forgesworn/heartwood-esp32">Meet the hardware →</a>
       </div>
-      <div class="step">
-        <h3>Pair your signer</h3>
-        <p>Paste a <code>bunker://</code> URI, scan a nostrconnect QR from the popup, or enter a local Heartwood address.</p>
+      <div class="card">
+        <h3>heartwoodd</h3>
+        <p>No hardware yet? The same daemon runs standalone on a Pi or server with keys encrypted at rest. Your own bunker, no third party, upgrade to hardware whenever.</p>
+        <a class="more" href="https://github.com/forgesworn/heartwood-esp32">Run your own bunker →</a>
       </div>
-      <div class="step">
-        <h3>Approve and sign</h3>
-        <p>Open any Nostr web app. Bark asks before a new site can use your identity; approve once or trust the site for routine signing.</p>
+      <div class="card">
+        <h3>Cambium</h3>
+        <p>The same idea on Android: registers as a NIP-55 signer for apps like Amethyst and Primal, holds no keys, and proxies everything to your Heartwood.</p>
+        <a class="more" href="https://github.com/forgesworn/cambium">Sign from your phone →</a>
+      </div>
+      <div class="card">
+        <h3>Sapwood</h3>
+        <p>The management UI: provision a device, create identities, set slot policies, approve requests, take encrypted backups. Shape your signer.</p>
+        <a class="more" href="https://github.com/forgesworn/sapwood">Manage your signer →</a>
       </div>
     </div>
   </div>
@@ -194,17 +356,17 @@
 
 <section class="alt" id="download">
   <div class="wrap">
-    <h2>Download</h2>
+    <h2>Get Bark</h2>
     <p class="lede">Version 1.2.0. Store listings are in review; direct downloads work today.</p>
     <div class="downloads">
       <div class="dl">
         <h3>Chrome, Brave, Edge <span class="badge">store review pending</span></h3>
-        <p class="sub">Until the Chrome Web Store listing is live, download the zip, extract it, enable Developer mode at <code>chrome://extensions</code>, and Load unpacked.</p>
+        <p class="sub">Until the Chrome Web Store listing is live: download the zip, extract it, enable Developer mode at <code>chrome://extensions</code>, and Load unpacked.</p>
         <a class="btn btn-primary" href="https://github.com/forgesworn/bark/releases/download/v1.2.0/bark-v1.2.0.zip">Download for Chromium</a>
       </div>
       <div class="dl">
         <h3>Firefox <span class="badge">store review pending</span></h3>
-        <p class="sub">Until the Firefox Add-ons listing is live, download the zip and load it temporarily via <code>about:debugging</code>, or wait for the signed listing.</p>
+        <p class="sub">Until the Firefox Add-ons listing is live: download the zip and load it temporarily via <code>about:debugging</code>, or wait for the signed listing.</p>
         <a class="btn btn-primary" href="https://github.com/forgesworn/bark/releases/download/v1.2.0/bark-firefox-v1.2.0.zip">Download for Firefox</a>
       </div>
       <div class="dl">
@@ -213,11 +375,18 @@
         <a class="btn btn-ghost" href="https://github.com/forgesworn/bark/releases/download/v1.2.0/bark-safari-v1.2.0.zip">Download for Safari</a>
       </div>
     </div>
-    <pre><code># or build from source
+    <pre><code># or build it yourself and check our work
 git clone https://github.com/forgesworn/bark.git
 cd bark &amp;&amp; npm install &amp;&amp; npm run build:all</code></pre>
-    <p style="margin-top:16px; font-size:14px; color:#6b7c6b;">All releases and checksums: <a href="https://github.com/forgesworn/bark/releases">github.com/forgesworn/bark/releases</a></p>
-    <p style="margin-top:10px; font-size:14px; color:#6b7c6b;">On Android? <a href="https://github.com/forgesworn/cambium">Cambium</a> does the same job for apps: a NIP-55 signer that holds no keys and proxies to your Heartwood.</p>
+    <p style="margin-top:16px; font-size:14px; color:var(--dim);">All releases: <a href="https://github.com/forgesworn/bark/releases">github.com/forgesworn/bark/releases</a>. On Android? <a href="https://github.com/forgesworn/cambium">Cambium</a> is Bark for apps.</p>
+
+    <div class="v4v">
+      <div class="txt">
+        <h2>Built on value for value</h2>
+        <p>No token, no tier, no tracking. Bark is free because signing infrastructure should be. If it's worth something to you, send some value back: it funds store fees, prototype boards, and the time to keep building.</p>
+      </div>
+      <a class="btn btn-primary" href="donate.html">Support the work</a>
+    </div>
   </div>
 </section>
 
@@ -225,11 +394,14 @@ cd bark &amp;&amp; npm install &amp;&amp; npm run build:all</code></pre>
   <div class="wrap">
     <div class="links">
       <a href="https://github.com/forgesworn/bark">GitHub</a>
+      <a href="donate.html">Donate</a>
+      <a href="support.html">Support</a>
       <a href="https://github.com/forgesworn/bark/blob/main/PRIVACY.md">Privacy</a>
       <a href="https://github.com/forgesworn/bark/blob/main/SECURITY.md">Security</a>
       <a href="https://github.com/forgesworn/bark/blob/main/CONTRIBUTING.md">Contributing</a>
-      <a href="https://github.com/forgesworn/heartwood">Heartwood</a>
+      <a href="https://github.com/forgesworn/heartwood-esp32">Heartwood</a>
       <a href="https://github.com/forgesworn/cambium">Cambium</a>
+      <a href="https://github.com/forgesworn/sapwood">Sapwood</a>
       <a href="https://github.com/forgesworn">ForgeSworn</a>
     </div>
     <p>Bark is part of the ForgeSworn open-source ecosystem for sovereign identity on Nostr. MIT licence.</p>
