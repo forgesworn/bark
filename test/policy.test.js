@@ -3,9 +3,23 @@ import {
   buildTrustedSiteRule,
   DEFAULT_POLICIES,
   evaluatePolicy,
+  nextPolicyAction,
   normalisePolicies,
   POLICY_VERSION,
 } from '../src/policy.js'
+
+describe('nextPolicyAction', () => {
+  it('cycles allow → ask → deny → allow', () => {
+    expect(nextPolicyAction('allow')).toBe('ask')
+    expect(nextPolicyAction('ask')).toBe('deny')
+    expect(nextPolicyAction('deny')).toBe('allow')
+  })
+
+  it('starts the cycle at allow for invalid input', () => {
+    expect(nextPolicyAction(undefined)).toBe('allow')
+    expect(nextPolicyAction('nonsense')).toBe('allow')
+  })
+})
 
 describe('evaluatePolicy', () => {
   it('asks for first-use NIP-07 and encryption methods by default', () => {

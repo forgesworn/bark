@@ -2,7 +2,7 @@
 
 import { nip19 } from 'nostr-tools'
 import { renderSVG } from 'uqr'
-import { DEFAULT_POLICIES, normalisePolicies } from './policy.js'
+import { DEFAULT_POLICIES, nextPolicyAction, normalisePolicies, TRUSTED_SITE_METHODS } from './policy.js'
 
 const callbackApi = globalThis.chrome
 const promiseApi = globalThis.browser && !globalThis.chrome ? globalThis.browser : null
@@ -858,6 +858,19 @@ async function savePolicies(policies) {
   await storageSet({ policies })
 }
 
+/** Build a click-to-cycle action badge. onCycle(next) persists the change. */
+function makeActionBadge(action, onCycle) {
+  const badge = document.createElement('span')
+  badge.className = `policy-action cyclable ${escapeHtml(action)}`
+  badge.textContent = action
+  badge.title = 'Click to change: allow → ask → deny'
+  badge.addEventListener('click', (e) => {
+    e.stopPropagation()
+    onCycle(nextPolicyAction(action))
+  })
+  return badge
+}
+
 function renderKindRules(policies) {
   kindRulesList.innerHTML = ''
   const entries = Object.entries(policies.kindRules || {})
@@ -878,10 +891,12 @@ function renderKindRules(policies) {
     label.innerHTML = `${escapeHtml(name)} <span class="policy-kind-num">${escapeHtml(kind)}</span>`
     item.appendChild(label)
 
-    const actionSpan = document.createElement('span')
-    actionSpan.className = `policy-action ${escapeHtml(action)}`
-    actionSpan.textContent = action
-    item.appendChild(actionSpan)
+    item.appendChild(makeActionBadge(action, async (next) => {
+      const current = await loadPolicies()
+      current.kindRules[kind] = next
+      await savePolicies(current)
+      renderKindRules(current)
+    }))
 
     const removeBtn = document.createElement('button')
     removeBtn.className = 'policy-remove'
@@ -897,6 +912,85 @@ function renderKindRules(policies) {
 
     kindRulesList.appendChild(item)
   }
+}
+
+/** Origins whose per-site kind override panel is expanded. */
+const expandedSites = new Set()
+
+function renderSiteKindPanel(origin, rule) {
+  const panel = document.createElement('div')
+  panel.className = 'site-kind-panel'
+
+  const kindEntries = Object.entries(rule.kindRules || {})
+  if (kindEntries.length === 0) {
+    const hint = document.createElement('div')
+    hint.className = 'site-kind-hint'
+    hint.textContent = 'No kind overrides for this site'
+    panel.appendChild(hint)
+  }
+
+  for (const [kind, action] of kindEntries) {
+    const row = document.createElement('div')
+    row.className = 'policy-item'
+
+    const label = document.createElement('span')
+    label.className = 'policy-label'
+    const name = KIND_NAMES[Number(kind)] || `Kind ${kind}`
+    label.innerHTML = `${escapeHtml(name)} <span class="policy-kind-num">${escapeHtml(kind)}</span>`
+    row.appendChild(label)
+
+    row.appendChild(makeActionBadge(action, async (next) => {
+      const current = await loadPolicies()
+      const site = current.siteRules[origin]
+      if (!site) return
+      site.kindRules = { ...(site.kindRules || {}), [kind]: next }
+      await savePolicies(current)
+      renderSiteRules(current)
+    }))
+
+    const removeBtn = document.createElement('button')
+    removeBtn.className = 'policy-remove'
+    removeBtn.textContent = '×'
+    removeBtn.addEventListener('click', async () => {
+      const current = await loadPolicies()
+      const site = current.siteRules[origin]
+      if (site?.kindRules) delete site.kindRules[kind]
+      await savePolicies(current)
+      renderSiteRules(current)
+    })
+    row.appendChild(removeBtn)
+
+    panel.appendChild(row)
+  }
+
+  const addRow = document.createElement('div')
+  addRow.className = 'site-kind-add'
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.placeholder = 'Kind number'
+  input.inputMode = 'numeric'
+  const addBtn = document.createElement('button')
+  addBtn.className = 'btn-sm btn-save'
+  addBtn.textContent = 'Add'
+  const addKindOverride = async () => {
+    const num = Number(input.value.trim())
+    if (!input.value.trim() || isNaN(num) || !Number.isInteger(num) || num < 0 || num > 65535) return
+    const current = await loadPolicies()
+    const site = current.siteRules[origin]
+    if (!site) return
+    site.kindRules = { ...(site.kindRules || {}), [String(num)]: 'ask' }
+    await savePolicies(current)
+    renderSiteRules(current)
+  }
+  addBtn.addEventListener('click', addKindOverride)
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addKindOverride()
+  })
+  addRow.appendChild(input)
+  addRow.appendChild(addBtn)
+  panel.appendChild(addRow)
+
+  return panel
 }
 
 function renderSiteRules(policies) {
@@ -920,17 +1014,36 @@ function renderSiteRules(policies) {
     const item = document.createElement('div')
     item.className = 'policy-item'
 
+    const expand = document.createElement('span')
+    expand.className = 'site-expand'
+    expand.textContent = expandedSites.has(origin) ? '▼' : '▶'
+    item.appendChild(expand)
+
     const label = document.createElement('span')
     label.className = 'policy-label'
     label.title = origin
     label.textContent = hostname
+    label.style.cursor = 'pointer'
+    label.style.flex = '1'
     item.appendChild(label)
 
-    const actionSpan = document.createElement('span')
+    const toggleExpand = () => {
+      if (expandedSites.has(origin)) expandedSites.delete(origin)
+      else expandedSites.add(origin)
+      renderSiteRules(policies)
+    }
+    expand.addEventListener('click', toggleExpand)
+    label.addEventListener('click', toggleExpand)
+
     const displayAction = rule.signEvent || 'allow'
-    actionSpan.className = `policy-action ${escapeHtml(displayAction)}`
-    actionSpan.textContent = displayAction
-    item.appendChild(actionSpan)
+    item.appendChild(makeActionBadge(displayAction, async (next) => {
+      const current = await loadPolicies()
+      const site = current.siteRules[origin]
+      if (!site) return
+      for (const method of TRUSTED_SITE_METHODS) site[method] = next
+      await savePolicies(current)
+      renderSiteRules(current)
+    }))
 
     const removeBtn = document.createElement('button')
     removeBtn.className = 'policy-remove'
@@ -939,12 +1052,17 @@ function renderSiteRules(policies) {
     removeBtn.addEventListener('click', async () => {
       const current = await loadPolicies()
       delete current.siteRules[origin]
+      expandedSites.delete(origin)
       await savePolicies(current)
       renderSiteRules(current)
     })
     item.appendChild(removeBtn)
 
     siteRulesList.appendChild(item)
+
+    if (expandedSites.has(origin)) {
+      siteRulesList.appendChild(renderSiteKindPanel(origin, rule))
+    }
   }
 }
 

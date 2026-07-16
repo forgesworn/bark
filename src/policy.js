@@ -102,6 +102,16 @@ export function normalisePolicies(policies) {
 }
 
 /**
+ * Cycle a policy action for click-to-change UI: allow → ask → deny → allow.
+ * Invalid input starts the cycle at 'allow'.
+ */
+export function nextPolicyAction(action) {
+  if (action === 'allow') return 'ask'
+  if (action === 'ask') return 'deny'
+  return 'allow'
+}
+
+/**
  * Evaluate the policy for a given method + params + origin combination.
  *
  * @param {object} policies  Policy set (same shape as DEFAULT_POLICIES)
