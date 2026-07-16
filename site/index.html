@@ -160,66 +160,91 @@
     <p class="prose">Browsers are where phishing pages, malicious scripts, and rogue extension updates live. Keeping your most unrecoverable secret there is a bet that nothing in your browser will ever go wrong. <strong>Bark refuses the bet.</strong> It holds no key at all: signing happens on a signer you control, and the browser only ever carries requests out and signatures back, encrypted end to end with NIP-46.</p>
     <p class="prose">If your laptop were stolen tomorrow, the thief would find a connection string that can ask your signer for permission. Yours to revoke. That is the whole point.</p>
 
-    <div class="diagram" role="img" aria-label="Diagram comparing a key stored in the browser, exposed to malicious scripts and rogue updates, with Bark's model where the key stays on a separate signer device">
-      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
-        <!-- Left: keys in the browser -->
-        <rect x="20" y="30" width="380" height="230" rx="14" fill="#12121c" stroke="#3a2a2a"/>
-        <rect x="20" y="30" width="380" height="34" rx="14" fill="#1a1420"/>
-        <circle cx="44" cy="47" r="5" fill="#c05b4d"/><circle cx="62" cy="47" r="5" fill="#b8a24a"/><circle cx="80" cy="47" r="5" fill="#3a5a3a"/>
-        <text x="210" y="52" fill="#8a7a7a" font-size="13" text-anchor="middle">a typical signer extension</text>
-        <!-- key -->
-        <g transform="translate(180,140)">
-          <circle cx="0" cy="0" r="16" fill="none" stroke="#d8b84a" stroke-width="5"/>
-          <rect x="12" y="-3" width="44" height="6" fill="#d8b84a"/>
-          <rect x="40" y="-3" width="6" height="14" fill="#d8b84a"/>
-          <rect x="50" y="-3" width="6" height="10" fill="#d8b84a"/>
-        </g>
-        <text x="210" y="185" fill="#d8b84a" font-size="13" text-anchor="middle">nsec lives here</text>
-        <!-- threats -->
-        <text x="60" y="105" fill="#c05b4d" font-size="13">malicious page</text>
-        <path d="M 105 112 L 160 132" stroke="#c05b4d" stroke-width="2" marker-end="url(#arr-r)"/>
-        <text x="255" y="105" fill="#c05b4d" font-size="13">rogue update</text>
-        <path d="M 290 112 L 245 132" stroke="#c05b4d" stroke-width="2" marker-end="url(#arr-r)"/>
-        <text x="86" y="228" fill="#c05b4d" font-size="13">one paste, one leak</text>
-        <path d="M 150 218 L 178 172" stroke="#c05b4d" stroke-width="2" marker-end="url(#arr-r)"/>
-        <text x="210" y="295" fill="#8a7a7a" font-size="14" text-anchor="middle">everything in one place, including the risk</text>
-
-        <!-- Right: Bark model -->
-        <rect x="460" y="30" width="180" height="230" rx="14" fill="#12121c" stroke="#24422a"/>
-        <rect x="460" y="30" width="180" height="34" rx="14" fill="#141d22"/>
-        <circle cx="484" cy="47" r="5" fill="#c05b4d"/><circle cx="502" cy="47" r="5" fill="#b8a24a"/><circle cx="520" cy="47" r="5" fill="#3a5a3a"/>
-        <text x="550" y="52" fill="#7a8a7a" font-size="13" text-anchor="middle">Bark</text>
-        <text x="550" y="140" fill="#9db89d" font-size="14" text-anchor="middle">no keys</text>
-        <text x="550" y="162" fill="#6b7c6b" font-size="12" text-anchor="middle">requests out,</text>
-        <text x="550" y="178" fill="#6b7c6b" font-size="12" text-anchor="middle">signatures back</text>
-
-        <!-- relay -->
-        <path d="M 660 132 q 14 -26 40 -18 q 8 -22 34 -14 q 26 -8 30 16 q 20 8 8 26 q 2 20 -24 18 q -12 16 -34 8 q -26 10 -38 -10 q -22 0 -16 -26 z" fill="#161624" stroke="#2a2a3a"/>
-        <text x="723" y="145" fill="#7a7a9a" font-size="12" text-anchor="middle">relay</text>
-        <path d="M 645 145 L 662 145" stroke="#339933" stroke-width="2.5" marker-end="url(#arr-g)"/>
-        <path d="M 792 145 L 776 145" stroke="#339933" stroke-width="2.5" marker-start="url(#arr-g2)"/>
-        <text x="718" y="112" fill="#5a7a5a" font-size="11" text-anchor="middle">NIP-46, encrypted</text>
-
-        <!-- signer -->
-        <rect x="795" y="95" width="70" height="100" rx="10" fill="#0f1a12" stroke="#2e4a2e" stroke-width="1.5"/>
-        <g transform="translate(818,130) scale(0.62)">
-          <circle cx="0" cy="0" r="16" fill="none" stroke="#d8b84a" stroke-width="5"/>
-          <rect x="12" y="-3" width="44" height="6" fill="#d8b84a"/>
-          <rect x="40" y="-3" width="6" height="14" fill="#d8b84a"/>
-          <rect x="50" y="-3" width="6" height="10" fill="#d8b84a"/>
-        </g>
-        <circle cx="830" cy="172" r="8" fill="#339933"/>
-        <text x="830" y="215" fill="#9db89d" font-size="12" text-anchor="middle">your signer</text>
-        <text x="830" y="232" fill="#6b7c6b" font-size="11" text-anchor="middle">key + button</text>
-        <text x="663" y="295" fill="#7a8a7a" font-size="14" text-anchor="middle">the key never crosses the gap</text>
-
+    <div class="diagram" role="img" aria-label="Container diagram comparing a typical signer extension that stores your nsec in the browser, exposed to phishing, rogue updates and bad pastes, with Bark's chain where requests flow through a relay to a signer that holds the key">
+      <svg viewBox="0 0 880 460" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
         <defs>
-          <marker id="arr-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#c05b4d"/></marker>
-          <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#339933"/></marker>
-          <marker id="arr-g2" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6 z" fill="#339933"/></marker>
+          <marker id="arr-red" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#c05b4d"/></marker>
+          <marker id="arr-grn" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#339933"/></marker>
+          <marker id="arr-ind" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#6a7ab8"/></marker>
+          <marker id="arr-amb" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#e8a838"/></marker>
         </defs>
+
+        <!-- Lane 1: the usual way -->
+        <text x="4" y="24" fill="#6b7c6b" font-size="12" letter-spacing="3" font-weight="600">THE USUAL WAY</text>
+        <line x1="120" y1="20" x2="876" y2="20" stroke="#24242f"/>
+
+        <g>
+          <rect x="4" y="48" width="200" height="86" rx="10" fill="#12121c" stroke="#24242f"/>
+          <rect x="4" y="48" width="200" height="4" rx="2" fill="#4a7ab8"/>
+          <text x="22" y="80" fill="#eef4ee" font-size="15" font-weight="700">Nostr web app</text>
+          <text x="22" y="102" fill="#8a95a5" font-size="12">any site asking for</text>
+          <text x="22" y="118" fill="#8a95a5" font-size="12">a signature</text>
+        </g>
+        <path d="M 208 91 L 296 91" stroke="#4a7ab8" stroke-width="2" marker-end="url(#arr-ind)"/>
+        <text x="252" y="82" fill="#6a7a9a" font-size="11" text-anchor="middle">window.nostr</text>
+
+        <g>
+          <rect x="300" y="48" width="240" height="86" rx="10" fill="#12121c" stroke="#3a2626"/>
+          <rect x="300" y="48" width="240" height="4" rx="2" fill="#c05b4d"/>
+          <text x="318" y="80" fill="#eef4ee" font-size="15" font-weight="700">Signer extension</text>
+          <text x="318" y="102" fill="#b58a83" font-size="12">your nsec, stored inside</text>
+          <text x="318" y="118" fill="#b58a83" font-size="12">the browser profile</text>
+        </g>
+
+        <text x="620" y="62" fill="#c05b4d" font-size="12">phishing page</text>
+        <path d="M 616 58 L 546 70" stroke="#c05b4d" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arr-red)"/>
+        <text x="620" y="96" fill="#c05b4d" font-size="12">rogue extension update</text>
+        <path d="M 616 92 L 546 92" stroke="#c05b4d" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arr-red)"/>
+        <text x="620" y="130" fill="#c05b4d" font-size="12">one bad paste</text>
+        <path d="M 616 126 L 546 114" stroke="#c05b4d" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arr-red)"/>
+        <text x="300" y="166" fill="#8a7a7a" font-size="13">one compromise and the key that is your identity is gone</text>
+
+        <!-- Lane 2: the Bark way -->
+        <text x="4" y="234" fill="#6b7c6b" font-size="12" letter-spacing="3" font-weight="600">THE BARK WAY</text>
+        <line x1="115" y1="230" x2="876" y2="230" stroke="#24242f"/>
+
+        <g>
+          <rect x="4" y="262" width="180" height="96" rx="10" fill="#12121c" stroke="#24242f"/>
+          <rect x="4" y="262" width="180" height="4" rx="2" fill="#4a7ab8"/>
+          <text x="22" y="294" fill="#eef4ee" font-size="15" font-weight="700">Nostr web app</text>
+          <text x="22" y="316" fill="#8a95a5" font-size="12">same site, same</text>
+          <text x="22" y="332" fill="#8a95a5" font-size="12">window.nostr call</text>
+        </g>
+        <path d="M 188 310 L 246 310" stroke="#4a7ab8" stroke-width="2" marker-end="url(#arr-ind)"/>
+
+        <g>
+          <rect x="250" y="262" width="190" height="96" rx="10" fill="#12121c" stroke="#24422a"/>
+          <rect x="250" y="262" width="190" height="4" rx="2" fill="#339933"/>
+          <text x="268" y="294" fill="#eef4ee" font-size="15" font-weight="700">Bark</text>
+          <text x="268" y="316" fill="#9db89d" font-size="12">holds no keys · asks you</text>
+          <text x="268" y="332" fill="#9db89d" font-size="12">first · enforces policies</text>
+        </g>
+        <path d="M 444 296 L 502 296" stroke="#339933" stroke-width="2" marker-end="url(#arr-grn)"/>
+        <text x="474" y="287" fill="#5a7a5a" font-size="11" text-anchor="middle">request</text>
+        <path d="M 502 326 L 444 326" stroke="#e8a838" stroke-width="2" marker-end="url(#arr-amb)"/>
+        <text x="474" y="345" fill="#a8862e" font-size="11" text-anchor="middle">signature</text>
+
+        <g>
+          <rect x="506" y="262" width="150" height="96" rx="10" fill="#12121c" stroke="#26263a"/>
+          <rect x="506" y="262" width="150" height="4" rx="2" fill="#6a7ab8"/>
+          <text x="524" y="294" fill="#eef4ee" font-size="15" font-weight="700">Relay</text>
+          <text x="524" y="316" fill="#8a95a5" font-size="12">carries NIP-46 traffic,</text>
+          <text x="524" y="332" fill="#8a95a5" font-size="12">encrypted end to end</text>
+        </g>
+        <path d="M 660 296 L 718 296" stroke="#339933" stroke-width="2" marker-end="url(#arr-grn)"/>
+        <path d="M 718 326 L 660 326" stroke="#e8a838" stroke-width="2" marker-end="url(#arr-amb)"/>
+
+        <g>
+          <rect x="722" y="262" width="154" height="96" rx="10" fill="#12121c" stroke="#3a3020"/>
+          <rect x="722" y="262" width="154" height="4" rx="2" fill="#e8a838"/>
+          <text x="740" y="294" fill="#eef4ee" font-size="15" font-weight="700">Your signer</text>
+          <text x="740" y="316" fill="#c8a86a" font-size="12">holds the key ·</text>
+          <text x="740" y="332" fill="#c8a86a" font-size="12">approves with a button</text>
+        </g>
+
+        <text x="4" y="404" fill="#8a9a8a" font-size="13">steal this browser and you get a revocable connection string, never the key</text>
       </svg>
-      <p class="caption">Left: the usual model. Right: Bark's model. The difference is what a thief gets.</p>
+      <p class="caption">Same web apps, same signatures. The difference is what a thief gets.</p>
     </div>
   </div>
 </section>
@@ -296,36 +321,46 @@
     <h2>Named after a tree for a reason</h2>
     <p class="prose">Bark is the outer layer of something bigger. ForgeSworn builds the whole trunk: a hardware signer at the core, and a layer for every place you use Nostr. Each part is open source, each works on its own, and together they mean your key can live on a chip on your desk while you post from anywhere.</p>
 
-    <div class="diagram" role="img" aria-label="Tree cross-section showing Heartwood at the core, surrounded by Sapwood, Cambium, and Bark as the outer layer">
-      <svg viewBox="0 0 880 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
-        <!-- rings -->
-        <ellipse cx="250" cy="190" rx="215" ry="165" fill="#1a2416" stroke="#2e4a2e" stroke-width="2"/>
-        <ellipse cx="250" cy="190" rx="172" ry="130" fill="#141d12" stroke="#39632f" stroke-width="3"/>
-        <ellipse cx="250" cy="190" rx="128" ry="96" fill="#18231a" stroke="#2a3a2a" stroke-width="1.5"/>
-        <ellipse cx="250" cy="190" rx="70" ry="52" fill="#0f1a12" stroke="#4a7a3a" stroke-width="2.5"/>
-        <text x="250" y="196" fill="#cfe3cf" font-size="15" font-weight="700" text-anchor="middle">Heartwood</text>
-        <!-- ring grain -->
-        <ellipse cx="250" cy="190" rx="98" ry="73" fill="none" stroke="#22301f" stroke-width="1"/>
-        <ellipse cx="250" cy="190" rx="150" ry="113" fill="none" stroke="#22301f" stroke-width="1"/>
+    <div class="diagram" role="img" aria-label="Ringed cross-section of the ForgeSworn family: Heartwood at the core holding the keys, Sapwood managing it, Cambium for Android, and Bark as the protective outer layer in the browser">
+      <svg viewBox="0 0 880 440" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+        <!-- rings, each layer its own hue like the ForgeSworn stack map -->
+        <ellipse cx="255" cy="220" rx="230" ry="185" fill="#14201a" stroke="#339933" stroke-width="2.5"/>
+        <ellipse cx="255" cy="220" rx="175" ry="140" fill="#0f1d1c" stroke="#2aa198" stroke-width="2.5"/>
+        <ellipse cx="255" cy="220" rx="122" ry="97" fill="#171426" fill-opacity="0.85" stroke="#7a5aba" stroke-width="2.5"/>
+        <ellipse cx="255" cy="220" rx="66" ry="52" fill="#241c0c" stroke="#e8a838" stroke-width="3"/>
+        <text x="255" y="216" fill="#f0d9a8" font-size="16" font-weight="700" text-anchor="middle">Heartwood</text>
+        <text x="255" y="236" fill="#a8862e" font-size="11" text-anchor="middle">keys live here</text>
 
-        <!-- labels -->
+        <!-- in-band layer names, top of each ring -->
+        <text x="255" y="62" fill="#7fce7f" font-size="12" letter-spacing="2.5" text-anchor="middle" font-weight="600">BARK</text>
+        <text x="255" y="107" fill="#63bfb7" font-size="12" letter-spacing="2.5" text-anchor="middle" font-weight="600">CAMBIUM</text>
+        <text x="255" y="150" fill="#a68ad4" font-size="12" letter-spacing="2.5" text-anchor="middle" font-weight="600">SAPWOOD</text>
+
+        <!-- callouts with colour-matched dots, stack-map style -->
         <g font-size="15">
-          <line x1="447" y1="120" x2="530" y2="92" stroke="#3a4a3a"/>
-          <text x="540" y="88" fill="#cfe3cf" font-weight="700">Bark</text>
-          <text x="540" y="108" fill="#9db89d" font-size="13">the protective outer layer: this browser extension</text>
+          <circle cx="452" cy="130" r="4.5" fill="#339933"/>
+          <line x1="456" y1="129" x2="540" y2="106" stroke="#2e4a2e" stroke-width="1.5"/>
+          <text x="550" y="102" fill="#cfe3cf" font-weight="700">Bark <tspan fill="#5a7a5a" font-size="12" font-weight="400">· browser</tspan></text>
+          <text x="550" y="122" fill="#9db89d" font-size="13">the protective outer layer: NIP-07 for web apps</text>
 
-          <line x1="405" y1="167" x2="530" y2="162" stroke="#3a4a3a"/>
-          <text x="540" y="158" fill="#cfe3cf" font-weight="700">Cambium</text>
-          <text x="540" y="178" fill="#9db89d" font-size="13">the living layer: Android signer for Nostr apps</text>
+          <circle cx="415" cy="181" r="4.5" fill="#2aa198"/>
+          <line x1="420" y1="181" x2="540" y2="181" stroke="#25403e" stroke-width="1.5"/>
+          <text x="550" y="177" fill="#c8e8e5" font-weight="700">Cambium <tspan fill="#4a7a76" font-size="12" font-weight="400">· Android</tspan></text>
+          <text x="550" y="197" fill="#9db89d" font-size="13">the living layer: NIP-55 signer for Android apps</text>
 
-          <line x1="372" y1="222" x2="530" y2="232" stroke="#3a4a3a"/>
-          <text x="540" y="228" fill="#cfe3cf" font-weight="700">Sapwood</text>
-          <text x="540" y="248" fill="#9db89d" font-size="13">carries what the tree needs: manage your signer</text>
+          <circle cx="373" cy="243" r="4.5" fill="#7a5aba"/>
+          <line x1="378" y1="244" x2="540" y2="256" stroke="#352a4a" stroke-width="1.5"/>
+          <text x="550" y="252" fill="#ddd2f0" font-weight="700">Sapwood <tspan fill="#6a5a8a" font-size="12" font-weight="400">· web UI</tspan></text>
+          <text x="550" y="272" fill="#9db89d" font-size="13">carries what the tree needs: manage and back up</text>
 
-          <line x1="318" y1="205" x2="530" y2="302" stroke="#3a4a3a"/>
-          <text x="540" y="298" fill="#cfe3cf" font-weight="700">Heartwood</text>
-          <text x="540" y="318" fill="#9db89d" font-size="13">the core: the hardware that holds your keys</text>
+          <circle cx="316" cy="240" r="4.5" fill="#e8a838"/>
+          <line x1="320" y1="243" x2="540" y2="326" stroke="#3a3020" stroke-width="1.5"/>
+          <text x="550" y="322" fill="#f0d9a8" font-weight="700">Heartwood <tspan fill="#a8862e" font-size="12" font-weight="400">· hardware or daemon</tspan></text>
+          <text x="550" y="342" fill="#9db89d" font-size="13">the core: keys on a chip, or run as a daemon</text>
         </g>
+
+        <!-- quiet annotation, reference-diagram style -->
+        <text x="30" y="416" fill="#6b7c6b" font-size="12">one seed at the core · every layer speaks NIP-46 · no layer above the core ever holds a key</text>
       </svg>
     </div>
 
