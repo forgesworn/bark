@@ -181,7 +181,7 @@ try {
     await compose(context, {
       name: '01-connected.png',
       headline: 'No keys in the browser. Ever.',
-      sub: 'Bark bridges window.nostr to your remote NIP-46 signer: a hardware device, a self-hosted bunker, or nsec.app. Only signatures cross the wire.',
+      sub: 'Bark bridges window.nostr to your remote NIP-46 signer: a Heartwood device, your own heartwoodd bunker, or a hosted signer. Only signatures cross the wire.',
       raw: await rawShot(popup),
       imageWidth: 440,
     })

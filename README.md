@@ -9,7 +9,7 @@ Bark is a minimal NIP-07 browser extension that signs Nostr events through a rem
 ## What it does
 
 - **Signs Nostr events** via NIP-46 remote signing (NIP-07 interface for web apps)
-- **Works with any NIP-46 bunker**: nsecBunker, Amber, or your own signer
+- **Works with any NIP-46 bunker**: Heartwood, heartwoodd, nsecBunker, Amber, nsec.app, or your own signer
 - **Switches Heartwood identities**: imports Heartwood's per-identity bunker URIs and switches by selecting the right bunker instance
 - **Bridge-friendly**: works with Wi-Fi devices, Heartwood daemons, or relay-to-serial bridges for tethered low-cost hardware
 - **Self-sovereign**: keys live on your signer hardware, never touch the browser
@@ -175,7 +175,7 @@ keys never leave your signer.
 
 > For internal architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Bark is part of the [ForgeSworn](https://github.com/forgesworn) open-source ecosystem for sovereign identity and commerce on Nostr and Lightning.
+Bark is part of the [ForgeSworn](https://github.com/forgesworn) open-source ecosystem for sovereign identity and commerce on Nostr and Lightning. It is the browser end of the Heartwood family: [Cambium](https://github.com/forgesworn/cambium) fills the same role for Android apps (a NIP-55 signer that proxies to Heartwood), and [Sapwood](https://github.com/forgesworn/sapwood) provisions and manages the signer itself.
 
 ## Part of the ForgeSworn Toolkit
 

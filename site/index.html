@@ -135,7 +135,7 @@
       </div>
       <div class="card">
         <h3>Works with any NIP-46 bunker</h3>
-        <p>nsecBunker, Amber, nsec.app, Heartwood, or your own signer. Pair by pasting a bunker URI, scanning a nostrconnect QR, or a local Heartwood address.</p>
+        <p>Heartwood, heartwoodd, nsecBunker, Amber, nsec.app, or your own signer. Pair by pasting a bunker URI, scanning a nostrconnect QR, or a local Heartwood address.</p>
       </div>
       <div class="card">
         <h3>Policies down to method and kind</h3>
@@ -151,7 +151,7 @@
       </div>
       <div class="card">
         <h3>Speaks your language</h3>
-        <p>The interface ships in 53 languages, and the minimal permission footprint means the only Chrome permission Bark asks for is storage.</p>
+        <p>The interface ships in 53 languages. The only permission Bark requests is storage; its content script exists solely to offer window.nostr and reads nothing from the pages you visit.</p>
       </div>
     </div>
   </div>
@@ -217,6 +217,7 @@
 git clone https://github.com/forgesworn/bark.git
 cd bark &amp;&amp; npm install &amp;&amp; npm run build:all</code></pre>
     <p style="margin-top:16px; font-size:14px; color:#6b7c6b;">All releases and checksums: <a href="https://github.com/forgesworn/bark/releases">github.com/forgesworn/bark/releases</a></p>
+    <p style="margin-top:10px; font-size:14px; color:#6b7c6b;">On Android? <a href="https://github.com/forgesworn/cambium">Cambium</a> does the same job for apps: a NIP-55 signer that holds no keys and proxies to your Heartwood.</p>
   </div>
 </section>
 
@@ -228,6 +229,7 @@ cd bark &amp;&amp; npm install &amp;&amp; npm run build:all</code></pre>
       <a href="https://github.com/forgesworn/bark/blob/main/SECURITY.md">Security</a>
       <a href="https://github.com/forgesworn/bark/blob/main/CONTRIBUTING.md">Contributing</a>
       <a href="https://github.com/forgesworn/heartwood">Heartwood</a>
+      <a href="https://github.com/forgesworn/cambium">Cambium</a>
       <a href="https://github.com/forgesworn">ForgeSworn</a>
     </div>
     <p>Bark is part of the ForgeSworn open-source ecosystem for sovereign identity on Nostr. MIT licence.</p>
