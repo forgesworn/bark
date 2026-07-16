@@ -418,6 +418,63 @@
     .instance-card .inst-status.connected { background: #1a6b35; }
     .instance-card .inst-status.disconnected { background: #8b2020; }
     .instance-card .inst-status.inactive { background: #555; }
+    /* ---- nostrconnect QR pairing ---- */
+    .qr-divider {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #666;
+      margin: 14px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    #nostrconnect-section input {
+      width: 100%;
+      padding: 8px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-family: monospace;
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+    }
+    #nostrconnect-section input:focus { outline: none; border-color: #555; }
+
+    #qr-code { text-align: center; margin: 10px 0; }
+    #qr-code svg {
+      width: 190px;
+      height: 190px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .qr-uri {
+      font-family: monospace;
+      font-size: 0.68rem;
+      color: #888;
+      word-break: break-all;
+      max-height: 56px;
+      overflow-y: auto;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 6px;
+      margin-bottom: 8px;
+    }
+
+    .qr-actions { display: flex; gap: 8px; margin-bottom: 8px; }
+
+    .qr-status {
+      font-size: 0.8rem;
+      color: #888;
+      text-align: center;
+      min-height: 18px;
+    }
+    .qr-status.ok { color: #339933; }
+    .qr-status.err { color: #cc4444; }
+
     #add-instance-section { margin-top: 8px; }
     #add-instance-section input {
       width: 100%; padding: 8px; background: #111; border: 1px solid #333;
@@ -572,6 +629,22 @@
       <input id="heartwood-address" type="text" placeholder="heartwood.local:3000 or bunker://..." spellcheck="false" autocomplete="off" style="width:100%; padding:8px; background:#111; border:1px solid #333; border-radius:6px; color:#e0e0e0; font-family:monospace; font-size:0.85rem; margin-bottom:8px;">
       <button class="btn btn-primary" id="pair-btn">Connect</button>
       <div id="pair-error" class="msg msg-err hidden" style="margin-top:8px;"></div>
+
+      <div id="nostrconnect-section">
+        <div class="qr-divider">or pair by QR</div>
+        <button class="btn btn-secondary" id="qr-show-btn">Pair by QR (nostrconnect)</button>
+        <div id="qr-flow" style="display:none">
+          <input id="qr-relay-input" type="text" value="wss://relay.nsec.app" spellcheck="false" autocomplete="off" title="Relay(s) for the pairing handshake">
+          <button class="btn btn-primary" id="qr-start-btn">Generate QR</button>
+          <div id="qr-code"></div>
+          <div id="qr-uri" class="qr-uri" style="display:none"></div>
+          <div class="qr-actions" style="display:none">
+            <button class="btn-sm btn-save" id="qr-copy-btn">Copy URI</button>
+            <button class="btn-sm" id="qr-cancel-btn">Cancel</button>
+          </div>
+          <div id="qr-status" class="qr-status"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -587,6 +660,7 @@
       <div id="add-instance-section" style="display:none;">
         <input id="add-address" type="text" placeholder="Add another signer..." spellcheck="false" autocomplete="off">
         <button class="btn-sm btn-save" id="add-pair-btn">Add</button>
+        <div id="qr-host-main"></div>
       </div>
       <button class="btn-sm btn-add" id="show-add-btn" style="margin-bottom:12px;">+ Add Signer</button>
 

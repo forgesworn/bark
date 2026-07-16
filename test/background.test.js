@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -390,6 +390,75 @@ describe('checkApproval', () => {
     expect(await checkApproval('getRelays', {}, 'https://example.com')).toBe('ask')
     expect(await checkApproval('nip04.encrypt', {}, 'https://example.com')).toBe('ask')
     expect(await checkApproval('nip04.decrypt', {}, 'https://example.com')).toBe('ask')
+  })
+})
+
+describe('normaliseNostrConnectRelays', () => {
+  it('accepts wss relays from a string with commas, spaces, or newlines', () => {
+    expect(normaliseNostrConnectRelays('wss://relay.nsec.app, wss://relay.damus.io\nwss://nos.lol')).toEqual([
+      'wss://relay.nsec.app',
+      'wss://relay.damus.io',
+      'wss://nos.lol',
+    ])
+  })
+
+  it('accepts an array input', () => {
+    expect(normaliseNostrConnectRelays(['wss://relay.nsec.app'])).toEqual(['wss://relay.nsec.app'])
+  })
+
+  it('strips trailing slashes and deduplicates', () => {
+    expect(normaliseNostrConnectRelays('wss://relay.nsec.app/ wss://relay.nsec.app')).toEqual([
+      'wss://relay.nsec.app',
+    ])
+  })
+
+  it('allows plain ws only for loopback bridges', () => {
+    expect(normaliseNostrConnectRelays('ws://localhost:7777 ws://127.0.0.1:8080')).toEqual([
+      'ws://localhost:7777',
+      'ws://127.0.0.1:8080',
+    ])
+    expect(normaliseNostrConnectRelays('ws://evil.example.com')).toEqual([])
+  })
+
+  it('rejects non-websocket URLs and junk', () => {
+    expect(normaliseNostrConnectRelays('https://relay.nsec.app not-a-url javascript:alert(1)')).toEqual([])
+  })
+
+  it('caps the list at four relays', () => {
+    const input = Array.from({ length: 6 }, (_, i) => `wss://relay${i}.example.com`)
+    expect(normaliseNostrConnectRelays(input)).toHaveLength(4)
+  })
+
+  it('has valid defaults', () => {
+    expect(normaliseNostrConnectRelays(DEFAULT_NOSTRCONNECT_RELAYS)).toEqual(DEFAULT_NOSTRCONNECT_RELAYS)
+  })
+})
+
+describe('buildNostrConnectRequest', () => {
+  it('builds a nostrconnect URI with client pubkey, relay, secret, and metadata', () => {
+    const { uri, clientSecret, relays, secret } = buildNostrConnectRequest('wss://relay.nsec.app')
+    expect(uri).toMatch(/^nostrconnect:\/\/[0-9a-f]{64}\?/)
+    expect(clientSecret).toMatch(/^[0-9a-f]{64}$/)
+    expect(relays).toEqual(['wss://relay.nsec.app'])
+    expect(secret).toMatch(/^[0-9a-f]{32}$/)
+
+    const parsed = new URL(uri)
+    expect(parsed.searchParams.getAll('relay')).toEqual(['wss://relay.nsec.app'])
+    expect(parsed.searchParams.get('secret')).toBe(secret)
+    expect(parsed.searchParams.get('name')).toBe('Bark')
+  })
+
+  it('generates a fresh keypair and secret per request', () => {
+    const a = buildNostrConnectRequest('wss://relay.nsec.app')
+    const b = buildNostrConnectRequest('wss://relay.nsec.app')
+    expect(a.clientSecret).not.toBe(b.clientSecret)
+    expect(a.secret).not.toBe(b.secret)
+  })
+
+  it('throws a safe error when no valid relay is given', () => {
+    expect(() => buildNostrConnectRequest('http://nope')).toThrow(/Invalid relay address/)
+    expect(sanitiseError(new Error('Invalid relay address. Use wss:// relay URLs.')))
+      .toBe('Invalid relay address. Use wss:// relay URLs.')
   })
 })
 

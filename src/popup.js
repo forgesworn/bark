@@ -1,6 +1,7 @@
 // Popup UI logic — persona management, Heartwood detection, relay display.
 
 import { nip19 } from 'nostr-tools'
+import { renderSVG } from 'uqr'
 import { DEFAULT_POLICIES, normalisePolicies } from './policy.js'
 
 const callbackApi = globalThis.chrome
@@ -101,6 +102,20 @@ const disconnectBtn = document.getElementById('disconnect-btn')
 const errorMsg = document.getElementById('error-msg')
 const connectStatus = document.getElementById('connect-status')
 
+// nostrconnect QR pairing refs
+const nostrconnectSection = document.getElementById('nostrconnect-section')
+const qrHostMain = document.getElementById('qr-host-main')
+const qrShowBtn = document.getElementById('qr-show-btn')
+const qrFlow = document.getElementById('qr-flow')
+const qrRelayInput = document.getElementById('qr-relay-input')
+const qrStartBtn = document.getElementById('qr-start-btn')
+const qrCode = document.getElementById('qr-code')
+const qrUri = document.getElementById('qr-uri')
+const qrActions = document.querySelector('.qr-actions')
+const qrCopyBtn = document.getElementById('qr-copy-btn')
+const qrCancelBtn = document.getElementById('qr-cancel-btn')
+const qrStatus = document.getElementById('qr-status')
+
 // Policy UI refs
 const policyToggle = document.getElementById('policy-toggle')
 const policyArrow = document.getElementById('policy-arrow')
@@ -164,11 +179,19 @@ function showError(msg) {
   }, 5000)
 }
 
+/** Original parent of the shared QR pairing section (setup screen). */
+const qrHostSetup = document.getElementById('nostrconnect-section')?.parentElement
+
 /** Switch visible screen. */
 function showScreen(screen) {
   setupScreen.classList.remove('active')
   mainScreen.classList.remove('active')
   screen.classList.add('active')
+  // The QR pairing section is shared between screens; return it to the
+  // setup screen whenever that screen is shown.
+  if (screen === setupScreen && qrHostSetup && nostrconnectSection.parentElement !== qrHostSetup) {
+    qrHostSetup.appendChild(nostrconnectSection)
+  }
 }
 
 function pairingPermissionOrigin(address) {
@@ -307,6 +330,110 @@ async function removeInstance(instanceId) {
   }
   await renderInstances()
   if (result.remaining > 0) await refreshState()
+}
+
+// ---------------------------------------------------------------------------
+// nostrconnect QR pairing
+// ---------------------------------------------------------------------------
+
+let qrPollTimer = null
+
+function stopQrPolling() {
+  if (qrPollTimer) {
+    clearTimeout(qrPollTimer)
+    qrPollTimer = null
+  }
+}
+
+function setQrStatus(msg, cls = '') {
+  qrStatus.textContent = msg
+  qrStatus.className = `qr-status ${cls}`.trim()
+}
+
+function resetQrFlow() {
+  stopQrPolling()
+  qrCode.innerHTML = ''
+  qrUri.textContent = ''
+  qrUri.style.display = 'none'
+  qrActions.style.display = 'none'
+  setQrStatus('')
+  qrStartBtn.disabled = false
+  qrStartBtn.textContent = 'Generate QR'
+}
+
+async function startQrPairing() {
+  resetQrFlow()
+  qrStartBtn.disabled = true
+  qrStartBtn.textContent = 'Waiting...'
+
+  let resp
+  try {
+    resp = await sendRuntimeMessage({ type: 'bark-nostrconnect-start', relays: qrRelayInput.value })
+  } catch (err) {
+    resp = { ok: false, error: err.message }
+  }
+  if (!resp?.ok) {
+    setQrStatus(resp?.error || 'Could not start pairing.', 'err')
+    qrStartBtn.disabled = false
+    qrStartBtn.textContent = 'Generate QR'
+    return
+  }
+
+  qrCode.innerHTML = renderSVG(resp.uri)
+  qrUri.textContent = resp.uri
+  qrUri.style.display = ''
+  qrActions.style.display = ''
+  setQrStatus('Scan with your signer, or paste the URI into it.')
+  pollQrStatus()
+}
+
+async function pollQrStatus() {
+  let status
+  try {
+    status = await sendRuntimeMessage({ type: 'bark-nostrconnect-status' })
+  } catch {
+    status = null
+  }
+  if (!status) {
+    setQrStatus('Pairing expired. Generate a new QR.', 'err')
+    qrStartBtn.disabled = false
+    qrStartBtn.textContent = 'Generate QR'
+    return
+  }
+
+  if (status.status === 'connected') {
+    setQrStatus('Connected.', 'ok')
+    await sendRuntimeMessage({ type: 'bark-nostrconnect-cancel' }).catch(() => {})
+    resetQrFlow()
+    qrFlow.style.display = 'none'
+    qrShowBtn.style.display = ''
+    await renderInstances()
+    await refreshState()
+    return
+  }
+
+  if (status.status === 'error') {
+    setQrStatus(status.error || 'Pairing failed.', 'err')
+    qrStartBtn.disabled = false
+    qrStartBtn.textContent = 'Generate QR'
+    return
+  }
+
+  qrPollTimer = setTimeout(pollQrStatus, 1000)
+}
+
+async function cancelQrPairing() {
+  await sendRuntimeMessage({ type: 'bark-nostrconnect-cancel' }).catch(() => {})
+  resetQrFlow()
+  qrFlow.style.display = 'none'
+  qrShowBtn.style.display = ''
+}
+
+/** Move the shared QR section into the main screen's add-signer area. */
+function mountQrSectionInMainScreen() {
+  if (qrHostMain && nostrconnectSection.parentElement !== qrHostMain) {
+    qrHostMain.appendChild(nostrconnectSection)
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -870,9 +997,26 @@ if (showAddBtn) {
   showAddBtn.addEventListener('click', () => {
     addInstanceSection.style.display = ''
     showAddBtn.style.display = 'none'
+    mountQrSectionInMainScreen()
     addAddressInput.focus()
   })
 }
+
+// nostrconnect QR pairing
+qrShowBtn.addEventListener('click', () => {
+  qrShowBtn.style.display = 'none'
+  qrFlow.style.display = ''
+})
+qrStartBtn.addEventListener('click', startQrPairing)
+qrCancelBtn.addEventListener('click', cancelQrPairing)
+qrCopyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(qrUri.textContent)
+    setQrStatus('URI copied.', 'ok')
+  } catch {
+    setQrStatus('Copy failed.', 'err')
+  }
+})
 
 if (addPairBtn) {
   addPairBtn.addEventListener('click', () => pairHeartwood(addAddressInput.value.trim()))

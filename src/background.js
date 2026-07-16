@@ -1,6 +1,6 @@
 // Background service worker — handles NIP-46 relay communication with Heartwood.
 
-import { BunkerSigner, parseBunkerInput } from 'nostr-tools/nip46'
+import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } from 'nostr-tools/nip46'
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
 import {
@@ -261,6 +261,161 @@ export async function importHeartwoodIdentities({
 
 function validClientSecret(value) {
   return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value)
+}
+
+// ---------------------------------------------------------------------------
+// nostrconnect:// pairing — client-initiated flow where the signer scans a
+// QR (or receives the pasted URI) and connects back over the relay
+// ---------------------------------------------------------------------------
+
+/** Default relays offered for client-initiated nostrconnect pairing. */
+export const DEFAULT_NOSTRCONNECT_RELAYS = ['wss://relay.nsec.app']
+
+/** Maximum time to wait for the signer to respond to a nostrconnect URI (ms). */
+const NOSTRCONNECT_WAIT_MS = 180_000
+
+/**
+ * Normalise user relay input (string or array) into a deduplicated list of
+ * WebSocket relay URLs. Plain ws:// is only accepted for loopback bridges.
+ */
+export function normaliseNostrConnectRelays(input) {
+  const raw = Array.isArray(input)
+    ? input
+    : (typeof input === 'string' ? input.split(/[\s,]+/) : [])
+  const relays = []
+  for (const candidate of raw) {
+    const value = String(candidate || '').trim()
+    if (!value) continue
+    let url
+    try { url = new URL(value) } catch { continue }
+    if (url.protocol !== 'wss:' && url.protocol !== 'ws:') continue
+    const isLoopback = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+    if (url.protocol === 'ws:' && !isLoopback) continue
+    const href = url.href.replace(/\/$/, '')
+    if (!relays.includes(href)) relays.push(href)
+  }
+  return relays.slice(0, 4)
+}
+
+/**
+ * Build a nostrconnect:// pairing request: fresh client keypair, random
+ * secret, and the URI the signer scans or receives.
+ */
+export function buildNostrConnectRequest(relayInput, {
+  name = 'Bark',
+  url = 'https://github.com/forgesworn/bark',
+} = {}) {
+  const relays = normaliseNostrConnectRelays(relayInput)
+  if (relays.length === 0) {
+    throw new Error('Invalid relay address. Use wss:// relay URLs.')
+  }
+  const clientSk = generateSecretKey()
+  const secretBytes = new Uint8Array(16)
+  crypto.getRandomValues(secretBytes)
+  const secret = bytesToHex(secretBytes)
+  const uri = createNostrConnectURI({
+    clientPubkey: getPublicKey(clientSk),
+    relays,
+    secret,
+    name,
+    url,
+  })
+  return { uri, clientSecret: bytesToHex(clientSk), relays, secret }
+}
+
+/** @type {{ uri: string, status: 'waiting'|'connected'|'error', error: string|null, abort: AbortController }|null} */
+let nostrConnectPending = null
+
+/**
+ * Start a nostrconnect pairing wait. Returns the URI for the popup to render.
+ * The wait continues in the background even if the popup closes.
+ */
+function startNostrConnectPairing(relayInput) {
+  if (nostrConnectPending?.status === 'waiting') {
+    nostrConnectPending.abort.abort()
+  }
+
+  const request = buildNostrConnectRequest(relayInput)
+  const abort = new AbortController()
+  const pending = { uri: request.uri, status: 'waiting', error: null, abort }
+  nostrConnectPending = pending
+  const timeoutId = setTimeout(() => abort.abort(), NOSTRCONNECT_WAIT_MS)
+
+  BunkerSigner.fromURI(hexToBytes(request.clientSecret), request.uri, {
+    onauth(authUrl) {
+      connectionState.status = 'awaiting-approval'
+      connectionState.lastError = 'Approve this connection on your signer.'
+      connectionState.authUrl = authUrl || null
+    },
+  }, abort.signal)
+    .then(async (newSigner) => {
+      clearTimeout(timeoutId)
+      if (nostrConnectPending !== pending) {
+        try { newSigner.close() } catch { /* ignore */ }
+        return
+      }
+      await adoptNostrConnectSigner(newSigner, request)
+      pending.status = 'connected'
+    })
+    .catch((err) => {
+      clearTimeout(timeoutId)
+      if (nostrConnectPending !== pending) return
+      pending.status = 'error'
+      pending.error = pending.abort.signal.aborted
+        ? 'Pairing timed out. Generate a new QR and try again.'
+        : sanitiseError(err)
+    })
+
+  return { uri: request.uri }
+}
+
+/**
+ * Persist the instance for a completed nostrconnect pairing and adopt the
+ * already-connected signer as the active connection.
+ */
+async function adoptNostrConnectSigner(newSigner, request) {
+  cancelReconnect()
+  if (signer) {
+    try { signer.close() } catch { /* ignore */ }
+  }
+  signer = newSigner
+  connectPromise = null
+  patchSignerPublishFailures(signer)
+
+  const bunkerUri = toBunkerURL(newSigner.bp)
+  if (!isValidBunkerUri(bunkerUri)) {
+    throw new Error('Server returned an invalid bunker URI.')
+  }
+
+  const { instances = [] } = await chrome.storage.local.get(['instances'])
+  const existing = instances.find(i => i.bunkerUri === bunkerUri)
+  const id = makeInstanceId('nostrconnect', bunkerUri)
+
+  let active
+  if (existing) {
+    existing.clientSecret = request.clientSecret
+    existing.signingVerifiedAt = 0
+    existing.signingLastError = null
+    existing.signingPubkey = ''
+    active = existing
+  } else {
+    active = {
+      id,
+      name: 'nostrconnect',
+      address: '',
+      bunkerUri,
+      clientSecret: request.clientSecret,
+      npub: '',
+      signingPubkey: '',
+      signingVerifiedAt: 0,
+      signingLastError: null,
+      isHeartwood: false,
+    }
+    instances.push(active)
+  }
+
+  await chrome.storage.local.set({ instances, activeInstanceId: active.id })
+  await finaliseConnection(active, instances, bunkerUri, newSigner.bp.relays)
 }
 
 export async function pairHeartwoodHttpAddress(address, {
@@ -1227,6 +1382,17 @@ async function doConnect(originHint) {
     throw err
   }
 
+  await finaliseConnection(active, instances, bunkerUri, bp.relays)
+
+  return signer
+}
+
+/**
+ * Shared post-connect steps for both the bunker:// path (doConnect) and the
+ * client-initiated nostrconnect path: mark connected, probe relay health,
+ * detect Heartwood capabilities, and schedule the signing health check.
+ */
+async function finaliseConnection(active, instances, bunkerUri, relays) {
   cancelReconnect()
   connectionState.status = 'connected'
   connectionState.lastError = null
@@ -1236,7 +1402,7 @@ async function doConnect(originHint) {
   scheduleKeepAlive()
 
   // Probe relay health
-  await probeRelays(bp.relays)
+  await probeRelays(relays)
 
   // Detect Heartwood mode and approval status.
   let heartwoodIdentityList = []
@@ -1278,8 +1444,6 @@ async function doConnect(originHint) {
   }
 
   if (!active.signingVerifiedAt) scheduleSignerPrime('initial')
-
-  return signer
 }
 
 /**
@@ -1545,6 +1709,8 @@ const SAFE_ERROR_PREFIXES = [
   'No Heartwood instance',
   'Invalid bunker URI',
   'Invalid address',
+  'Invalid relay address',
+  'Pairing timed out',
   'Bunker URI must',
   'Connection timed out',
   'Invalid method',
@@ -1585,6 +1751,7 @@ export function isUnsupportedHeartwoodProbeError(message) {
   return msg.includes('Heartwood identity probe timed out')
     || msg.includes('unknown method')
     || msg.includes('not supported')
+    || msg.includes('unsupported')
     || msg.includes('unrecognised')
     || msg.includes('unrecognized')
 }
@@ -1700,6 +1867,39 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           sendResponse({ ok: false, error: sanitiseError(err) })
         }
       })()
+      return true
+    }
+
+    if (message.type === 'bark-nostrconnect-start') {
+      try {
+        const result = startNostrConnectPairing(message.relays)
+        sendResponse({ ok: true, uri: result.uri })
+      } catch (err) {
+        sendResponse({ ok: false, error: sanitiseError(err) })
+      }
+      return true
+    }
+
+    if (message.type === 'bark-nostrconnect-status') {
+      if (!nostrConnectPending) {
+        sendResponse(null)
+        return true
+      }
+      sendResponse({
+        status: nostrConnectPending.status,
+        error: nostrConnectPending.error,
+        uri: nostrConnectPending.uri,
+      })
+      return true
+    }
+
+    if (message.type === 'bark-nostrconnect-cancel') {
+      if (nostrConnectPending) {
+        const pending = nostrConnectPending
+        nostrConnectPending = null
+        if (pending.status === 'waiting') pending.abort.abort()
+      }
+      sendResponse({ ok: true })
       return true
     }
 

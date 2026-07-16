@@ -7,7 +7,8 @@ test('loads the packaged popup', async ({ page, extensionId }) => {
   await expect(page.getByRole('heading', { name: 'Bark' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Add Signer' })).toBeVisible()
   await expect(page.getByPlaceholder('heartwood.local:3000 or bunker://...')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Connect' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Connect', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Pair by QR (nostrconnect)' })).toBeVisible()
 })
 
 test('injects the NIP-07 provider into a localhost page', async ({ context }) => {

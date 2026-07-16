@@ -345,6 +345,29 @@ export class DeterministicNip46Signer {
     this.publish(responseEvent)
   }
 
+  /**
+   * Act as the signer in a client-initiated nostrconnect flow: decrypt the
+   * URI parameters and publish the connect ack (the secret) to the client.
+   * Safe to call repeatedly while waiting for the client's subscription.
+   */
+  acceptNostrConnect(uri) {
+    const parsed = new URL(uri)
+    const clientPubkey = parsed.hostname || parsed.host
+    const secret = parsed.searchParams.get('secret')
+    const conversationKey = getConversationKey(this.secretKey, clientPubkey)
+    const content = encrypt(JSON.stringify({
+      id: `nostrconnect-ack-${Date.now()}`,
+      result: secret,
+    }), conversationKey)
+    const responseEvent = finalizeEvent({
+      kind: NOSTR_CONNECT_KIND,
+      tags: [['p', clientPubkey]],
+      content,
+      created_at: Math.floor(Date.now() / 1000),
+    }, this.secretKey)
+    this.publish(responseEvent)
+  }
+
   handleRequest(request) {
     if (request.method === 'connect') {
       const [remotePubkey, secret] = request.params || []
