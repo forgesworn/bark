@@ -14,13 +14,13 @@
   "content_scripts": [
     {
       "run_at": "document_start",
-      "matches": ["https://*/*", "http://localhost:*/*"],
+      "matches": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
       "js": ["content-script.js"],
       "all_frames": false
     },
     {
       "run_at": "document_start",
-      "matches": ["https://*/*", "http://localhost:*/*"],
+      "matches": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
       "js": ["provider.js"],
       "world": "MAIN",
       "all_frames": false

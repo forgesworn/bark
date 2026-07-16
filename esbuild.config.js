@@ -32,11 +32,16 @@ function manifestForTarget() {
     // Chromium never gates WebSockets on host permissions, so the base
     // manifest omits these. Firefox's behaviour is less clearly documented;
     // keep the declared (user-optional in MV3) relay permissions there.
-    manifest.host_permissions = ['wss://*/*', 'ws://localhost:*/*', 'ws://127.0.0.1:*/*']
+    // Match patterns ignore ports, so the loopback entries cover any port.
+    manifest.host_permissions = ['wss://*/*', 'ws://localhost/*', 'ws://127.0.0.1/*']
     manifest.browser_specific_settings = {
       gecko: {
         id: 'bark@forgesworn.local',
         strict_min_version: '128.0',
+        // Required for new AMO submissions. Bark collects nothing.
+        data_collection_permissions: {
+          required: ['none'],
+        },
       },
     }
   }
@@ -52,7 +57,7 @@ function manifestForTarget() {
     manifest.web_accessible_resources = [
       {
         resources: ['provider.js'],
-        matches: ['https://*/*', 'http://localhost:*/*'],
+        matches: ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*'],
       },
     ]
   }
