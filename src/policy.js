@@ -32,6 +32,13 @@ export const DEFAULT_POLICIES = {
     'nip04.decrypt': 'ask',
     'nip44.encrypt': 'ask',
     'nip44.decrypt': 'ask',
+    // Heartwood identity operations always prompt. They are deliberately
+    // absent from TRUSTED_SITE_METHODS: trusting a site for signing must
+    // not grant identity management.
+    heartwood_list_identities: 'ask',
+    heartwood_derive: 'ask',
+    heartwood_derive_persona: 'ask',
+    heartwood_switch: 'ask',
   },
   kindRules: {
     '0': 'ask',     // profile metadata

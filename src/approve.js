@@ -146,6 +146,15 @@ async function init() {
   } else if (details.method === 'nip44.decrypt') {
     title.textContent = 'Decrypt Message?'
     originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to decrypt a message'
+  } else if (details.method === 'heartwood_list_identities') {
+    title.textContent = 'List Identities?'
+    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to list the identities on your Heartwood device'
+  } else if (details.method === 'heartwood_derive' || details.method === 'heartwood_derive_persona') {
+    title.textContent = 'Derive Identity?'
+    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to derive a new identity on your Heartwood device'
+  } else if (details.method === 'heartwood_switch') {
+    title.textContent = 'Switch Identity?'
+    originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to switch your active signing identity'
   } else {
     title.textContent = 'Approve Request?'
     originText.innerHTML = '<strong>' + escapeHtml(details.origin) + '</strong> wants to call <code>' + escapeHtml(details.method) + '</code>'

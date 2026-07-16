@@ -148,6 +148,33 @@ describe('evaluatePolicy', () => {
   })
 })
 
+describe('evaluatePolicy — heartwood methods', () => {
+  it('asks by default for heartwood identity operations from web pages', () => {
+    for (const method of [
+      'heartwood_list_identities',
+      'heartwood_derive',
+      'heartwood_derive_persona',
+      'heartwood_switch',
+    ]) {
+      expect(evaluatePolicy(DEFAULT_POLICIES, method, undefined, 'https://app.example')).toBe('ask')
+    }
+  })
+
+  it('trusting a site does not grant heartwood identity management', () => {
+    const policies = {
+      ...DEFAULT_POLICIES,
+      siteRules: { 'https://app.example': buildTrustedSiteRule() },
+    }
+    expect(evaluatePolicy(policies, 'signEvent', { kind: 1 }, 'https://app.example')).toBe('allow')
+    expect(evaluatePolicy(policies, 'heartwood_derive', undefined, 'https://app.example')).toBe('ask')
+    expect(evaluatePolicy(policies, 'heartwood_switch', undefined, 'https://app.example')).toBe('ask')
+  })
+
+  it('still denies unknown methods', () => {
+    expect(evaluatePolicy(DEFAULT_POLICIES, 'heartwood_lsag_sign', undefined, 'https://app.example')).toBe('deny')
+  })
+})
+
 describe('evaluatePolicy — edge cases', () => {
   it('protects custom event kinds', () => {
     const policies = {
