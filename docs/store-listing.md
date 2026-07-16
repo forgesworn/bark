@@ -1,4 +1,4 @@
-# Store listing pack
++# Store listing pack
 
 Everything needed to submit Bark to the Chrome Web Store and Firefox
 Add-ons (AMO). Keep this in sync with the manifest and README.
@@ -24,7 +24,7 @@ CWS allows up to 16,000 characters and preserves line breaks (no markdown).
 Paste the block below verbatim.
 
 ```
-Bark bridges window.nostr to a remote NIP-46 signer, so Nostr web apps can request signatures without your private key ever entering the browser. Your keys stay on your signer: a hardware device, a self-hosted bunker, or a hosted service like nsec.app. Only signatures cross the wire.
+Bark bridges window.nostr to a remote NIP-46 signer, so Nostr web apps can request signatures without your private key ever entering the browser. Your keys stay on your signer: a Heartwood hardware device, your own self-hosted bunker (such as heartwoodd), or a hosted service like nsec.app. Only signatures cross the wire.
 
 NO KEYS IN THE BROWSER. EVER.
 Bark never generates, stores, or touches private key material. There is no key import, no seed phrase screen, and nothing for a malicious page or a browser compromise to steal. Every signing and encryption request travels over the encrypted NIP-46 protocol to a signer you control, and only the result comes back.
