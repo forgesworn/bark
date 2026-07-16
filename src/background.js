@@ -793,17 +793,66 @@ let signer = null
 let connectPromise = null
 
 /**
- * Timestamp of the last successful NIP-46 request/response cycle.
+ * Timestamp of the last site/popup request. Gates the keep-alive window so
+ * pings stop once the user goes quiet instead of running forever.
+ * @type {number}
+ */
+let lastActivityTime = Date.now()
+
+/**
+ * Timestamp of the last confirmed relay traffic (request or keep-alive ping).
  * Chrome MV3 silently kills WebSocket connections after ~30s of service
  * worker inactivity. The readyState property on the dead WebSocket still
  * reports OPEN (1), so isPoolAlive() is unreliable after idle periods.
  * We force a full reconnect if more than MAX_IDLE_MS has elapsed.
  * @type {number}
  */
-let lastActivityTime = Date.now()
+let lastSocketActivityTime = Date.now()
 
-/** Force reconnect after this many ms of inactivity (< MV3's ~30s kill). */
+/** Force reconnect after this many ms without socket traffic (< MV3's ~30s kill). */
 const MAX_IDLE_MS = 20_000
+
+// ---------------------------------------------------------------------------
+// Keep-alive — NIP-46 pings hold the socket (and MV3 worker) open during
+// active use, so human-paced interactions don't pay a reconnect every time
+// ---------------------------------------------------------------------------
+
+/** Ping cadence while active (< MV3's ~30s idle kill). */
+const KEEP_ALIVE_INTERVAL_MS = 20_000
+
+/** Stop pinging this long after the last real request. */
+const KEEP_ALIVE_WINDOW_MS = 120_000
+
+let keepAliveTimer = null
+
+function scheduleKeepAlive() {
+  if (keepAliveTimer) return
+  keepAliveTimer = setTimeout(keepAliveTick, KEEP_ALIVE_INTERVAL_MS)
+}
+
+async function keepAliveTick() {
+  keepAliveTimer = null
+  if (!signer) return
+  if (Date.now() - lastActivityTime > KEEP_ALIVE_WINDOW_MS) return
+  try {
+    await withTimeout(signer.ping(), 5_000, 'Keep-alive ping')
+    lastSocketActivityTime = Date.now()
+  } catch (err) {
+    // Any response — even "unknown method" from a bunker without ping —
+    // proves the socket is alive. Only a timeout suggests it is dead, in
+    // which case the next request's idle check forces a reconnect.
+    const msg = typeof err === 'string' ? err : (err?.message || '')
+    if (!msg.includes('timed out')) lastSocketActivityTime = Date.now()
+  }
+  scheduleKeepAlive()
+}
+
+function cancelKeepAlive() {
+  if (keepAliveTimer) {
+    clearTimeout(keepAliveTimer)
+    keepAliveTimer = null
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Auto-reconnect with exponential backoff
@@ -1027,7 +1076,7 @@ async function ensureConnected(originHint) {
   // MV3 kills WebSockets silently — readyState stays OPEN even after
   // the underlying connection is gone. Use idle time as a second check.
   if (signer) {
-    const idleMs = Date.now() - lastActivityTime
+    const idleMs = Date.now() - lastSocketActivityTime
     if (idleMs > MAX_IDLE_MS) {
       debug(`[bark:bg] idle ${Math.round(idleMs / 1000)}s > ${MAX_IDLE_MS / 1000}s — forcing reconnect`)
       try { signer.close() } catch { /* ignore */ }
@@ -1136,11 +1185,6 @@ async function doConnect(originHint) {
   patchSignerPublishFailures(signer)
 
   try {
-    // Allow the relay WebSocket to begin establishing before the first connect
-    // request. In MV3 the service-worker socket is often cold, so this alone is
-    // not enough — the retry loop below recovers a missed first response.
-    await new Promise(r => setTimeout(r, 2000))
-
     // Send the connect request directly so we can include app metadata as the
     // optional fourth parameter. The third parameter is requested permissions;
     // pass an empty string when no permission bundle is requested.
@@ -1188,6 +1232,8 @@ async function doConnect(originHint) {
   connectionState.lastError = null
   connectionState.authUrl = null
   lastActivityTime = Date.now()
+  lastSocketActivityTime = Date.now()
+  scheduleKeepAlive()
 
   // Probe relay health
   await probeRelays(bp.relays)
@@ -1241,6 +1287,7 @@ async function doConnect(originHint) {
  */
 async function resetConnection({ clearSigning = true } = {}) {
   cancelReconnect()
+  cancelKeepAlive()
   if (autoPrimeTimer) {
     clearTimeout(autoPrimeTimer)
     autoPrimeTimer = null
@@ -1325,9 +1372,11 @@ async function handleMessage(method, params, originHint) {
   const bunker = await ensureConnected(originHint)
   debug('[bark:bg] handleMessage', parsed.type, parsed.method, 'connected, dispatching')
 
-  // Update activity timestamp so the idle-time reconnect logic knows the
-  // relay WebSockets were recently used and probably still alive.
+  // Update activity timestamps so the idle-time reconnect logic knows the
+  // relay WebSockets were recently used, and keep-alive pings keep them warm.
   lastActivityTime = Date.now()
+  lastSocketActivityTime = Date.now()
+  scheduleKeepAlive()
 
   switch (parsed.type) {
     case 'nip07': {

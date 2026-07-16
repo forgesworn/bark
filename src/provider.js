@@ -9,13 +9,17 @@
   const pending = new Map()
   let idCounter = 0
 
-  /** Timeout for NIP-07 requests (ms). Allows for ESP32 button approval (~30s)
-   *  plus relay round-trip and service worker wake time. */
-  const REQUEST_TIMEOUT_MS = 60_000
+  /** Timeouts for NIP-07 requests (ms). A signEvent can traverse an approval
+   *  window (60s), a cold NIP-46 reconnect, and a hardware button press, and
+   *  concurrent requests queue behind each other — so it gets the longest
+   *  budget. Other methods stay above the approval + bunker request chain. */
+  const SIGN_EVENT_TIMEOUT_MS = 180_000
+  const REQUEST_TIMEOUT_MS = 120_000
 
   function call(method, params) {
     return new Promise((resolve, reject) => {
       const id = ++idCounter
+      const timeoutMs = method === 'signEvent' ? SIGN_EVENT_TIMEOUT_MS : REQUEST_TIMEOUT_MS
       const timeoutId = setTimeout(() => {
         if (!pending.has(id)) return
         pending.delete(id)
@@ -23,7 +27,7 @@
           ? 'Bark signEvent timed out. Open Bark and test signing.'
           : 'Bark request timed out.'
         reject(new Error(timeoutMessage))
-      }, REQUEST_TIMEOUT_MS)
+      }, timeoutMs)
       pending.set(id, { resolve, reject, timeoutId })
       debug('[bark:provider] →', method, 'id=' + id)
       window.postMessage({ type: 'bark-request', id, method, params }, window.location.origin)
