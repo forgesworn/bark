@@ -38,11 +38,13 @@ describe('locale catalogues', () => {
     }
   })
 
-  it('keeps every locale in key parity with en', () => {
-    const enKeys = Object.keys(en).sort()
+  it('keeps every locale key a subset of en (missing keys fall back to en)', () => {
+    const enKeys = new Set(Object.keys(en))
     for (const locale of locales) {
       if (locale === 'en') continue
-      expect(Object.keys(loadLocale(locale)).sort(), `${locale} key set`).toEqual(enKeys)
+      for (const key of Object.keys(loadLocale(locale))) {
+        expect(enKeys.has(key), `${locale} has unknown key: ${key}`).toBe(true)
+      }
     }
   })
 

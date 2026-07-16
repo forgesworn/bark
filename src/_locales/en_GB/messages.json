@@ -1,0 +1,192 @@
+{
+  "extDescription": {
+    "message": "Remote Nostr signing via NIP-46. Keys never touch the browser. Works with any bunker; Heartwood adds derived identities.",
+    "description": "Extension description shown in the browser's extension manager and stores."
+  },
+
+  "addSigner": { "message": "Add Signer", "description": "Heading of the setup screen." },
+  "setupIntro": { "message": "Enter a signer or bridge address, or paste a bunker URI." },
+  "connect": { "message": "Connect", "description": "Button that starts pairing with the entered address." },
+  "orPairByQr": { "message": "or pair by QR", "description": "Divider label between address pairing and QR pairing." },
+  "pairByQrBtn": { "message": "Pair by QR (nostrconnect)", "description": "Button revealing the QR pairing flow. Keep the word nostrconnect untranslated." },
+  "qrRelayTitle": { "message": "Relay(s) for the pairing handshake", "description": "Tooltip on the relay input of the QR pairing flow." },
+  "generateQr": { "message": "Generate QR" },
+  "copyUri": { "message": "Copy URI" },
+  "cancel": { "message": "Cancel" },
+  "scanWithSigner": { "message": "Scan with your signer, or paste the URI into it." },
+  "waitingEllipsis": { "message": "Waiting...", "description": "Button label while the QR pairing waits for the signer." },
+  "couldNotStartPairing": { "message": "Could not start pairing." },
+  "pairingExpired": { "message": "Pairing expired. Generate a new QR." },
+  "connectedStatus": { "message": "Connected.", "description": "Status line after successful QR pairing." },
+  "pairingFailedDot": { "message": "Pairing failed." },
+
+  "addAnotherSigner": { "message": "Add another signer...", "description": "Placeholder of the add-signer input on the main screen." },
+  "add": { "message": "Add", "description": "Small button that adds an entry (signer, kind rule, site rule, method rule)." },
+  "showAddSigner": { "message": "+ Add Signer", "description": "Button revealing the add-signer input. Keep the leading plus sign." },
+  "remove": { "message": "Remove", "description": "Tooltip of the button that removes a signer instance." },
+  "removeSignerConfirm": { "message": "Remove this signer instance?", "description": "Confirmation dialog before removing a signer." },
+  "couldNotRemoveInstance": { "message": "Could not remove instance." },
+  "couldNotSwitchIdentity": { "message": "Could not switch identity." },
+  "connectingEllipsis": { "message": "connecting...", "description": "Shown in place of a public key while an instance is connecting." },
+  "connectingBtn": { "message": "Connecting...", "description": "Button label while pairing is in progress." },
+  "enterSignerAddress": { "message": "Enter a signer or bridge address (e.g. heartwood.local:3000)", "description": "Validation error when the address field is empty." },
+  "noResponseFromBackground": { "message": "No response from background - try reloading the extension" },
+  "pairingFailed": { "message": "Pairing failed" },
+  "pairingPermissionDenied": { "message": "Pairing permission denied." },
+
+  "openApprovalPage": { "message": "Open approval page", "description": "Button opening the signer's browser approval page (auth_url)." },
+  "retry": { "message": "Retry" },
+  "checkAgain": { "message": "Check again" },
+  "connectionLost": { "message": "Connection lost." },
+  "reconnectingIn": {
+    "message": "Reconnecting in $SECONDS$s...",
+    "description": "Countdown before an automatic reconnect attempt. $SECONDS$ is a number.",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Approve this connection on your signer." },
+  "extensionError": { "message": "Extension error" },
+
+  "activePersona": { "message": "Active persona", "description": "Section label above the currently active identity." },
+  "defaultName": { "message": "default", "description": "Name shown for the identity of a standard (non-Heartwood) signer." },
+  "unnamed": { "message": "unnamed", "description": "Fallback name for an identity without a label." },
+  "personas": { "message": "Personas", "description": "Section label of the Heartwood identity list." },
+  "purposeNamePlaceholder": { "message": "purpose name", "description": "Placeholder of the input naming a new derived identity." },
+  "derive": { "message": "Derive", "description": "Button that derives a new identity on the Heartwood device." },
+  "personaRequiresHeartwood": { "message": "Persona management requires", "description": "Sentence fragment followed by a link reading 'Heartwood'." },
+  "couldNotLoadPersonas": {
+    "message": "Could not load personas: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Could not refresh Heartwood identities." },
+
+  "signingNotTested": { "message": "Signing not tested" },
+  "runSignTestHint": { "message": "Run a sign test before using sites." },
+  "test": { "message": "Test", "description": "Button that runs a signing test." },
+  "signingReady": { "message": "Signing ready" },
+  "lastTested": {
+    "message": "Last tested $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Signer returned a valid event." },
+  "waitingForSigner": { "message": "Waiting for signer" },
+  "approveOnSigner": { "message": "Approve the request on your signer device." },
+  "waitingBtn": { "message": "Waiting", "description": "Disabled button label while a sign test waits for the signer." },
+  "signingFailed": { "message": "Signing failed" },
+  "runSignTestAgain": { "message": "Run the sign test again." },
+
+  "zeroRelays": { "message": "0 relays", "description": "Initial relay summary before any status is known." },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relays connected",
+    "description": "Relay health summary. $UP$ and $TOTAL$ are numbers.",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Signing Policies", "description": "Collapsible section heading for the policy editor." },
+  "protectedKinds": { "message": "Protected kinds (ask before signing)" },
+  "kindNumberPlaceholder": { "message": "Kind number", "description": "Placeholder of the numeric input for a Nostr event kind." },
+  "privacyMode": { "message": "Privacy mode" },
+  "privacyModeHint": { "message": "Hide Bark from every site except those with a site rule below" },
+  "siteRules": { "message": "Site rules" },
+  "methods": { "message": "Methods", "description": "Heading of the per-site method override list." },
+  "kindOverrides": { "message": "Kind overrides", "description": "Heading of the per-site kind override list." },
+  "noKindRules": { "message": "No kind rules configured" },
+  "noSiteRules": { "message": "No site rules configured" },
+  "noKindOverrides": { "message": "No kind overrides for this site" },
+  "clickToChange": { "message": "Click to change: allow → ask → deny", "description": "Tooltip on the cycling policy action badge." },
+  "resetToDefaults": { "message": "Reset to defaults" },
+  "optionAllow": { "message": "Allow", "description": "Policy action in the add-site dropdown." },
+  "optionAsk": { "message": "Ask", "description": "Policy action in the add-site dropdown." },
+  "optionDeny": { "message": "Deny", "description": "Policy action in the add-site dropdown." },
+  "actionAllow": { "message": "allow", "description": "Policy action badge text, lower case." },
+  "actionAsk": { "message": "ask", "description": "Policy action badge text, lower case." },
+  "actionDeny": { "message": "deny", "description": "Policy action badge text, lower case." },
+  "kindProfileMetadata": { "message": "Profile metadata", "description": "Friendly name for Nostr event kind 0." },
+  "kindContactList": { "message": "Contact list", "description": "Friendly name for Nostr event kind 3." },
+  "kindRelayList": { "message": "Relay list", "description": "Friendly name for Nostr event kind 10002." },
+  "kindN": {
+    "message": "Kind $N$",
+    "description": "Fallback label for an event kind without a friendly name. $N$ is a number.",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Disconnect" },
+
+  "loadingRequest": { "message": "Loading request...", "description": "Approval window placeholder while the request loads." },
+  "missingRequestId": { "message": "Missing request ID." },
+  "requestNotFound": { "message": "Request not found or expired." },
+  "approveKindProfile": { "message": "Profile Metadata", "description": "Title-case name for event kind 0 in the approval window." },
+  "approveKindContacts": { "message": "Contact List", "description": "Title-case name for event kind 3 in the approval window." },
+  "approveKindRelays": { "message": "Relay List", "description": "Title-case name for event kind 10002 in the approval window." },
+  "signTitle": {
+    "message": "Sign $KIND$?",
+    "description": "Approval window title for a signing request. $KIND$ is e.g. 'Kind 1' or 'Profile Metadata'.",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ wants to sign a $KIND$ event",
+    "description": "$ORIGIN$ is the requesting site, already wrapped in bold markup.",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Share Identity?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ wants to know your public key",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Share Relays?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ wants to know your relay list",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Encrypt Message?" },
+  "decryptTitle": { "message": "Decrypt Message?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ wants to encrypt a legacy message",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ wants to decrypt a legacy message",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ wants to encrypt a message",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ wants to decrypt a message",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "List Identities?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ wants to list the identities on your Heartwood device",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Derive Identity?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ wants to derive a new identity on your Heartwood device",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Switch Identity?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ wants to switch your active signing identity",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Approve Request?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ wants to call $METHOD$",
+    "description": "$METHOD$ is a technical method name, already wrapped in code markup.",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Proposed profile", "description": "Section label above the profile fields a site wants to publish." },
+  "deny": { "message": "Deny", "description": "Approval window button rejecting the request." },
+  "allowOnce": { "message": "Allow Once", "description": "Approval window button allowing this single request." },
+  "trustSite": { "message": "Trust Site", "description": "Approval window button trusting the site for future routine requests." }
+}

@@ -9,10 +9,10 @@ Bark is a minimal NIP-07 browser extension that signs Nostr events through a rem
 ## What it does
 
 - **Signs Nostr events** via NIP-46 remote signing (NIP-07 interface for web apps)
-- **Works with any NIP-46 bunker** — nsecBunker, Amber, or your own signer
-- **Switches Heartwood identities** — imports Heartwood's per-identity bunker URIs and switches by selecting the right bunker instance
-- **Bridge-friendly** — works with Wi-Fi devices, Heartwood daemons, or relay-to-serial bridges for tethered low-cost hardware
-- **Self-sovereign** — keys live on your signer hardware, never touch the browser
+- **Works with any NIP-46 bunker**: nsecBunker, Amber, or your own signer
+- **Switches Heartwood identities**: imports Heartwood's per-identity bunker URIs and switches by selecting the right bunker instance
+- **Bridge-friendly**: works with Wi-Fi devices, Heartwood daemons, or relay-to-serial bridges for tethered low-cost hardware
+- **Self-sovereign**: keys live on your signer hardware, never touch the browser
 
 ## What it doesn't do
 
@@ -75,7 +75,7 @@ remember the same Bark test client across runs.
 
 ### Full setup guide
 
-For a complete walkthrough — firmware, bridge, provisioning, and Bark together — see the [Heartwood + Bark setup guide](docs/setup-guide.md).
+For a complete walkthrough (firmware, bridge, provisioning, and Bark together), see the [Heartwood + Bark setup guide](docs/setup-guide.md).
 
 For the release hardening test matrix, see [E2E hardening](docs/e2e-hardening.md).
 
@@ -84,8 +84,8 @@ For the release hardening test matrix, see [E2E hardening](docs/e2e-hardening.md
 Bark works as a standard NIP-07 provider with any NIP-46 bunker. The signing flow (`getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt`) works identically regardless of the backend. Three ways to pair:
 
 - **Paste a `bunker://` URI** from nsecBunker, Amber, nsec.app, or any compliant signer.
-- **Pair by QR (nostrconnect)** — Bark generates a `nostrconnect://` URI and QR code; scan it with your signer (or paste it in) and the signer connects back over the relay. Signers that require a browser approval step (e.g. nsec.app) get an "Open approval page" button in the popup.
-- **Heartwood HTTP address** for local devices (e.g. `heartwood.local:3000`). This targets the legacy Pi web UI's `/api/pair` contract; current `heartwoodd` deployments pair by bunker URI or QR instead — fetch the URI from Sapwood or `GET /api/slots/{master}/{slot}/uri`.
+- **Pair by QR (nostrconnect)**: Bark generates a `nostrconnect://` URI and QR code; scan it with your signer (or paste it in) and the signer connects back over the relay. Signers that require a browser approval step (e.g. nsec.app) get an "Open approval page" button in the popup.
+- **Heartwood HTTP address** for local devices (e.g. `heartwood.local:3000`). This targets the legacy Pi web UI's `/api/pair` contract; current `heartwoodd` deployments pair by bunker URI or QR instead, with the URI fetched from Sapwood or `GET /api/slots/{master}/{slot}/uri`.
 
 Identity features (derive and list) require [Heartwood](https://github.com/forgesworn/heartwood). When you pair by a Heartwood HTTP address, Bark also imports the per-identity bunker URI manifest from `/api/identities`. That endpoint can be a Wi-Fi Heartwood appliance, a Pi daemon, or another Heartwood-compatible host sitting in front of cheap tethered hardware. The current Heartwood model is that each identity has its own bunker URI, and selecting a persona in Bark selects the matching bunker instance.
 
@@ -132,15 +132,15 @@ Returns all derived identities on the device.
 Derive a new identity from the device's mnemonic.
 
 - **Params:** `[purpose: string, index: string]`
-  - `purpose` — alphanumeric label, 1-64 chars (e.g. `"nostr"`, `"twitter"`)
-  - `index` — derivation index as string, `"0"` to `"1000"`
+  - `purpose`: alphanumeric label, 1-64 chars (e.g. `"nostr"`, `"twitter"`)
+  - `index`: derivation index as string, `"0"` to `"1000"`
 - **Returns:** `{ pubkey: string, purpose: string, index: number }`
 
 ### `heartwood_switch` (legacy)
 
 Latest Heartwood treats identity selection as per-connection, based on the `bunker://<pubkey>` target. Bark keeps this RPC available for older Heartwood builds and third-party callers, but the extension UI switches identities by switching Bark instances.
 
-- **Params:** `[pubkey: string]` — 64-char lowercase hex public key
+- **Params:** `[pubkey: string]`, a 64-char lowercase hex public key
 - **Returns:** Heartwood-specific status for the current connection
 
 ## Comparison with other NIP-07 signers

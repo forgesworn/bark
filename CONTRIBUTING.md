@@ -1,6 +1,6 @@
 # Contributing to Bark
 
-Bark is a minimal NIP-07 browser extension. Contributions are welcome — keep
+Bark is a minimal NIP-07 browser extension. Contributions are welcome. Keep
 things focused, small, and in keeping with the no-local-keys philosophy.
 
 ## Build and test
@@ -39,11 +39,11 @@ browser E2E matrix is tracked in [docs/e2e-hardening.md](docs/e2e-hardening.md).
 
 ## Code style
 
-- **British English** — colour, initialise, behaviour, licence, sanitise.
-- **ESM throughout** — `import`/`export`, no CommonJS.
-- **No local key material** — the extension must never generate, store, or
+- **British English**: colour, initialise, behaviour, licence, sanitise.
+- **ESM throughout**: `import`/`export`, no CommonJS.
+- **No local key material**: the extension must never generate, store, or
   touch private keys. This is a hard constraint, not a preference.
-- **Pure functions for testable logic** — keep side-effect-free helpers
+- **Pure functions for testable logic**: keep side-effect-free helpers
   (validators, sanitisers, policy evaluation) in separate exports so they can
   be unit tested without a browser environment.
 - **No new dependencies** without discussion. Bark has one runtime dependency
@@ -70,7 +70,7 @@ GitHub and directly relevant.
 ## Pull request process
 
 1. Fork the repo and work on a branch named `type/short-description`.
-2. Run `npm run verify` — all tests, build, and audit checks must pass.
+2. Run `npm run verify`; all tests, build, and audit checks must pass.
 3. Load the built extension and manually verify the change in a browser.
 4. Open a PR against `main` with a clear description of what changed and why.
 5. Keep PRs focused. One logical change per PR.
