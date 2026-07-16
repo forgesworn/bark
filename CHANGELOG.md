@@ -2,6 +2,15 @@
 
 All notable changes to Bark are documented here.
 
+## [1.3.3] — 2026-07-16
+
+### Changed
+
+- Firefox minimum version raised from 128 to 140 (ESR) so the mandatory
+  `data_collection_permissions` declaration, only understood from 140, is
+  shown to every user who can install. Clears the AMO validator's manifest
+  warning.
+
 ## [1.3.2] — 2026-07-16
 
 ### Changed

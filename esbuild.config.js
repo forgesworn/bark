@@ -51,7 +51,11 @@ function manifestForTarget() {
     manifest.browser_specific_settings = {
       gecko: {
         id: 'bark@forgesworn.local',
-        strict_min_version: '128.0',
+        // 140 (ESR) rather than the technical floor of 128 (MAIN-world
+        // content scripts): data_collection_permissions below is only
+        // understood from 140, and the declaration should be shown to
+        // every user who can install.
+        strict_min_version: '140.0',
         // Required for new AMO submissions. Bark collects nothing.
         data_collection_permissions: {
           required: ['none'],
