@@ -29,6 +29,10 @@ function manifestForTarget() {
     manifest.background = {
       scripts: ['background.js'],
     }
+    // Chromium never gates WebSockets on host permissions, so the base
+    // manifest omits these. Firefox's behaviour is less clearly documented;
+    // keep the declared (user-optional in MV3) relay permissions there.
+    manifest.host_permissions = ['wss://*/*', 'ws://localhost:*/*', 'ws://127.0.0.1:*/*']
     manifest.browser_specific_settings = {
       gecko: {
         id: 'bark@forgesworn.local',
@@ -42,6 +46,15 @@ function manifestForTarget() {
     manifest.background = {
       service_worker: 'background.js',
     }
+    // Safari lacks reliable MAIN-world content script support, so it keeps
+    // the script-tag injection path (see __BARK_INJECT_PROVIDER__ below).
+    manifest.content_scripts = manifest.content_scripts.filter(cs => cs.world !== 'MAIN')
+    manifest.web_accessible_resources = [
+      {
+        resources: ['provider.js'],
+        matches: ['https://*/*', 'http://localhost:*/*'],
+      },
+    ]
   }
 
   return manifest
@@ -55,9 +68,6 @@ function copyStatic() {
   )
   cpSync(resolve(srcDir, 'popup.html'), resolve(distDir, 'popup.html'))
   cpSync(resolve(srcDir, 'icons'), resolve(distDir, 'icons'), { recursive: true })
-  // Copy unbundled scripts (they run in page/content context)
-  cpSync(resolve(srcDir, 'provider.js'), resolve(distDir, 'provider.js'))
-  cpSync(resolve(srcDir, 'content-script.js'), resolve(distDir, 'content-script.js'))
   cpSync(resolve(srcDir, 'approve.html'), resolve(distDir, 'approve.html'))
   cpSync(resolve(srcDir, 'diagnostic.html'), resolve(distDir, 'diagnostic.html'))
 }
@@ -70,11 +80,18 @@ const buildOptions = {
     resolve(srcDir, 'background.js'),
     resolve(srcDir, 'popup.js'),
     resolve(srcDir, 'approve.js'),
+    resolve(srcDir, 'content-script.js'),
+    resolve(srcDir, 'provider.js'),
   ],
   bundle: true,
   format: 'iife',
   outdir: distDir,
   logLevel: 'info',
+  define: {
+    // Safari falls back to script-tag provider injection; Chromium and
+    // Firefox use the declarative MAIN-world content script instead.
+    __BARK_INJECT_PROVIDER__: target === 'safari' ? 'true' : 'false',
+  },
   plugins: [
     {
       name: 'copy-static-on-rebuild',

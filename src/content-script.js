@@ -18,10 +18,17 @@ function runtimeSendMessage(payload) {
   return Promise.reject(new Error('Extension runtime unavailable.'))
 }
 
-const script = document.createElement('script')
-script.src = runtimeGetURL('provider.js')
-script.onload = () => script.remove()
-;(document.head || document.documentElement).appendChild(script)
+// Chromium and Firefox (128+) inject provider.js declaratively via a
+// MAIN-world content script in the manifest, which removes the race where
+// page scripts run before window.nostr exists. Safari builds fall back to
+// script-tag injection (the define is set per build target by esbuild).
+const INJECT_PROVIDER = typeof __BARK_INJECT_PROVIDER__ === 'undefined' || __BARK_INJECT_PROVIDER__
+if (INJECT_PROVIDER) {
+  const script = document.createElement('script')
+  script.src = runtimeGetURL('provider.js')
+  script.onload = () => script.remove()
+  ;(document.head || document.documentElement).appendChild(script)
+}
 
 const DEBUG = false
 function debug(...args) {
