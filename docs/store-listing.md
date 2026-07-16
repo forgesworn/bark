@@ -101,13 +101,15 @@ Both former gaps are closed as of v1.2.0:
 
 ## Assets checklist
 
-- [x] Screenshots (1280×800) in `docs/store-assets/` — regenerate with
-      `npm run build && node scripts/store-screenshots.mjs`
-- [x] CWS allows **max 5 screenshots** — upload these, in this order:
-      `03-connected`, `06-approval`, `04-policies`, `02-qr-pairing`,
-      `05-personas`. Omit `01-setup` (a subset of `02-qr-pairing`).
-      AMO allows up to 10 — upload all six there.
-- [x] CWS promo tile 440×280 (`docs/store-assets/promo-tile-440x280.png`)
+- [x] Five captioned screenshots (1280×800) in `docs/store-assets/` —
+      regenerate with `npm run build && node scripts/store-screenshots.mjs`.
+      Each pairs a 2x UI capture with a headline explaining the feature.
+      Upload in numbered order on both stores: `01-connected`,
+      `02-approval`, `03-policies`, `04-qr-pairing`, `05-personas`.
+- [x] CWS promo tile 440×280 (`docs/store-assets/promo-tile-440x280.jpg`,
+      JPEG — the store rejects PNGs with an alpha channel)
+- [x] CWS marquee promo tile 1400×560
+      (`docs/store-assets/marquee-promo-1400x560.jpg`)
 - [x] CWS store icon (`docs/store-assets/store-icon-128.png`) — 96×96
       artwork centred on a transparent 128×128 canvas per Google's image
       guidelines; the raw `src/icons/bark-128.png` is full-bleed and will
