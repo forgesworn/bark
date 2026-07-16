@@ -980,17 +980,32 @@ async function registerSiteScripts(origin) {
 
 async function enableSite(origin, tabId) {
   if (!supportsDynamicSites()) throw new Error('Per-site enablement is not available on this browser.')
-  await registerSiteScripts(origin)
-  const { enabledSites = [] } = await chrome.storage.local.get('enabledSites')
-  if (!enabledSites.includes(origin)) {
-    await chrome.storage.local.set({ enabledSites: [...enabledSites, origin] })
+  if (!originToMatchPattern(origin)) throw new Error('Only http(s) sites can be enabled.')
+
+  // Persistent registration needs a granted host permission for the origin.
+  // The Chromium manifest declares no optional host permissions (they count
+  // towards the CWS in-depth-review trigger), so this normally fails there
+  // and we fall back to a tab-scoped activeTab injection instead.
+  let mode = 'persistent'
+  try {
+    await registerSiteScripts(origin)
+    const { enabledSites = [] } = await chrome.storage.local.get('enabledSites')
+    if (!enabledSites.includes(origin)) {
+      await chrome.storage.local.set({ enabledSites: [...enabledSites, origin] })
+    }
+  } catch {
+    mode = 'tab'
   }
+
   // Make the current page work without a reload. activeTab covers the tab
-  // the user invoked the popup on even before the optional grant lands.
+  // the user invoked the popup on regardless of host grants.
   if (typeof tabId === 'number') {
-    await chrome.scripting.executeScript({ target: { tabId }, files: ['content-script.js'] }).catch(() => {})
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['content-script.js'] })
     await chrome.scripting.executeScript({ target: { tabId }, files: ['provider.js'], world: 'MAIN' }).catch(() => {})
+  } else if (mode === 'tab') {
+    throw new Error('Open the site tab and try again.')
   }
+  return mode
 }
 
 async function disableSite(origin) {
@@ -1986,7 +2001,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
     if (message.type === 'bark-site-enable') {
       enableSite(message.origin, message.tabId)
-        .then(() => sendResponse({ ok: true }))
+        .then((mode) => sendResponse({ ok: true, mode }))
         .catch((err) => sendResponse({ error: sanitiseError(err) }))
       return true
     }

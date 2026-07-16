@@ -188,6 +188,7 @@ async function initSiteCard() {
     siteCard.style.display = ''
     siteCardHost.textContent = new URL(origin).hostname
     siteCardState.textContent = enabled ? t('siteCardOn') : t('siteCardOff')
+    siteCardBtn.style.display = ''
     siteCardBtn.textContent = enabled ? t('disableOnSite') : t('enableOnSite')
     siteCardBtn.onclick = async () => {
       siteCardBtn.disabled = true
@@ -197,18 +198,24 @@ async function initSiteCard() {
           siteCardHint.style.display = 'none'
           renderState(false)
         } else {
-          const granted = await requestOriginPermission(`${origin}/*`)
-          if (!granted) {
-            showError(t('sitePermissionDeclined'))
-            return
-          }
+          // Best effort: a grant makes the enable persist across visits on
+          // builds that declare optional host permissions (Firefox). The
+          // Chromium build declares none, so this resolves false and the
+          // background falls back to a tab-scoped activeTab injection.
+          await requestOriginPermission(`${origin}/*`)
           const resp = await sendRuntimeMessage({ type: 'bark-site-enable', origin, tabId: tab?.id })
           if (resp?.error) {
             showError(resp.error)
             return
           }
-          siteCardHint.style.display = ''
-          renderState(true)
+          if (resp.mode === 'tab') {
+            siteCardState.textContent = t('siteCardTabOnly')
+            siteCardBtn.style.display = 'none'
+            siteCardHint.style.display = 'none'
+          } else {
+            siteCardHint.style.display = ''
+            renderState(true)
+          }
         }
       } finally {
         siteCardBtn.disabled = false
@@ -296,9 +303,12 @@ async function requestPairingPermission(address) {
   const origin = pairingPermissionOrigin(address)
   if (!origin) return
 
+  // Best effort: builds that declare optional host permissions (Firefox)
+  // get a real grant here. The Chromium manifest declares none, so the
+  // request resolves false and the pairing fetch itself decides the
+  // outcome (the target must answer, CORS permitting).
   const permission = { origins: [origin] }
-  const granted = await requestOptionalPermission(permission)
-  if (!granted) throw new Error(t('pairingPermissionDenied'))
+  await requestOptionalPermission(permission).catch(() => false)
 }
 
 // ---------------------------------------------------------------------------

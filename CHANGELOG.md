@@ -2,6 +2,19 @@
 
 All notable changes to Bark are documented here.
 
+## [1.3.1] — 2026-07-16
+
+### Changed
+
+- The Chromium manifest no longer declares optional host permissions
+  either — the last host-permission entry that counted towards the Chrome
+  Web Store review warning. Enabling an uncurated site now injects for the
+  current visit via `activeTab`, and the popup says so; on Firefox, where
+  the optional grants remain declared, enabling a site still persists.
+  HTTP pairing on Chromium proceeds without a pre-granted origin and
+  depends on the target answering; current `heartwoodd` deployments pair
+  by bunker URI or QR, which are unaffected.
+
 ## [1.3.0] — 2026-07-16
 
 ### Changed

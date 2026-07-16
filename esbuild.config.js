@@ -38,6 +38,10 @@ function manifestForTarget() {
       scripts: ['background.js'],
     }
     manifest.permissions = ['storage']
+    // Firefox keeps optional host permissions for the legacy HTTP pairing
+    // flow; the Chromium manifest omits them because CWS counts optional
+    // broad host permissions towards the in-depth-review trigger.
+    manifest.optional_host_permissions = ['http://*/*', 'https://*/*']
     for (const cs of manifest.content_scripts) cs.matches = BROAD_MATCHES
     // Chromium never gates WebSockets on host permissions, so the base
     // manifest omits these. Firefox's behaviour is less clearly documented;
@@ -62,6 +66,7 @@ function manifestForTarget() {
       service_worker: 'background.js',
     }
     manifest.permissions = ['storage']
+    manifest.optional_host_permissions = ['http://*/*', 'https://*/*']
     // Safari lacks reliable MAIN-world content script support, so it keeps
     // the script-tag injection path (see __BARK_INJECT_PROVIDER__ below).
     manifest.content_scripts = manifest.content_scripts.filter(cs => cs.world !== 'MAIN')

@@ -119,6 +119,7 @@
   "enableOnSite": { "message": "Enable", "description": "Button enabling Bark on the current site." },
   "disableOnSite": { "message": "Disable", "description": "Button disabling Bark on the current site." },
   "reloadHint": { "message": "Reload the page if it was already open." },
+  "siteCardTabOnly": { "message": "Active on this page. Bark switches off when you leave this site." },
   "sitePermissionDeclined": { "message": "Permission was declined." },
 
   "loadingRequest": { "message": "Loading request...", "description": "Approval window placeholder while the request loads." },
