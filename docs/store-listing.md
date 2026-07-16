@@ -78,6 +78,14 @@ Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hard
 (Firefox and Safari builds additionally declare optional http/https host
 permissions for the legacy HTTP pairing flow; Chromium omits them.)
 
+Note on the dashboard's "may require an in-depth review" notice: verified
+empirically (2026-07-16, v1.3.2) that it appears for ANY content-script
+host match, even exact-host-only patterns with zero host permissions. It
+is advisory and cannot be removed without deleting the content scripts,
+which would break NIP-07 entirely. Submit regardless — actual review
+weighs the manifest's real scope, and Bark's is the narrowest in its
+category (competitors match every site on the web and clear review).
+
 CWS's "Host permission justification" field counts content-script match
 patterns as host permissions. Paste this:
 
