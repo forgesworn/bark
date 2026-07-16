@@ -432,8 +432,11 @@ async function trustSite(origin) {
   })
 }
 
-/** Timeout for approval requests (ms). */
+/** Timeout for a displayed approval window (ms). */
 const APPROVAL_TIMEOUT_MS = 60_000
+
+/** Maximum time a request may wait in the queue before being displayed (ms). */
+const APPROVAL_QUEUE_TIMEOUT_MS = 180_000
 
 // ---------------------------------------------------------------------------
 // Approval system — pending requests awaiting user decision
@@ -442,20 +445,59 @@ const APPROVAL_TIMEOUT_MS = 60_000
 /** @type {Map<string, { method: string, params: any, event?: object, pubkey: string, personaName: string, origin: string, instanceId?: string, sendResponse: Function, timeoutId: number, windowId?: number }>} */
 const pendingApprovals = new Map()
 
-/** @type {string|null} Currently active approval request ID, if any. */
+/** @type {string[]} FIFO of requestIds waiting for their approval window. */
+const approvalQueue = []
+
+/** @type {string|null} Currently displayed approval request ID, if any. */
 let activeApprovalId = null
 
+/** Badge text for a pending approval count. Exported for testing. */
+export function approvalBadgeText(count) {
+  if (!Number.isInteger(count) || count <= 0) return ''
+  return count > 9 ? '9+' : String(count)
+}
+
+function updateApprovalBadge() {
+  if (typeof chrome === 'undefined' || !chrome.action?.setBadgeText) return
+  const text = approvalBadgeText(pendingApprovals.size)
+  chrome.action.setBadgeText({ text })
+  if (text && chrome.action.setBadgeBackgroundColor) {
+    chrome.action.setBadgeBackgroundColor({ color: '#339933' })
+  }
+}
 
 /**
- * Open the approval popup window and store the pending request.
+ * Queue an approval request. Sites often fire several NIP-07 calls at once
+ * (e.g. getPublicKey + signEvent on login), so requests queue and display
+ * one at a time instead of rejecting while another approval is pending.
  */
-async function openApprovalWindow(requestId, details) {
+function enqueueApproval(requestId, details) {
   const timeoutId = setTimeout(() => {
     denyApproval(requestId, 'Approval timed out.')
-  }, APPROVAL_TIMEOUT_MS)
+  }, APPROVAL_QUEUE_TIMEOUT_MS)
 
   pendingApprovals.set(requestId, { ...details, timeoutId })
+  approvalQueue.push(requestId)
+  updateApprovalBadge()
+  void openNextApproval()
+}
+
+/**
+ * Display the next queued approval window, if none is currently shown.
+ * The 60-second attention timeout starts when the window opens.
+ */
+async function openNextApproval() {
+  if (activeApprovalId) return
+  const requestId = approvalQueue.shift()
+  if (!requestId) return
+  const entry = pendingApprovals.get(requestId)
+  if (!entry) return openNextApproval()
+
   activeApprovalId = requestId
+  clearTimeout(entry.timeoutId)
+  entry.timeoutId = setTimeout(() => {
+    denyApproval(requestId, 'Approval timed out.')
+  }, APPROVAL_TIMEOUT_MS)
 
   try {
     const win = await chrome.windows.create({
@@ -465,22 +507,35 @@ async function openApprovalWindow(requestId, details) {
       height: 520,
       focused: true,
     })
-    const entry = pendingApprovals.get(requestId)
-    if (entry) entry.windowId = win.id
+    const stored = pendingApprovals.get(requestId)
+    if (stored) stored.windowId = win.id
   } catch (err) {
     denyApproval(requestId, 'Could not open approval window.')
   }
+}
+
+/** Remove a request from the pending map and queue; advance the queue. */
+function settleApproval(requestId) {
+  const entry = pendingApprovals.get(requestId)
+  if (!entry) return null
+  clearTimeout(entry.timeoutId)
+  pendingApprovals.delete(requestId)
+  const queued = approvalQueue.indexOf(requestId)
+  if (queued !== -1) approvalQueue.splice(queued, 1)
+  if (activeApprovalId === requestId) {
+    activeApprovalId = null
+    void openNextApproval()
+  }
+  updateApprovalBadge()
+  return entry
 }
 
 /**
  * Deny a pending approval — resolve the original request with an error.
  */
 function denyApproval(requestId, reason) {
-  const entry = pendingApprovals.get(requestId)
+  const entry = settleApproval(requestId)
   if (!entry) return
-  clearTimeout(entry.timeoutId)
-  pendingApprovals.delete(requestId)
-  if (activeApprovalId === requestId) activeApprovalId = null
   entry.sendResponse({ error: reason || 'Request denied by user.' })
 }
 
@@ -488,11 +543,8 @@ function denyApproval(requestId, reason) {
  * Allow a pending approval — execute the original request.
  */
 async function allowApproval(requestId, { rememberSite = false } = {}) {
-  const entry = pendingApprovals.get(requestId)
+  const entry = settleApproval(requestId)
   if (!entry) return
-  clearTimeout(entry.timeoutId)
-  pendingApprovals.delete(requestId)
-  if (activeApprovalId === requestId) activeApprovalId = null
 
   // Verify the active instance hasn't changed since the approval was created
   if (entry.instanceId) {
@@ -1457,7 +1509,6 @@ const SAFE_ERROR_PREFIXES = [
   'Instance not found',
   'Server returned',
   'Request denied',
-  'An approval request',
   'Approval timed out',
   'Could not open approval',
 ]
@@ -1794,12 +1845,6 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
         if (decision === 'ask') {
           debug('[bark:bg] approval required for', message.method)
-          // Guard: only one approval at a time
-          if (activeApprovalId) {
-            sendResponse({ error: 'An approval request is already in progress.' })
-            return
-          }
-
           const requestId = `approval-${crypto.randomUUID()}`
 
           try {
@@ -1821,7 +1866,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
             const { activeInstanceId: approvalInstanceId } = await chrome.storage.local.get('activeInstanceId')
 
-            await openApprovalWindow(requestId, {
+            enqueueApproval(requestId, {
               method: message.method,
               params: message.params,
               // Preview the normalised event so it matches what handleMessage

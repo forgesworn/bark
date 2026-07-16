@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -390,6 +390,25 @@ describe('checkApproval', () => {
     expect(await checkApproval('getRelays', {}, 'https://example.com')).toBe('ask')
     expect(await checkApproval('nip04.encrypt', {}, 'https://example.com')).toBe('ask')
     expect(await checkApproval('nip04.decrypt', {}, 'https://example.com')).toBe('ask')
+  })
+})
+
+describe('approvalBadgeText', () => {
+  it('returns empty string for zero, negative, or invalid counts', () => {
+    expect(approvalBadgeText(0)).toBe('')
+    expect(approvalBadgeText(-1)).toBe('')
+    expect(approvalBadgeText(1.5)).toBe('')
+    expect(approvalBadgeText(NaN)).toBe('')
+  })
+
+  it('returns the count as a string up to nine', () => {
+    expect(approvalBadgeText(1)).toBe('1')
+    expect(approvalBadgeText(9)).toBe('9')
+  })
+
+  it('caps the display at 9+', () => {
+    expect(approvalBadgeText(10)).toBe('9+')
+    expect(approvalBadgeText(42)).toBe('9+')
   })
 })
 

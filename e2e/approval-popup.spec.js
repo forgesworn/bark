@@ -113,6 +113,30 @@ test('enforces approval popup deny, allow-once, trust-site, and protected-kind f
         let stored = await readExtensionStorage(context, extensionId, ['policies'])
         expect(stored.policies.siteRules[origin]).toBeUndefined()
 
+        // Concurrent requests queue instead of rejecting: the kind 1 popup is
+        // denied and the kind 42 popup (whichever order they appear) is allowed.
+        const queuedNote = noteEvent('queued approval: deny me', [['client', 'bark-approval-queue-deny']])
+        const queuedChannel = {
+          kind: 42,
+          created_at: Math.floor(Date.now() / 1000),
+          tags: [['client', 'bark-approval-queue-allow']],
+          content: 'queued approval: allow me',
+        }
+        const firstQueuedPromise = waitForApprovalPage(context)
+        const queuedNoteResult = callNostrResult(page, 'signEvent', queuedNote, 60_000)
+        const queuedChannelResult = callNostrResult(page, 'signEvent', queuedChannel, 60_000)
+        const firstQueued = await firstQueuedPromise
+        const firstIsNote = (await firstQueued.locator('#title').textContent()).includes('Kind 1')
+        const secondQueuedPromise = waitForApprovalPage(context)
+        await clickDecision(firstQueued, firstIsNote ? 'Deny' : 'Allow Once')
+        const secondQueued = await secondQueuedPromise
+        await clickDecision(secondQueued, firstIsNote ? 'Allow Once' : 'Deny')
+        await expect(queuedNoteResult).resolves.toEqual({
+          ok: false,
+          error: 'Request denied by user.',
+        })
+        await expectSignedResult(await queuedChannelResult, signer, queuedChannel)
+
         const trustTemplate = noteEvent('trust routine signing for this site', [['client', 'bark-approval-trust']])
         const trust = await submitSignRequestAndWaitForApproval(context, page, trustTemplate)
         await clickDecision(trust.approvalPage, 'Trust Site')
