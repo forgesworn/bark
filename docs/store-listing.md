@@ -69,7 +69,10 @@ the local `escapeHtml` helper first.
 - [x] Screenshots (1280×800) in `docs/store-assets/` — regenerate with
       `npm run build && node scripts/store-screenshots.mjs`
 - [x] CWS promo tile 440×280 (`docs/store-assets/promo-tile-440x280.png`)
-- [x] Icon 128×128 (already in `src/icons/`)
+- [x] CWS store icon (`docs/store-assets/store-icon-128.png`) — 96×96
+      artwork centred on a transparent 128×128 canvas per Google's image
+      guidelines; the raw `src/icons/bark-128.png` is full-bleed and will
+      be rejected
 
 ## Submission checklist
 
