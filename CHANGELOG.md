@@ -2,7 +2,7 @@
 
 All notable changes to Bark are documented here.
 
-## [Unreleased]
+## [1.1.1] — 2026-07-16
 
 ### Fixed
 
