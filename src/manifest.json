@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Bark",
-  "version": "1.0.0",
-  "description": "Sign Nostr events through your self-hosted Heartwood device. Derived identities, one click.",
+  "version": "1.1.0",
+  "description": "Remote Nostr signing via NIP-46. Keys never touch the browser. Works with any bunker; Heartwood adds derived identities.",
   "permissions": ["storage"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": {

@@ -81,7 +81,11 @@ For the release hardening test matrix, see [E2E hardening](docs/e2e-hardening.md
 
 ## Works with any NIP-46 bunker
 
-Bark works as a standard NIP-07 provider with any NIP-46 bunker. Paste a `bunker://` URI from nsecBunker, Amber, or any compliant signer. The signing flow (`getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt`) works identically regardless of the backend.
+Bark works as a standard NIP-07 provider with any NIP-46 bunker. The signing flow (`getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt`) works identically regardless of the backend. Three ways to pair:
+
+- **Paste a `bunker://` URI** from nsecBunker, Amber, nsec.app, or any compliant signer.
+- **Pair by QR (nostrconnect)** — Bark generates a `nostrconnect://` URI and QR code; scan it with your signer (or paste it in) and the signer connects back over the relay. Signers that require a browser approval step (e.g. nsec.app) get an "Open approval page" button in the popup.
+- **Heartwood HTTP address** for local devices (e.g. `heartwood.local:3000`).
 
 Identity features (derive and list) require [Heartwood](https://github.com/forgesworn/heartwood). When you pair by a Heartwood HTTP address, Bark also imports the per-identity bunker URI manifest from `/api/identities`. That endpoint can be a Wi-Fi Heartwood appliance, a Pi daemon, or another Heartwood-compatible host sitting in front of cheap tethered hardware. The current Heartwood model is that each identity has its own bunker URI, and selecting a persona in Bark selects the matching bunker instance.
 
@@ -141,14 +145,16 @@ Latest Heartwood treats identity selection as per-connection, based on the `bunk
 
 ## Comparison with other NIP-07 signers
 
-| | Bark | Alby | nos2x | Remote NIP-07 |
-|---|---|---|---|---|
-| Key storage | None (remote signer) | Browser or Alby Hub | Browser | None (Amber) |
-| NIP-46 backend | Any bunker | No | No | Amber only |
-| Derived identities | Unlimited (Heartwood) | None | None | None |
-| Self-sovereign signing | Yes | Software only | Software only | Phone (Amber) |
-| Size | Focused, 1 runtime dependency | Large extension + hub | Small extension | Small extension |
-| Lightning | No | Yes | No | No |
+| | Bark | Alby | nos2x | Bunker46 | Remote NIP-07 |
+|---|---|---|---|---|---|
+| Key storage | None (remote signer) | Browser or Alby Hub | Browser | None (remote signer) | None (Amber) |
+| NIP-46 backend | Any bunker | No | No | Any bunker | Amber only |
+| Pairing | bunker://, QR (nostrconnect), Heartwood HTTP | n/a | n/a | bunker://, QR | Amber QR |
+| Approval model | Per-site allow/ask/deny, per-kind rules, protected kinds, request queue | Per-site prompts | Per-site prompts | Per-domain, per-method | Per-request |
+| Derived identities | Unlimited (Heartwood) | None | None | None | None |
+| Hardware signer path | Yes (bridge to tethered boards) | No | No | No | Phone |
+| Host permissions (Chromium) | None | Broad | None | Varies | None |
+| Lightning | No | Yes | No | No | No |
 
 Bark is not an Alby replacement. It is a focused tool for people who want self-sovereign Nostr signing with optional derived identity management.
 

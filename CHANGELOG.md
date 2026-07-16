@@ -2,9 +2,45 @@
 
 All notable changes to Bark are documented here.
 
-## [Unreleased]
+## [1.1.0] — 2026-07-16
+
+### Added
+
+- Client-initiated `nostrconnect://` pairing with QR code. Bark generates the
+  URI (fresh client keypair and secret per attempt), the signer scans or
+  receives it and connects back over the relay, and the connected signer is
+  adopted live. Covered by a deterministic local-relay E2E.
+- Signer `auth_url` handling: bunkers that require a browser approval step
+  (e.g. nsec.app) now get an "Open approval page" button in the popup.
+- Approval request queue: concurrent NIP-07 calls queue FIFO instead of
+  failing with "an approval is already in progress". Toolbar badge shows the
+  pending approval count.
+- Policy action badges are click-to-cycle (allow → ask → deny), and site
+  rules expand to show and edit per-site kind overrides.
+- NIP-46 keep-alive pings hold the relay socket open for two minutes after
+  the last request, so active browsing stops paying a reconnect per action.
+- Release workflow: pushing a `v*` tag builds, tests, packages all three
+  browser targets, and attaches the zips to a draft GitHub release.
+- Store submission pack in `docs/store-listing.md`.
 
 ### Changed
+
+- `provider.js` is injected as a declarative MAIN-world content script on
+  Chromium and Firefox, removing the race where page scripts could observe
+  `window.nostr` as undefined at document start. Safari keeps the script-tag
+  fallback.
+- The Chromium and Safari manifests declare no host permissions at all
+  (WebSockets are not gated by host permissions on Chromium); HTTP pairing
+  access remains optional and per-origin. Firefox keeps its declared relay
+  permissions.
+- Provider timeouts raised to 180s for `signEvent` and 120s otherwise, so
+  queued approvals and hardware button presses don't time out at the page.
+- The unconditional 2s pre-connect delay is removed; the connect retry loop
+  recovers missed responses (deterministic E2E: 3.2s → 2.1s).
+- Signers answering "unsupported method" to the Heartwood probe are no
+  longer misdetected as Heartwood.
+
+### Changed (hardening since 1.0.0)
 
 - Default policies now ask before unknown sites can read identity, read relays,
   sign events, or use NIP-04/NIP-44 encryption methods.
@@ -29,7 +65,7 @@ All notable changes to Bark are documented here.
   timeouts, so a standard NIP-46 signer that ignores Heartwood-specific methods
   cannot block normal signing.
 
-### Added
+### Added (hardening since 1.0.0)
 
 - GitHub Actions CI for tests, build, audit, and package checks on Node 22 and
   Node 24.
