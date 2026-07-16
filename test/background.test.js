@@ -824,3 +824,18 @@ describe('originCoveredByPatterns', () => {
     expect(originCoveredByPatterns('https://anything.example', [])).toBe(false)
   })
 })
+
+describe('chromium manifest host patterns', () => {
+  it('contains no wildcard host patterns (CWS broad-permission heuristic)', async () => {
+    const { readFileSync } = await import('node:fs')
+    const manifest = JSON.parse(readFileSync(new URL('../src/manifest.json', import.meta.url), 'utf8'))
+    expect(manifest.host_permissions).toBeUndefined()
+    expect(manifest.optional_host_permissions).toBeUndefined()
+    for (const cs of manifest.content_scripts) {
+      for (const pattern of cs.matches) {
+        expect(pattern, `wildcard host in ${pattern}`).not.toMatch(/:\/\/\*/)
+        expect(pattern, `wildcard subdomain in ${pattern}`).not.toContain('*.')
+      }
+    }
+  })
+})

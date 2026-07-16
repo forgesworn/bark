@@ -2,6 +2,15 @@
 
 All notable changes to Bark are documented here.
 
+## [1.3.2] — 2026-07-16
+
+### Changed
+
+- The curated content-script matches now use exact hosts (apex plus www)
+  instead of wildcard subdomains, removing the last host wildcards from
+  the Chromium manifest for the Chrome Web Store's host-permission
+  heuristic. Coverage is unchanged for every listed client.
+
 ## [1.3.1] — 2026-07-16
 
 ### Changed
