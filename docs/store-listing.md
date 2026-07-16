@@ -131,6 +131,32 @@ step with any future data-flow change).
 
 No remote code: all scripts are bundled; the CSP is `script-src 'self'`.
 
+## AMO permission justification (reviewer notes)
+
+The Firefox build intentionally keeps broad injection — AMO has no
+in-depth-review trigger for it. Paste this alongside the build
+instructions:
+
+> Bark is a NIP-07 signing provider: it must inject the window.nostr
+> object before page scripts run on any site the user visits, because
+> Nostr web apps can be hosted on any domain, so a narrower match list is
+> impossible. That is the sole reason for the content script matches on
+> https://*/* (plus localhost/127.0.0.1 for local development and loopback
+> bridge pages). The provider only exposes the standard NIP-07 API; the
+> isolated content script validates origin and message shape, reads
+> nothing from pages, and transmits nothing except the user's own signing
+> requests to their configured signer over encrypted NIP-46. An optional
+> privacy mode further restricts injection to user-whitelisted sites only.
+>
+> The declared wss://*/* and loopback ws:// host permissions cover the
+> WebSocket connections to the Nostr relays named in the user's own bunker
+> URI; Bark connects to no relay the user has not configured.
+>
+> The optional http/https host permissions are requested at runtime for
+> the single origin the user types when pairing a local Heartwood or
+> bridge device by HTTP address (e.g. heartwood.local:3000), and never
+> otherwise.
+
 ## AMO reviewer build instructions
 
 Bundled code is built from source in this repository:
