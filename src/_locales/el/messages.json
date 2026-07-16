@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Απομακρυσμένη υπογραφή Nostr μέσω NIP-46. Τα κλειδιά δεν αγγίζουν ποτέ το πρόγραμμα περιήγησης. Λειτουργεί με οποιοδήποτε bunker· το Heartwood προσθέτει παράγωγες ταυτότητες." },
+
+  "addSigner": { "message": "Προσθήκη υπογραφέα" },
+  "setupIntro": { "message": "Εισαγάγετε μια διεύθυνση υπογραφέα ή γέφυρας, ή επικολλήστε ένα bunker URI." },
+  "connect": { "message": "Σύνδεση" },
+  "orPairByQr": { "message": "ή σύζευξη μέσω QR" },
+  "pairByQrBtn": { "message": "Σύζευξη μέσω QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relay για τη χειραψία σύζευξης" },
+  "generateQr": { "message": "Δημιουργία QR" },
+  "copyUri": { "message": "Αντιγραφή URI" },
+  "cancel": { "message": "Άκυρο" },
+  "scanWithSigner": { "message": "Σαρώστε με τον υπογραφέα σας ή επικολλήστε το URI σε αυτόν." },
+  "waitingEllipsis": { "message": "Αναμονή..." },
+  "couldNotStartPairing": { "message": "Δεν ήταν δυνατή η έναρξη της σύζευξης." },
+  "pairingExpired": { "message": "Η σύζευξη έληξε. Δημιουργήστε νέο QR." },
+  "connectedStatus": { "message": "Συνδέθηκε." },
+  "pairingFailedDot": { "message": "Η σύζευξη απέτυχε." },
+
+  "addAnotherSigner": { "message": "Προσθήκη άλλου υπογραφέα..." },
+  "add": { "message": "Προσθήκη" },
+  "showAddSigner": { "message": "+ Προσθήκη υπογραφέα" },
+  "remove": { "message": "Αφαίρεση" },
+  "removeSignerConfirm": { "message": "Να αφαιρεθεί αυτός ο υπογραφέας;" },
+  "couldNotRemoveInstance": { "message": "Δεν ήταν δυνατή η αφαίρεση της παρουσίας." },
+  "couldNotSwitchIdentity": { "message": "Δεν ήταν δυνατή η εναλλαγή ταυτότητας." },
+  "connectingEllipsis": { "message": "σύνδεση..." },
+  "connectingBtn": { "message": "Σύνδεση..." },
+  "enterSignerAddress": { "message": "Εισαγάγετε διεύθυνση υπογραφέα ή γέφυρας (π.χ. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Καμία απόκριση από τη διεργασία παρασκηνίου – δοκιμάστε να επαναφορτώσετε την επέκταση" },
+  "pairingFailed": { "message": "Η σύζευξη απέτυχε" },
+  "pairingPermissionDenied": { "message": "Η άδεια σύζευξης απορρίφθηκε." },
+
+  "openApprovalPage": { "message": "Άνοιγμα σελίδας έγκρισης" },
+  "retry": { "message": "Επανάληψη" },
+  "checkAgain": { "message": "Έλεγχος ξανά" },
+  "connectionLost": { "message": "Η σύνδεση χάθηκε." },
+  "reconnectingIn": {
+    "message": "Επανασύνδεση σε $SECONDS$ δευτ...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Εγκρίνετε αυτή τη σύνδεση στον υπογραφέα σας." },
+  "extensionError": { "message": "Σφάλμα επέκτασης" },
+
+  "activePersona": { "message": "Ενεργή περσόνα" },
+  "defaultName": { "message": "προεπιλογή" },
+  "unnamed": { "message": "χωρίς όνομα" },
+  "personas": { "message": "Περσόνες" },
+  "purposeNamePlaceholder": { "message": "όνομα σκοπού" },
+  "derive": { "message": "Παραγωγή" },
+  "personaRequiresHeartwood": { "message": "Η διαχείριση περσονών απαιτεί" },
+  "couldNotLoadPersonas": {
+    "message": "Δεν ήταν δυνατή η φόρτωση των περσονών: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Δεν ήταν δυνατή η ανανέωση των ταυτοτήτων Heartwood." },
+
+  "signingNotTested": { "message": "Η υπογραφή δεν έχει δοκιμαστεί" },
+  "runSignTestHint": { "message": "Εκτελέστε δοκιμή υπογραφής πριν χρησιμοποιήσετε ιστότοπους." },
+  "test": { "message": "Δοκιμή" },
+  "signingReady": { "message": "Η υπογραφή είναι έτοιμη" },
+  "lastTested": {
+    "message": "Τελευταία δοκιμή: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Ο υπογραφέας επέστρεψε έγκυρο συμβάν." },
+  "waitingForSigner": { "message": "Αναμονή για τον υπογραφέα" },
+  "approveOnSigner": { "message": "Εγκρίνετε το αίτημα στη συσκευή υπογραφής σας." },
+  "waitingBtn": { "message": "Αναμονή" },
+  "signingFailed": { "message": "Η υπογραφή απέτυχε" },
+  "runSignTestAgain": { "message": "Εκτελέστε ξανά τη δοκιμή υπογραφής." },
+
+  "zeroRelays": { "message": "0 relay" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relay συνδεδεμένα",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Πολιτικές υπογραφής" },
+  "protectedKinds": { "message": "Προστατευμένα είδη (ερώτηση πριν την υπογραφή)" },
+  "kindNumberPlaceholder": { "message": "Αριθμός είδους" },
+  "privacyMode": { "message": "Λειτουργία απορρήτου" },
+  "privacyModeHint": { "message": "Απόκρυψη του Bark από όλους τους ιστότοπους εκτός από όσους έχουν κανόνα παρακάτω" },
+  "siteRules": { "message": "Κανόνες ιστότοπων" },
+  "methods": { "message": "Μέθοδοι" },
+  "kindOverrides": { "message": "Παρακάμψεις ειδών" },
+  "noKindRules": { "message": "Δεν έχουν οριστεί κανόνες ειδών" },
+  "noSiteRules": { "message": "Δεν έχουν οριστεί κανόνες ιστότοπων" },
+  "noKindOverrides": { "message": "Δεν υπάρχουν παρακάμψεις ειδών για αυτόν τον ιστότοπο" },
+  "clickToChange": { "message": "Κάντε κλικ για αλλαγή: επιτρέπεται → ερώτηση → απόρριψη" },
+  "resetToDefaults": { "message": "Επαναφορά προεπιλογών" },
+  "optionAllow": { "message": "Επιτρέπεται" },
+  "optionAsk": { "message": "Ερώτηση" },
+  "optionDeny": { "message": "Απόρριψη" },
+  "actionAllow": { "message": "επιτρέπεται" },
+  "actionAsk": { "message": "ερώτηση" },
+  "actionDeny": { "message": "απόρριψη" },
+  "kindProfileMetadata": { "message": "Μεταδεδομένα προφίλ" },
+  "kindContactList": { "message": "Λίστα επαφών" },
+  "kindRelayList": { "message": "Λίστα relay" },
+  "kindN": {
+    "message": "Είδος $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Αποσύνδεση" },
+
+  "loadingRequest": { "message": "Φόρτωση αιτήματος..." },
+  "missingRequestId": { "message": "Λείπει το ID του αιτήματος." },
+  "requestNotFound": { "message": "Το αίτημα δεν βρέθηκε ή έληξε." },
+  "approveKindProfile": { "message": "Μεταδεδομένα προφίλ" },
+  "approveKindContacts": { "message": "Λίστα επαφών" },
+  "approveKindRelays": { "message": "Λίστα relay" },
+  "signTitle": {
+    "message": "Υπογραφή «$KIND$»;",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "Το $ORIGIN$ θέλει να υπογράψει ένα συμβάν «$KIND$»",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Κοινοποίηση ταυτότητας;" },
+  "wantsPublicKey": {
+    "message": "Το $ORIGIN$ θέλει να μάθει το δημόσιο κλειδί σας",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Κοινοποίηση relay;" },
+  "wantsRelayList": {
+    "message": "Το $ORIGIN$ θέλει να μάθει τη λίστα relay σας",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Κρυπτογράφηση μηνύματος;" },
+  "decryptTitle": { "message": "Αποκρυπτογράφηση μηνύματος;" },
+  "wantsEncryptLegacy": {
+    "message": "Το $ORIGIN$ θέλει να κρυπτογραφήσει ένα μήνυμα παλαιού τύπου",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "Το $ORIGIN$ θέλει να αποκρυπτογραφήσει ένα μήνυμα παλαιού τύπου",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "Το $ORIGIN$ θέλει να κρυπτογραφήσει ένα μήνυμα",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "Το $ORIGIN$ θέλει να αποκρυπτογραφήσει ένα μήνυμα",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Εμφάνιση ταυτοτήτων;" },
+  "wantsListIdentities": {
+    "message": "Το $ORIGIN$ θέλει να δει τις ταυτότητες στη συσκευή Heartwood σας",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Παραγωγή ταυτότητας;" },
+  "wantsDeriveIdentity": {
+    "message": "Το $ORIGIN$ θέλει να παραγάγει νέα ταυτότητα στη συσκευή Heartwood σας",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Εναλλαγή ταυτότητας;" },
+  "wantsSwitchIdentity": {
+    "message": "Το $ORIGIN$ θέλει να αλλάξει την ενεργή ταυτότητα υπογραφής σας",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Έγκριση αιτήματος;" },
+  "wantsCallMethod": {
+    "message": "Το $ORIGIN$ θέλει να καλέσει τη μέθοδο $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Προτεινόμενο προφίλ" },
+  "deny": { "message": "Απόρριψη" },
+  "allowOnce": { "message": "Αποδοχή μία φορά" },
+  "trustSite": { "message": "Εμπιστοσύνη στον ιστότοπο" }
+}

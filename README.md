@@ -13,6 +13,8 @@ Bark is a minimal NIP-07 browser extension that signs Nostr events through a rem
 - **Switches Heartwood identities**: imports Heartwood's per-identity bunker URIs and switches by selecting the right bunker instance
 - **Bridge-friendly**: works with Wi-Fi devices, Heartwood daemons, or relay-to-serial bridges for tethered low-cost hardware
 - **Self-sovereign**: keys live on your signer hardware, never touch the browser
+- **Privacy mode**: optionally hide `window.nostr` from every site except the ones you whitelist, so pages cannot fingerprint the extension
+- **Speaks your language**: the UI ships in 53 locales
 
 ## What it doesn't do
 
@@ -114,7 +116,10 @@ Bark asks before sharing identity, signing, or encrypting/decrypting for an
 unknown site. The approval popup can allow a request once or trust the site for
 routine future requests. Protected event kinds such as profile metadata,
 contacts, and relay lists continue to ask unless you add an explicit site kind
-override in the popup policy settings.
+override in the popup policy settings. Each site rule can also override
+individual methods (for example, deny `nip44.decrypt` on one site while
+allowing signing), and privacy mode hides Bark entirely from sites without a
+rule.
 
 ## Heartwood RPC extensions
 
@@ -150,10 +155,12 @@ Latest Heartwood treats identity selection as per-connection, based on the `bunk
 | Key storage | None (remote signer) | Browser or Alby Hub | Browser | None (remote signer) | None (Amber) |
 | NIP-46 backend | Any bunker | No | No | Any bunker | Amber only |
 | Pairing | bunker://, QR (nostrconnect), Heartwood HTTP | n/a | n/a | bunker://, QR | Amber QR |
-| Approval model | Per-site allow/ask/deny, per-kind rules, protected kinds, request queue | Per-site prompts | Per-site prompts | Per-domain, per-method | Per-request |
+| Approval model | Per-site allow/ask/deny, per-method and per-kind overrides, protected kinds, request queue | Per-site prompts | Per-site prompts | Per-domain, per-method | Per-request |
+| Hide from unlisted sites | Yes (privacy mode) | No | No | Yes (whitelist) | No |
 | Derived identities | Unlimited (Heartwood) | None | None | None | None |
 | Hardware signer path | Yes (bridge to tethered boards) | No | No | No | Phone |
 | Host permissions (Chromium) | None | Broad | None | Varies | None |
+| Languages | 53 | English | English | 44 | English |
 | Lightning | No | Yes | No | No | No |
 
 Bark is not an Alby replacement. It is a focused tool for people who want self-sovereign Nostr signing with optional derived identity management.

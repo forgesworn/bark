@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Удалённое подписание Nostr через NIP-46. Ключи никогда не попадают в браузер. Работает с любым bunker; Heartwood добавляет производные идентичности." },
+
+  "addSigner": { "message": "Добавить подписанта" },
+  "setupIntro": { "message": "Введите адрес подписанта или моста либо вставьте bunker URI." },
+  "connect": { "message": "Подключить" },
+  "orPairByQr": { "message": "или сопряжение по QR" },
+  "pairByQrBtn": { "message": "Сопряжение по QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Реле для процедуры сопряжения" },
+  "generateQr": { "message": "Создать QR" },
+  "copyUri": { "message": "Копировать URI" },
+  "cancel": { "message": "Отмена" },
+  "scanWithSigner": { "message": "Отсканируйте своим подписантом или вставьте в него URI." },
+  "waitingEllipsis": { "message": "Ожидание..." },
+  "couldNotStartPairing": { "message": "Не удалось начать сопряжение." },
+  "pairingExpired": { "message": "Срок сопряжения истёк. Создайте новый QR." },
+  "connectedStatus": { "message": "Подключено." },
+  "pairingFailedDot": { "message": "Сопряжение не удалось." },
+
+  "addAnotherSigner": { "message": "Добавить ещё одного подписанта..." },
+  "add": { "message": "Добавить" },
+  "showAddSigner": { "message": "+ Добавить подписанта" },
+  "remove": { "message": "Удалить" },
+  "removeSignerConfirm": { "message": "Удалить этот экземпляр подписанта?" },
+  "couldNotRemoveInstance": { "message": "Не удалось удалить экземпляр." },
+  "couldNotSwitchIdentity": { "message": "Не удалось переключить идентичность." },
+  "connectingEllipsis": { "message": "подключение..." },
+  "connectingBtn": { "message": "Подключение..." },
+  "enterSignerAddress": { "message": "Введите адрес подписанта или моста (напр. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Нет ответа от фонового процесса — попробуйте перезагрузить расширение" },
+  "pairingFailed": { "message": "Сопряжение не удалось" },
+  "pairingPermissionDenied": { "message": "В разрешении на сопряжение отказано." },
+
+  "openApprovalPage": { "message": "Открыть страницу подтверждения" },
+  "retry": { "message": "Повторить" },
+  "checkAgain": { "message": "Проверить ещё раз" },
+  "connectionLost": { "message": "Соединение потеряно." },
+  "reconnectingIn": {
+    "message": "Переподключение через $SECONDS$ с...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Подтвердите это подключение на своём подписанте." },
+  "extensionError": { "message": "Ошибка расширения" },
+
+  "activePersona": { "message": "Активная персона" },
+  "defaultName": { "message": "по умолчанию" },
+  "unnamed": { "message": "без имени" },
+  "personas": { "message": "Персоны" },
+  "purposeNamePlaceholder": { "message": "название назначения" },
+  "derive": { "message": "Создать" },
+  "personaRequiresHeartwood": { "message": "Для управления персонами требуется" },
+  "couldNotLoadPersonas": {
+    "message": "Не удалось загрузить персоны: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Не удалось обновить идентичности Heartwood." },
+
+  "signingNotTested": { "message": "Подписание не проверено" },
+  "runSignTestHint": { "message": "Выполните тест подписи перед использованием сайтов." },
+  "test": { "message": "Тест" },
+  "signingReady": { "message": "Подписание готово" },
+  "lastTested": {
+    "message": "Последний тест: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Подписант вернул корректное событие." },
+  "waitingForSigner": { "message": "Ожидание подписанта" },
+  "approveOnSigner": { "message": "Подтвердите запрос на устройстве-подписанте." },
+  "waitingBtn": { "message": "Ожидание" },
+  "signingFailed": { "message": "Ошибка подписания" },
+  "runSignTestAgain": { "message": "Выполните тест подписи ещё раз." },
+
+  "zeroRelays": { "message": "0 реле" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ реле подключено",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Политики подписания" },
+  "protectedKinds": { "message": "Защищённые типы (спрашивать перед подписанием)" },
+  "kindNumberPlaceholder": { "message": "Номер типа" },
+  "privacyMode": { "message": "Режим приватности" },
+  "privacyModeHint": { "message": "Скрывать Bark от всех сайтов, кроме тех, у которых есть правило ниже" },
+  "siteRules": { "message": "Правила для сайтов" },
+  "methods": { "message": "Методы" },
+  "kindOverrides": { "message": "Переопределения типов" },
+  "noKindRules": { "message": "Правила для типов не настроены" },
+  "noSiteRules": { "message": "Правила для сайтов не настроены" },
+  "noKindOverrides": { "message": "Нет переопределений типов для этого сайта" },
+  "clickToChange": { "message": "Нажмите, чтобы изменить: разрешить → спрашивать → запретить" },
+  "resetToDefaults": { "message": "Сбросить к значениям по умолчанию" },
+  "optionAllow": { "message": "Разрешить" },
+  "optionAsk": { "message": "Спрашивать" },
+  "optionDeny": { "message": "Запретить" },
+  "actionAllow": { "message": "разрешить" },
+  "actionAsk": { "message": "спрашивать" },
+  "actionDeny": { "message": "запретить" },
+  "kindProfileMetadata": { "message": "Метаданные профиля" },
+  "kindContactList": { "message": "Список контактов" },
+  "kindRelayList": { "message": "Список реле" },
+  "kindN": {
+    "message": "Тип $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Отключить" },
+
+  "loadingRequest": { "message": "Загрузка запроса..." },
+  "missingRequestId": { "message": "Отсутствует ID запроса." },
+  "requestNotFound": { "message": "Запрос не найден или истёк." },
+  "approveKindProfile": { "message": "Метаданные профиля" },
+  "approveKindContacts": { "message": "Список контактов" },
+  "approveKindRelays": { "message": "Список реле" },
+  "signTitle": {
+    "message": "Подписать «$KIND$»?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ хочет подписать событие «$KIND$»",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Поделиться идентичностью?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ хочет узнать ваш публичный ключ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Поделиться списком реле?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ хочет узнать ваш список реле",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Зашифровать сообщение?" },
+  "decryptTitle": { "message": "Расшифровать сообщение?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ хочет зашифровать сообщение в устаревшем формате",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ хочет расшифровать сообщение в устаревшем формате",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ хочет зашифровать сообщение",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ хочет расшифровать сообщение",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Показать список идентичностей?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ хочет просмотреть идентичности на вашем устройстве Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Создать идентичность?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ хочет создать новую идентичность на вашем устройстве Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Переключить идентичность?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ хочет переключить вашу активную идентичность для подписания",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Подтвердить запрос?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ хочет вызвать $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Предлагаемый профиль" },
+  "deny": { "message": "Отклонить" },
+  "allowOnce": { "message": "Разрешить один раз" },
+  "trustSite": { "message": "Доверять сайту" }
+}

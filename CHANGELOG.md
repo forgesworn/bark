@@ -2,6 +2,23 @@
 
 All notable changes to Bark are documented here.
 
+## [1.2.0] — 2026-07-16
+
+### Added
+
+- Privacy mode: when enabled (popup → Signing Policies), `window.nostr` is
+  exposed only to origins with a site rule. Hidden origins get silence
+  rather than errors, including for hand-crafted bridge messages, so pages
+  cannot fingerprint that Bark is installed. Covered by e2e both ways.
+- Per-site method overrides: a site rule now edits individual methods
+  (including Heartwood identity methods) alongside kind overrides, with a
+  click-to-cycle badge per method.
+- Localisation: the popup and approval window ship in 53 languages via
+  `chrome.i18n`, with English fallback for missing keys and a locale
+  integrity test (key subset, placeholder parity) in CI.
+- Contributor templates: bug report, feature request, and pull request
+  templates under `.github/`.
+
 ## [1.1.1] — 2026-07-16
 
 ### Fixed

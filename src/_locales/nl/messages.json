@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "Externe Nostr-ondertekening via NIP-46. Sleutels raken de browser nooit. Voor elke bunker; Heartwood biedt afgeleide identiteiten."
+  },
+
+  "addSigner": { "message": "Signer toevoegen" },
+  "setupIntro": { "message": "Voer een signer- of bridge-adres in, of plak een bunker-URI." },
+  "connect": { "message": "Verbinden" },
+  "orPairByQr": { "message": "of koppel via QR" },
+  "pairByQrBtn": { "message": "Koppelen via QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relay(s) voor de koppelings-handshake" },
+  "generateQr": { "message": "QR genereren" },
+  "copyUri": { "message": "URI kopiëren" },
+  "cancel": { "message": "Annuleren" },
+  "scanWithSigner": { "message": "Scan met je signer, of plak de URI erin." },
+  "waitingEllipsis": { "message": "Wachten..." },
+  "couldNotStartPairing": { "message": "Kon het koppelen niet starten." },
+  "pairingExpired": { "message": "Koppeling verlopen. Genereer een nieuwe QR." },
+  "connectedStatus": { "message": "Verbonden." },
+  "pairingFailedDot": { "message": "Koppelen mislukt." },
+
+  "addAnotherSigner": { "message": "Nog een signer toevoegen..." },
+  "add": { "message": "Toevoegen" },
+  "showAddSigner": { "message": "+ Signer toevoegen" },
+  "remove": { "message": "Verwijderen" },
+  "removeSignerConfirm": { "message": "Deze signer-instantie verwijderen?" },
+  "couldNotRemoveInstance": { "message": "Kon instantie niet verwijderen." },
+  "couldNotSwitchIdentity": { "message": "Kon niet van identiteit wisselen." },
+  "connectingEllipsis": { "message": "verbinden..." },
+  "connectingBtn": { "message": "Verbinden..." },
+  "enterSignerAddress": { "message": "Voer een signer- of bridge-adres in (bijv. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Geen antwoord van het achtergrondproces - herlaad de extensie" },
+  "pairingFailed": { "message": "Koppelen mislukt" },
+  "pairingPermissionDenied": { "message": "Toestemming voor koppelen geweigerd." },
+
+  "openApprovalPage": { "message": "Goedkeuringspagina openen" },
+  "retry": { "message": "Opnieuw proberen" },
+  "checkAgain": { "message": "Opnieuw controleren" },
+  "connectionLost": { "message": "Verbinding verbroken." },
+  "reconnectingIn": {
+    "message": "Opnieuw verbinden over $SECONDS$ s...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Keur deze verbinding goed op je signer." },
+  "extensionError": { "message": "Extensiefout" },
+
+  "activePersona": { "message": "Actieve persona" },
+  "defaultName": { "message": "standaard" },
+  "unnamed": { "message": "naamloos" },
+  "personas": { "message": "Persona's" },
+  "purposeNamePlaceholder": { "message": "doelnaam" },
+  "derive": { "message": "Afleiden" },
+  "personaRequiresHeartwood": { "message": "Personabeheer vereist" },
+  "couldNotLoadPersonas": {
+    "message": "Kon persona's niet laden: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Kon Heartwood-identiteiten niet vernieuwen." },
+
+  "signingNotTested": { "message": "Ondertekenen niet getest" },
+  "runSignTestHint": { "message": "Voer een ondertekentest uit voordat je sites gebruikt." },
+  "test": { "message": "Testen" },
+  "signingReady": { "message": "Ondertekenen gereed" },
+  "lastTested": {
+    "message": "Laatst getest $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "De signer gaf een geldig event terug." },
+  "waitingForSigner": { "message": "Wachten op signer" },
+  "approveOnSigner": { "message": "Keur het verzoek goed op je signer-apparaat." },
+  "waitingBtn": { "message": "Wachten" },
+  "signingFailed": { "message": "Ondertekenen mislukt" },
+  "runSignTestAgain": { "message": "Voer de ondertekentest opnieuw uit." },
+
+  "zeroRelays": { "message": "0 relays" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relays verbonden",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Ondertekenbeleid" },
+  "protectedKinds": { "message": "Beschermde kinds (vragen vóór ondertekenen)" },
+  "kindNumberPlaceholder": { "message": "Kind-nummer" },
+  "privacyMode": { "message": "Privacymodus" },
+  "privacyModeHint": { "message": "Verberg Bark voor elke site, behalve sites met een siteregel hieronder" },
+  "siteRules": { "message": "Siteregels" },
+  "methods": { "message": "Methoden" },
+  "kindOverrides": { "message": "Kind-uitzonderingen" },
+  "noKindRules": { "message": "Geen kind-regels ingesteld" },
+  "noSiteRules": { "message": "Geen siteregels ingesteld" },
+  "noKindOverrides": { "message": "Geen kind-uitzonderingen voor deze site" },
+  "clickToChange": { "message": "Klik om te wijzigen: toestaan → vragen → weigeren" },
+  "resetToDefaults": { "message": "Standaardwaarden herstellen" },
+  "optionAllow": { "message": "Toestaan" },
+  "optionAsk": { "message": "Vragen" },
+  "optionDeny": { "message": "Weigeren" },
+  "actionAllow": { "message": "toestaan" },
+  "actionAsk": { "message": "vragen" },
+  "actionDeny": { "message": "weigeren" },
+  "kindProfileMetadata": { "message": "Profielmetadata" },
+  "kindContactList": { "message": "Contactenlijst" },
+  "kindRelayList": { "message": "Relaylijst" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Verbinding verbreken" },
+
+  "loadingRequest": { "message": "Verzoek laden..." },
+  "missingRequestId": { "message": "Verzoek-ID ontbreekt." },
+  "requestNotFound": { "message": "Verzoek niet gevonden of verlopen." },
+  "approveKindProfile": { "message": "Profielmetadata" },
+  "approveKindContacts": { "message": "Contactenlijst" },
+  "approveKindRelays": { "message": "Relaylijst" },
+  "signTitle": {
+    "message": "$KIND$ ondertekenen?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ wil een $KIND$-event ondertekenen",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Identiteit delen?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ wil je publieke sleutel weten",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Relays delen?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ wil je relaylijst weten",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Bericht versleutelen?" },
+  "decryptTitle": { "message": "Bericht ontsleutelen?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ wil een legacy-bericht versleutelen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ wil een legacy-bericht ontsleutelen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ wil een bericht versleutelen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ wil een bericht ontsleutelen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Identiteiten opvragen?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ wil de identiteiten op je Heartwood-apparaat opvragen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Identiteit afleiden?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ wil een nieuwe identiteit afleiden op je Heartwood-apparaat",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Identiteit wisselen?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ wil je actieve ondertekenidentiteit wisselen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Verzoek goedkeuren?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ wil $METHOD$ aanroepen",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Voorgesteld profiel" },
+  "deny": { "message": "Weigeren" },
+  "allowOnce": { "message": "Eén keer toestaan" },
+  "trustSite": { "message": "Site vertrouwen" }
+}

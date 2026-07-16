@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "Nostr-etäallekirjoitus NIP-46:lla. Avaimet eivät päädy selaimeen. Toimii kaikilla bunkereilla; Heartwood tuo johdetut identiteetit."
+  },
+
+  "addSigner": { "message": "Lisää allekirjoittaja" },
+  "setupIntro": { "message": "Syötä allekirjoittajan tai sillan osoite tai liitä bunker-URI." },
+  "connect": { "message": "Yhdistä" },
+  "orPairByQr": { "message": "tai parita QR-koodilla" },
+  "pairByQrBtn": { "message": "Parita QR-koodilla (nostrconnect)" },
+  "qrRelayTitle": { "message": "Rele(et) parituskättelyä varten" },
+  "generateQr": { "message": "Luo QR" },
+  "copyUri": { "message": "Kopioi URI" },
+  "cancel": { "message": "Peruuta" },
+  "scanWithSigner": { "message": "Skannaa allekirjoittajallasi tai liitä URI siihen." },
+  "waitingEllipsis": { "message": "Odotetaan..." },
+  "couldNotStartPairing": { "message": "Paritusta ei voitu aloittaa." },
+  "pairingExpired": { "message": "Paritus vanheni. Luo uusi QR." },
+  "connectedStatus": { "message": "Yhdistetty." },
+  "pairingFailedDot": { "message": "Paritus epäonnistui." },
+
+  "addAnotherSigner": { "message": "Lisää toinen allekirjoittaja..." },
+  "add": { "message": "Lisää" },
+  "showAddSigner": { "message": "+ Lisää allekirjoittaja" },
+  "remove": { "message": "Poista" },
+  "removeSignerConfirm": { "message": "Poistetaanko tämä allekirjoittajainstanssi?" },
+  "couldNotRemoveInstance": { "message": "Instanssia ei voitu poistaa." },
+  "couldNotSwitchIdentity": { "message": "Identiteettiä ei voitu vaihtaa." },
+  "connectingEllipsis": { "message": "yhdistetään..." },
+  "connectingBtn": { "message": "Yhdistetään..." },
+  "enterSignerAddress": { "message": "Syötä allekirjoittajan tai sillan osoite (esim. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Ei vastausta taustaprosessilta - kokeile ladata laajennus uudelleen" },
+  "pairingFailed": { "message": "Paritus epäonnistui" },
+  "pairingPermissionDenied": { "message": "Parituslupa evättiin." },
+
+  "openApprovalPage": { "message": "Avaa hyväksyntäsivu" },
+  "retry": { "message": "Yritä uudelleen" },
+  "checkAgain": { "message": "Tarkista uudelleen" },
+  "connectionLost": { "message": "Yhteys katkesi." },
+  "reconnectingIn": {
+    "message": "Yhdistetään uudelleen $SECONDS$ s kuluttua...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Hyväksy tämä yhteys allekirjoittajallasi." },
+  "extensionError": { "message": "Laajennusvirhe" },
+
+  "activePersona": { "message": "Aktiivinen persoona" },
+  "defaultName": { "message": "oletus" },
+  "unnamed": { "message": "nimetön" },
+  "personas": { "message": "Persoonat" },
+  "purposeNamePlaceholder": { "message": "käyttötarkoituksen nimi" },
+  "derive": { "message": "Johda" },
+  "personaRequiresHeartwood": { "message": "Persoonien hallintaan tarvitaan" },
+  "couldNotLoadPersonas": {
+    "message": "Persoonia ei voitu ladata: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Heartwood-identiteettejä ei voitu päivittää." },
+
+  "signingNotTested": { "message": "Allekirjoitusta ei ole testattu" },
+  "runSignTestHint": { "message": "Suorita allekirjoitustesti ennen sivustojen käyttöä." },
+  "test": { "message": "Testaa" },
+  "signingReady": { "message": "Allekirjoitus valmis" },
+  "lastTested": {
+    "message": "Viimeksi testattu $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Allekirjoittaja palautti kelvollisen tapahtuman." },
+  "waitingForSigner": { "message": "Odotetaan allekirjoittajaa" },
+  "approveOnSigner": { "message": "Hyväksy pyyntö allekirjoituslaitteellasi." },
+  "waitingBtn": { "message": "Odotetaan" },
+  "signingFailed": { "message": "Allekirjoitus epäonnistui" },
+  "runSignTestAgain": { "message": "Suorita allekirjoitustesti uudelleen." },
+
+  "zeroRelays": { "message": "0 relettä" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relettä yhdistetty",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Allekirjoituskäytännöt" },
+  "protectedKinds": { "message": "Suojatut kindit (kysy ennen allekirjoitusta)" },
+  "kindNumberPlaceholder": { "message": "Kind-numero" },
+  "privacyMode": { "message": "Yksityisyystila" },
+  "privacyModeHint": { "message": "Piilota Bark kaikilta sivustoilta paitsi niiltä, joilla on sivustosääntö alla" },
+  "siteRules": { "message": "Sivustosäännöt" },
+  "methods": { "message": "Metodit" },
+  "kindOverrides": { "message": "Kind-poikkeukset" },
+  "noKindRules": { "message": "Ei määritettyjä kind-sääntöjä" },
+  "noSiteRules": { "message": "Ei määritettyjä sivustosääntöjä" },
+  "noKindOverrides": { "message": "Ei kind-poikkeuksia tälle sivustolle" },
+  "clickToChange": { "message": "Muuta napsauttamalla: salli → kysy → kiellä" },
+  "resetToDefaults": { "message": "Palauta oletukset" },
+  "optionAllow": { "message": "Salli" },
+  "optionAsk": { "message": "Kysy" },
+  "optionDeny": { "message": "Kiellä" },
+  "actionAllow": { "message": "salli" },
+  "actionAsk": { "message": "kysy" },
+  "actionDeny": { "message": "kiellä" },
+  "kindProfileMetadata": { "message": "Profiilin metatiedot" },
+  "kindContactList": { "message": "Kontaktilista" },
+  "kindRelayList": { "message": "Relelista" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Katkaise yhteys" },
+
+  "loadingRequest": { "message": "Ladataan pyyntöä..." },
+  "missingRequestId": { "message": "Pyynnön ID puuttuu." },
+  "requestNotFound": { "message": "Pyyntöä ei löytynyt tai se on vanhentunut." },
+  "approveKindProfile": { "message": "Profiilin metatiedot" },
+  "approveKindContacts": { "message": "Kontaktilista" },
+  "approveKindRelays": { "message": "Relelista" },
+  "signTitle": {
+    "message": "Allekirjoitetaanko $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ haluaa allekirjoittaa tapahtuman ($KIND$)",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Jaetaanko identiteetti?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ haluaa tietää julkisen avaimesi",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Jaetaanko releet?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ haluaa tietää relelistasi",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Salataanko viesti?" },
+  "decryptTitle": { "message": "Puretaanko viestin salaus?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ haluaa salata legacy-viestin",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ haluaa purkaa legacy-viestin salauksen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ haluaa salata viestin",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ haluaa purkaa viestin salauksen",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Listataanko identiteetit?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ haluaa listata Heartwood-laitteesi identiteetit",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Johdetaanko identiteetti?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ haluaa johtaa uuden identiteetin Heartwood-laitteellasi",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Vaihdetaanko identiteetti?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ haluaa vaihtaa aktiivisen allekirjoitusidentiteettisi",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Hyväksytäänkö pyyntö?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ haluaa kutsua metodia $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Ehdotettu profiili" },
+  "deny": { "message": "Kiellä" },
+  "allowOnce": { "message": "Salli kerran" },
+  "trustSite": { "message": "Luota sivustoon" }
+}

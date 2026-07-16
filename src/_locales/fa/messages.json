@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "امضای Nostr از راه دور از طریق NIP-46. کلیدها هرگز به مرورگر نمی‌رسند. با هر bunker کار می‌کند؛ Heartwood هویت‌های مشتق‌شده اضافه می‌کند." },
+
+  "addSigner": { "message": "افزودن امضاکننده" },
+  "setupIntro": { "message": "نشانی یک امضاکننده یا پل را وارد کنید، یا یک bunker URI جای‌گذاری کنید." },
+  "connect": { "message": "اتصال" },
+  "orPairByQr": { "message": "یا جفت‌سازی با QR" },
+  "pairByQrBtn": { "message": "جفت‌سازی با QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "رله(ها) برای دست‌دهی جفت‌سازی" },
+  "generateQr": { "message": "ساخت QR" },
+  "copyUri": { "message": "کپی URI" },
+  "cancel": { "message": "لغو" },
+  "scanWithSigner": { "message": "با امضاکنندهٔ خود اسکن کنید، یا URI را در آن جای‌گذاری کنید." },
+  "waitingEllipsis": { "message": "در انتظار..." },
+  "couldNotStartPairing": { "message": "شروع جفت‌سازی ممکن نشد." },
+  "pairingExpired": { "message": "جفت‌سازی منقضی شد. یک QR جدید بسازید." },
+  "connectedStatus": { "message": "متصل شد." },
+  "pairingFailedDot": { "message": "جفت‌سازی ناموفق بود." },
+
+  "addAnotherSigner": { "message": "افزودن امضاکنندهٔ دیگر..." },
+  "add": { "message": "افزودن" },
+  "showAddSigner": { "message": "+ افزودن امضاکننده" },
+  "remove": { "message": "حذف" },
+  "removeSignerConfirm": { "message": "این نمونهٔ امضاکننده حذف شود؟" },
+  "couldNotRemoveInstance": { "message": "حذف نمونه ممکن نشد." },
+  "couldNotSwitchIdentity": { "message": "تغییر هویت ممکن نشد." },
+  "connectingEllipsis": { "message": "در حال اتصال..." },
+  "connectingBtn": { "message": "در حال اتصال..." },
+  "enterSignerAddress": { "message": "نشانی یک امضاکننده یا پل را وارد کنید (مثلاً heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "پاسخی از پس‌زمینه دریافت نشد - افزونه را دوباره بارگذاری کنید" },
+  "pairingFailed": { "message": "جفت‌سازی ناموفق بود" },
+  "pairingPermissionDenied": { "message": "اجازهٔ جفت‌سازی رد شد." },
+
+  "openApprovalPage": { "message": "باز کردن صفحهٔ تأیید" },
+  "retry": { "message": "تلاش دوباره" },
+  "checkAgain": { "message": "بررسی دوباره" },
+  "connectionLost": { "message": "اتصال قطع شد." },
+  "reconnectingIn": {
+    "message": "اتصال دوباره تا $SECONDS$ ثانیهٔ دیگر...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "این اتصال را روی امضاکنندهٔ خود تأیید کنید." },
+  "extensionError": { "message": "خطای افزونه" },
+
+  "activePersona": { "message": "پرسونای فعال" },
+  "defaultName": { "message": "پیش‌فرض" },
+  "unnamed": { "message": "بی‌نام" },
+  "personas": { "message": "پرسوناها" },
+  "purposeNamePlaceholder": { "message": "نام هدف" },
+  "derive": { "message": "اشتقاق" },
+  "personaRequiresHeartwood": { "message": "مدیریت پرسونا نیازمند" },
+  "couldNotLoadPersonas": {
+    "message": "بارگیری پرسوناها ممکن نشد: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "تازه‌سازی هویت‌های Heartwood ممکن نشد." },
+
+  "signingNotTested": { "message": "امضا آزمایش نشده است" },
+  "runSignTestHint": { "message": "پیش از استفاده از سایت‌ها یک آزمایش امضا اجرا کنید." },
+  "test": { "message": "آزمایش" },
+  "signingReady": { "message": "امضا آماده است" },
+  "lastTested": {
+    "message": "آخرین آزمایش $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "امضاکننده یک رویداد معتبر برگرداند." },
+  "waitingForSigner": { "message": "در انتظار امضاکننده" },
+  "approveOnSigner": { "message": "درخواست را روی دستگاه امضاکنندهٔ خود تأیید کنید." },
+  "waitingBtn": { "message": "در انتظار" },
+  "signingFailed": { "message": "امضا ناموفق بود" },
+  "runSignTestAgain": { "message": "آزمایش امضا را دوباره اجرا کنید." },
+
+  "zeroRelays": { "message": "0 رله" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ رله متصل",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "سیاست‌های امضا" },
+  "protectedKinds": { "message": "انواع محافظت‌شده (پرسش پیش از امضا)" },
+  "kindNumberPlaceholder": { "message": "شمارهٔ نوع" },
+  "privacyMode": { "message": "حالت حریم خصوصی" },
+  "privacyModeHint": { "message": "پنهان کردن Bark از همهٔ سایت‌ها به‌جز سایت‌های دارای قانون سایت در پایین" },
+  "siteRules": { "message": "قوانین سایت‌ها" },
+  "methods": { "message": "متدها" },
+  "kindOverrides": { "message": "استثناهای نوع" },
+  "noKindRules": { "message": "هیچ قانون نوعی تنظیم نشده است" },
+  "noSiteRules": { "message": "هیچ قانون سایتی تنظیم نشده است" },
+  "noKindOverrides": { "message": "هیچ استثنای نوعی برای این سایت نیست" },
+  "clickToChange": { "message": "برای تغییر کلیک کنید: اجازه ← پرسش ← رد" },
+  "resetToDefaults": { "message": "بازنشانی به پیش‌فرض‌ها" },
+  "optionAllow": { "message": "اجازه" },
+  "optionAsk": { "message": "پرسش" },
+  "optionDeny": { "message": "رد" },
+  "actionAllow": { "message": "اجازه" },
+  "actionAsk": { "message": "پرسش" },
+  "actionDeny": { "message": "رد" },
+  "kindProfileMetadata": { "message": "اطلاعات نمایه" },
+  "kindContactList": { "message": "فهرست مخاطبان" },
+  "kindRelayList": { "message": "فهرست رله‌ها" },
+  "kindN": {
+    "message": "نوع $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "قطع اتصال" },
+
+  "loadingRequest": { "message": "در حال بارگیری درخواست..." },
+  "missingRequestId": { "message": "شناسهٔ درخواست موجود نیست." },
+  "requestNotFound": { "message": "درخواست یافت نشد یا منقضی شده است." },
+  "approveKindProfile": { "message": "اطلاعات نمایه" },
+  "approveKindContacts": { "message": "فهرست مخاطبان" },
+  "approveKindRelays": { "message": "فهرست رله‌ها" },
+  "signTitle": {
+    "message": "$KIND$ امضا شود؟",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ می‌خواهد یک رویداد $KIND$ را امضا کند",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "هویت به اشتراک گذاشته شود؟" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ می‌خواهد کلید عمومی شما را بداند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "رله‌ها به اشتراک گذاشته شوند؟" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ می‌خواهد فهرست رله‌های شما را بداند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "پیام رمزگذاری شود؟" },
+  "decryptTitle": { "message": "پیام رمزگشایی شود؟" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ می‌خواهد یک پیام قدیمی را رمزگذاری کند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ می‌خواهد یک پیام قدیمی را رمزگشایی کند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ می‌خواهد یک پیام را رمزگذاری کند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ می‌خواهد یک پیام را رمزگشایی کند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "هویت‌ها فهرست شوند؟" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ می‌خواهد هویت‌های روی دستگاه Heartwood شما را فهرست کند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "هویت جدید مشتق شود؟" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ می‌خواهد هویتی جدید روی دستگاه Heartwood شما مشتق کند",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "هویت تغییر کند؟" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ می‌خواهد هویت امضای فعال شما را تغییر دهد",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "درخواست تأیید شود؟" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ می‌خواهد $METHOD$ را فراخوانی کند",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "نمایهٔ پیشنهادی" },
+  "deny": { "message": "رد" },
+  "allowOnce": { "message": "یک بار اجازه بده" },
+  "trustSite": { "message": "به سایت اعتماد کن" }
+}

@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "توقيع Nostr عن بُعد عبر NIP-46. المفاتيح لا تلمس المتصفح أبداً. يعمل مع أي bunker؛ ويضيف Heartwood هويات مشتقة." },
+
+  "addSigner": { "message": "إضافة مُوقِّع" },
+  "setupIntro": { "message": "أدخل عنوان مُوقِّع أو جسر، أو الصق bunker URI." },
+  "connect": { "message": "اتصال" },
+  "orPairByQr": { "message": "أو الاقتران عبر QR" },
+  "pairByQrBtn": { "message": "الاقتران عبر QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "المُرحِّلات المستخدمة لمصافحة الاقتران" },
+  "generateQr": { "message": "إنشاء QR" },
+  "copyUri": { "message": "نسخ URI" },
+  "cancel": { "message": "إلغاء" },
+  "scanWithSigner": { "message": "امسح الرمز بمُوقِّعك، أو الصق URI فيه." },
+  "waitingEllipsis": { "message": "بانتظار..." },
+  "couldNotStartPairing": { "message": "تعذّر بدء الاقتران." },
+  "pairingExpired": { "message": "انتهت صلاحية الاقتران. أنشئ QR جديداً." },
+  "connectedStatus": { "message": "تم الاتصال." },
+  "pairingFailedDot": { "message": "فشل الاقتران." },
+
+  "addAnotherSigner": { "message": "إضافة مُوقِّع آخر..." },
+  "add": { "message": "إضافة" },
+  "showAddSigner": { "message": "+ إضافة مُوقِّع" },
+  "remove": { "message": "إزالة" },
+  "removeSignerConfirm": { "message": "إزالة نسخة المُوقِّع هذه؟" },
+  "couldNotRemoveInstance": { "message": "تعذّرت إزالة النسخة." },
+  "couldNotSwitchIdentity": { "message": "تعذّر تبديل الهوية." },
+  "connectingEllipsis": { "message": "جارٍ الاتصال..." },
+  "connectingBtn": { "message": "جارٍ الاتصال..." },
+  "enterSignerAddress": { "message": "أدخل عنوان مُوقِّع أو جسر (مثل heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "لا استجابة من الخلفية - جرّب إعادة تحميل الامتداد" },
+  "pairingFailed": { "message": "فشل الاقتران" },
+  "pairingPermissionDenied": { "message": "رُفض إذن الاقتران." },
+
+  "openApprovalPage": { "message": "فتح صفحة الموافقة" },
+  "retry": { "message": "إعادة المحاولة" },
+  "checkAgain": { "message": "تحقق مجدداً" },
+  "connectionLost": { "message": "انقطع الاتصال." },
+  "reconnectingIn": {
+    "message": "إعادة الاتصال خلال $SECONDS$ ث...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "وافق على هذا الاتصال في مُوقِّعك." },
+  "extensionError": { "message": "خطأ في الامتداد" },
+
+  "activePersona": { "message": "الشخصية النشطة" },
+  "defaultName": { "message": "افتراضي" },
+  "unnamed": { "message": "بلا اسم" },
+  "personas": { "message": "الشخصيات" },
+  "purposeNamePlaceholder": { "message": "اسم الغرض" },
+  "derive": { "message": "اشتقاق" },
+  "personaRequiresHeartwood": { "message": "تتطلب إدارة الشخصيات" },
+  "couldNotLoadPersonas": {
+    "message": "تعذّر تحميل الشخصيات: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "تعذّر تحديث هويات Heartwood." },
+
+  "signingNotTested": { "message": "لم يُختبر التوقيع" },
+  "runSignTestHint": { "message": "أجرِ اختبار توقيع قبل استخدام المواقع." },
+  "test": { "message": "اختبار" },
+  "signingReady": { "message": "التوقيع جاهز" },
+  "lastTested": {
+    "message": "آخر اختبار $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "أعاد المُوقِّع حدثاً صالحاً." },
+  "waitingForSigner": { "message": "بانتظار المُوقِّع" },
+  "approveOnSigner": { "message": "وافق على الطلب في جهاز المُوقِّع." },
+  "waitingBtn": { "message": "انتظار" },
+  "signingFailed": { "message": "فشل التوقيع" },
+  "runSignTestAgain": { "message": "أجرِ اختبار التوقيع مجدداً." },
+
+  "zeroRelays": { "message": "0 مُرحِّلات" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ مُرحِّلات متصلة",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "سياسات التوقيع" },
+  "protectedKinds": { "message": "الأنواع المحمية (السؤال قبل التوقيع)" },
+  "kindNumberPlaceholder": { "message": "رقم النوع" },
+  "privacyMode": { "message": "وضع الخصوصية" },
+  "privacyModeHint": { "message": "إخفاء Bark عن كل المواقع باستثناء المواقع التي لها قاعدة موقع أدناه" },
+  "siteRules": { "message": "قواعد المواقع" },
+  "methods": { "message": "الطرق" },
+  "kindOverrides": { "message": "تجاوزات الأنواع" },
+  "noKindRules": { "message": "لا توجد قواعد أنواع" },
+  "noSiteRules": { "message": "لا توجد قواعد مواقع" },
+  "noKindOverrides": { "message": "لا توجد تجاوزات أنواع لهذا الموقع" },
+  "clickToChange": { "message": "انقر للتغيير: سماح ← سؤال ← رفض" },
+  "resetToDefaults": { "message": "إعادة التعيين إلى الافتراضيات" },
+  "optionAllow": { "message": "سماح" },
+  "optionAsk": { "message": "سؤال" },
+  "optionDeny": { "message": "رفض" },
+  "actionAllow": { "message": "سماح" },
+  "actionAsk": { "message": "سؤال" },
+  "actionDeny": { "message": "رفض" },
+  "kindProfileMetadata": { "message": "بيانات الملف الشخصي" },
+  "kindContactList": { "message": "قائمة جهات الاتصال" },
+  "kindRelayList": { "message": "قائمة المُرحِّلات" },
+  "kindN": {
+    "message": "النوع $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "قطع الاتصال" },
+
+  "loadingRequest": { "message": "جارٍ تحميل الطلب..." },
+  "missingRequestId": { "message": "معرّف الطلب مفقود." },
+  "requestNotFound": { "message": "الطلب غير موجود أو منتهي الصلاحية." },
+  "approveKindProfile": { "message": "بيانات الملف الشخصي" },
+  "approveKindContacts": { "message": "قائمة جهات الاتصال" },
+  "approveKindRelays": { "message": "قائمة المُرحِّلات" },
+  "signTitle": {
+    "message": "توقيع $KIND$؟",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ يريد توقيع حدث $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "مشاركة الهوية؟" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ يريد معرفة مفتاحك العام",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "مشاركة المُرحِّلات؟" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ يريد معرفة قائمة المُرحِّلات لديك",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "تشفير رسالة؟" },
+  "decryptTitle": { "message": "فك تشفير رسالة؟" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ يريد تشفير رسالة قديمة",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ يريد فك تشفير رسالة قديمة",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ يريد تشفير رسالة",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ يريد فك تشفير رسالة",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "عرض الهويات؟" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ يريد عرض الهويات على جهاز Heartwood الخاص بك",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "اشتقاق هوية؟" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ يريد اشتقاق هوية جديدة على جهاز Heartwood الخاص بك",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "تبديل الهوية؟" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ يريد تبديل هوية التوقيع النشطة لديك",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "الموافقة على الطلب؟" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ يريد استدعاء $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "الملف الشخصي المقترح" },
+  "deny": { "message": "رفض" },
+  "allowOnce": { "message": "السماح مرة واحدة" },
+  "trustSite": { "message": "الوثوق بالموقع" }
+}

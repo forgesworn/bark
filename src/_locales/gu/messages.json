@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "NIP-46 દ્વારા રિમોટ Nostr સાઇનિંગ. કી ક્યારેય બ્રાઉઝર સુધી પહોંચતી નથી. કોઈપણ bunker સાથે કામ કરે છે; Heartwood ડિરાઇવ્ડ ઓળખો ઉમેરે છે."
+  },
+
+  "addSigner": { "message": "સાઇનર ઉમેરો" },
+  "setupIntro": { "message": "સાઇનર અથવા બ્રિજ સરનામું દાખલ કરો, અથવા bunker URI પેસ્ટ કરો." },
+  "connect": { "message": "કનેક્ટ કરો" },
+  "orPairByQr": { "message": "અથવા QR થી પેર કરો" },
+  "pairByQrBtn": { "message": "QR થી પેર કરો (nostrconnect)" },
+  "qrRelayTitle": { "message": "પેરિંગ હેન્ડશેક માટે રિલે" },
+  "generateQr": { "message": "QR બનાવો" },
+  "copyUri": { "message": "URI કૉપિ કરો" },
+  "cancel": { "message": "રદ કરો" },
+  "scanWithSigner": { "message": "તમારા સાઇનરથી સ્કૅન કરો, અથવા તેમાં URI પેસ્ટ કરો." },
+  "waitingEllipsis": { "message": "રાહ જોવાઈ રહી છે..." },
+  "couldNotStartPairing": { "message": "પેરિંગ શરૂ થઈ શક્યું નહીં." },
+  "pairingExpired": { "message": "પેરિંગની મુદત પૂરી થઈ. નવો QR બનાવો." },
+  "connectedStatus": { "message": "કનેક્ટ થયું." },
+  "pairingFailedDot": { "message": "પેરિંગ નિષ્ફળ થયું." },
+
+  "addAnotherSigner": { "message": "બીજું સાઇનર ઉમેરો..." },
+  "add": { "message": "ઉમેરો" },
+  "showAddSigner": { "message": "+ સાઇનર ઉમેરો" },
+  "remove": { "message": "દૂર કરો" },
+  "removeSignerConfirm": { "message": "આ સાઇનર ઇન્સ્ટન્સ દૂર કરવું છે?" },
+  "couldNotRemoveInstance": { "message": "ઇન્સ્ટન્સ દૂર થઈ શક્યું નહીં." },
+  "couldNotSwitchIdentity": { "message": "ઓળખ બદલી શકાઈ નહીં." },
+  "connectingEllipsis": { "message": "કનેક્ટ થઈ રહ્યું છે..." },
+  "connectingBtn": { "message": "કનેક્ટ થઈ રહ્યું છે..." },
+  "enterSignerAddress": { "message": "સાઇનર અથવા બ્રિજ સરનામું દાખલ કરો (દા.ત. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "બૅકગ્રાઉન્ડ તરફથી કોઈ જવાબ નથી - એક્સટેન્શન ફરી લોડ કરી જુઓ" },
+  "pairingFailed": { "message": "પેરિંગ નિષ્ફળ" },
+  "pairingPermissionDenied": { "message": "પેરિંગની પરવાનગી નકારાઈ." },
+
+  "openApprovalPage": { "message": "મંજૂરી પેજ ખોલો" },
+  "retry": { "message": "ફરી પ્રયાસ કરો" },
+  "checkAgain": { "message": "ફરી તપાસો" },
+  "connectionLost": { "message": "કનેક્શન તૂટ્યું." },
+  "reconnectingIn": {
+    "message": "$SECONDS$ સેકન્ડમાં ફરી કનેક્ટ થઈ રહ્યું છે...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "તમારા સાઇનર પર આ કનેક્શન મંજૂર કરો." },
+  "extensionError": { "message": "એક્સટેન્શન ભૂલ" },
+
+  "activePersona": { "message": "સક્રિય પર્સોના" },
+  "defaultName": { "message": "ડિફૉલ્ટ" },
+  "unnamed": { "message": "નામ વગરનું" },
+  "personas": { "message": "પર્સોના" },
+  "purposeNamePlaceholder": { "message": "હેતુનું નામ" },
+  "derive": { "message": "ડિરાઇવ કરો" },
+  "personaRequiresHeartwood": { "message": "પર્સોના મેનેજમેન્ટ માટે જરૂરી છે" },
+  "couldNotLoadPersonas": {
+    "message": "પર્સોના લોડ થઈ શક્યા નહીં: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Heartwood ઓળખો રિફ્રેશ થઈ શકી નહીં." },
+
+  "signingNotTested": { "message": "સાઇનિંગ ચકાસાયું નથી" },
+  "runSignTestHint": { "message": "સાઇટ્સ વાપરતાં પહેલાં સાઇન ટેસ્ટ ચલાવો." },
+  "test": { "message": "ટેસ્ટ" },
+  "signingReady": { "message": "સાઇનિંગ તૈયાર" },
+  "lastTested": {
+    "message": "છેલ્લે ચકાસ્યું $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "સાઇનરે માન્ય ઇવેન્ટ પરત આપ્યો." },
+  "waitingForSigner": { "message": "સાઇનરની રાહ જોવાઈ રહી છે" },
+  "approveOnSigner": { "message": "તમારા સાઇનર ડિવાઇસ પર વિનંતી મંજૂર કરો." },
+  "waitingBtn": { "message": "રાહ જોવાઈ રહી છે" },
+  "signingFailed": { "message": "સાઇનિંગ નિષ્ફળ" },
+  "runSignTestAgain": { "message": "સાઇન ટેસ્ટ ફરી ચલાવો." },
+
+  "zeroRelays": { "message": "0 રિલે" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ રિલે કનેક્ટેડ",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "સાઇનિંગ નીતિઓ" },
+  "protectedKinds": { "message": "સુરક્ષિત કાઇન્ડ (સાઇન કરતાં પહેલાં પૂછો)" },
+  "kindNumberPlaceholder": { "message": "કાઇન્ડ નંબર" },
+  "privacyMode": { "message": "પ્રાઇવસી મોડ" },
+  "privacyModeHint": { "message": "નીચે સાઇટ નિયમ ધરાવતી સાઇટ્સ સિવાય બધી સાઇટ્સથી Bark છુપાવો" },
+  "siteRules": { "message": "સાઇટ નિયમો" },
+  "methods": { "message": "મેથડ" },
+  "kindOverrides": { "message": "કાઇન્ડ ઓવરરાઇડ" },
+  "noKindRules": { "message": "કોઈ કાઇન્ડ નિયમ ગોઠવેલ નથી" },
+  "noSiteRules": { "message": "કોઈ સાઇટ નિયમ ગોઠવેલ નથી" },
+  "noKindOverrides": { "message": "આ સાઇટ માટે કોઈ કાઇન્ડ ઓવરરાઇડ નથી" },
+  "clickToChange": { "message": "બદલવા માટે ક્લિક કરો: મંજૂરી → પૂછો → નકારો" },
+  "resetToDefaults": { "message": "ડિફૉલ્ટ પર રીસેટ કરો" },
+  "optionAllow": { "message": "મંજૂરી આપો" },
+  "optionAsk": { "message": "પૂછો" },
+  "optionDeny": { "message": "નકારો" },
+  "actionAllow": { "message": "મંજૂરી" },
+  "actionAsk": { "message": "પૂછો" },
+  "actionDeny": { "message": "નકારો" },
+  "kindProfileMetadata": { "message": "પ્રોફાઇલ મેટાડેટા" },
+  "kindContactList": { "message": "સંપર્ક યાદી" },
+  "kindRelayList": { "message": "રિલે યાદી" },
+  "kindN": {
+    "message": "કાઇન્ડ $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "ડિસ્કનેક્ટ કરો" },
+
+  "loadingRequest": { "message": "વિનંતી લોડ થઈ રહી છે..." },
+  "missingRequestId": { "message": "વિનંતી ID ખૂટે છે." },
+  "requestNotFound": { "message": "વિનંતી મળી નહીં અથવા મુદત પૂરી થઈ." },
+  "approveKindProfile": { "message": "પ્રોફાઇલ મેટાડેટા" },
+  "approveKindContacts": { "message": "સંપર્ક યાદી" },
+  "approveKindRelays": { "message": "રિલે યાદી" },
+  "signTitle": {
+    "message": "$KIND$ સાઇન કરવું છે?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ એક $KIND$ ઇવેન્ટ સાઇન કરવા માંગે છે",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "ઓળખ શેર કરવી છે?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ તમારી પબ્લિક કી જાણવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "રિલે શેર કરવા છે?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ તમારી રિલે યાદી જાણવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "સંદેશ એન્ક્રિપ્ટ કરવો છે?" },
+  "decryptTitle": { "message": "સંદેશ ડિક્રિપ્ટ કરવો છે?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ એક લેગસી સંદેશ એન્ક્રિપ્ટ કરવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ એક લેગસી સંદેશ ડિક્રિપ્ટ કરવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ એક સંદેશ એન્ક્રિપ્ટ કરવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ એક સંદેશ ડિક્રિપ્ટ કરવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "ઓળખોની યાદી બતાવવી છે?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ તમારા Heartwood ડિવાઇસ પરની ઓળખોની યાદી જોવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "ઓળખ ડિરાઇવ કરવી છે?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ તમારા Heartwood ડિવાઇસ પર નવી ઓળખ ડિરાઇવ કરવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "ઓળખ બદલવી છે?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ તમારી સક્રિય સાઇનિંગ ઓળખ બદલવા માંગે છે",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "વિનંતી મંજૂર કરવી છે?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ $METHOD$ કૉલ કરવા માંગે છે",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "સૂચિત પ્રોફાઇલ" },
+  "deny": { "message": "નકારો" },
+  "allowOnce": { "message": "એકવાર મંજૂરી આપો" },
+  "trustSite": { "message": "સાઇટ પર વિશ્વાસ કરો" }
+}

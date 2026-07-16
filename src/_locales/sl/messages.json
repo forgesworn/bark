@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "Oddaljeno podpisovanje Nostr prek NIP-46. Ključi nikoli ne pridejo v brskalnik. Deluje s katerim koli bunkerjem; Heartwood dodaja izpeljane identitete."
+  },
+
+  "addSigner": { "message": "Dodaj podpisnika" },
+  "setupIntro": { "message": "Vnesite naslov podpisnika ali mostu ali prilepite URI bunkerja." },
+  "connect": { "message": "Poveži" },
+  "orPairByQr": { "message": "ali seznani prek QR" },
+  "pairByQrBtn": { "message": "Seznani prek QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Rele(ji) za seznanjanje" },
+  "generateQr": { "message": "Ustvari QR" },
+  "copyUri": { "message": "Kopiraj URI" },
+  "cancel": { "message": "Prekliči" },
+  "scanWithSigner": { "message": "Skenirajte s podpisnikom ali vanj prilepite URI." },
+  "waitingEllipsis": { "message": "Čakanje..." },
+  "couldNotStartPairing": { "message": "Seznanjanja ni bilo mogoče začeti." },
+  "pairingExpired": { "message": "Seznanjanje je poteklo. Ustvarite nov QR." },
+  "connectedStatus": { "message": "Povezano." },
+  "pairingFailedDot": { "message": "Seznanjanje ni uspelo." },
+
+  "addAnotherSigner": { "message": "Dodaj še enega podpisnika..." },
+  "add": { "message": "Dodaj" },
+  "showAddSigner": { "message": "+ Dodaj podpisnika" },
+  "remove": { "message": "Odstrani" },
+  "removeSignerConfirm": { "message": "Odstranim ta primerek podpisnika?" },
+  "couldNotRemoveInstance": { "message": "Primerka ni bilo mogoče odstraniti." },
+  "couldNotSwitchIdentity": { "message": "Identitete ni bilo mogoče preklopiti." },
+  "connectingEllipsis": { "message": "povezovanje..." },
+  "connectingBtn": { "message": "Povezovanje..." },
+  "enterSignerAddress": { "message": "Vnesite naslov podpisnika ali mostu (npr. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Ni odgovora iz ozadja - poskusite znova naložiti razširitev" },
+  "pairingFailed": { "message": "Seznanjanje ni uspelo" },
+  "pairingPermissionDenied": { "message": "Dovoljenje za seznanjanje zavrnjeno." },
+
+  "openApprovalPage": { "message": "Odpri stran za odobritev" },
+  "retry": { "message": "Poskusi znova" },
+  "checkAgain": { "message": "Preveri znova" },
+  "connectionLost": { "message": "Povezava prekinjena." },
+  "reconnectingIn": {
+    "message": "Ponovna povezava čez $SECONDS$ s...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Odobrite to povezavo na svojem podpisniku." },
+  "extensionError": { "message": "Napaka razširitve" },
+
+  "activePersona": { "message": "Aktivna persona" },
+  "defaultName": { "message": "privzeta" },
+  "unnamed": { "message": "neimenovana" },
+  "personas": { "message": "Persone" },
+  "purposeNamePlaceholder": { "message": "ime namena" },
+  "derive": { "message": "Izpelji" },
+  "personaRequiresHeartwood": { "message": "Upravljanje person zahteva" },
+  "couldNotLoadPersonas": {
+    "message": "Person ni bilo mogoče naložiti: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Identitet Heartwood ni bilo mogoče osvežiti." },
+
+  "signingNotTested": { "message": "Podpisovanje ni preizkušeno" },
+  "runSignTestHint": { "message": "Pred uporabo strani zaženite preizkus podpisa." },
+  "test": { "message": "Preizkusi" },
+  "signingReady": { "message": "Podpisovanje pripravljeno" },
+  "lastTested": {
+    "message": "Nazadnje preizkušeno $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Podpisnik je vrnil veljaven dogodek." },
+  "waitingForSigner": { "message": "Čakanje na podpisnika" },
+  "approveOnSigner": { "message": "Odobrite zahtevo na podpisni napravi." },
+  "waitingBtn": { "message": "Čakanje" },
+  "signingFailed": { "message": "Podpisovanje ni uspelo" },
+  "runSignTestAgain": { "message": "Znova zaženite preizkus podpisa." },
+
+  "zeroRelays": { "message": "0 relejev" },
+  "relaysConnected": {
+    "message": "Povezanih $UP$/$TOTAL$ relejev",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Pravila podpisovanja" },
+  "protectedKinds": { "message": "Zaščitene vrste (vprašaj pred podpisom)" },
+  "kindNumberPlaceholder": { "message": "Številka vrste" },
+  "privacyMode": { "message": "Način zasebnosti" },
+  "privacyModeHint": { "message": "Skrij Bark pred vsemi stranmi razen tistih s pravilom spodaj" },
+  "siteRules": { "message": "Pravila strani" },
+  "methods": { "message": "Metode" },
+  "kindOverrides": { "message": "Izjeme za vrste" },
+  "noKindRules": { "message": "Ni pravil za vrste" },
+  "noSiteRules": { "message": "Ni pravil za strani" },
+  "noKindOverrides": { "message": "Za to stran ni izjem za vrste" },
+  "clickToChange": { "message": "Kliknite za spremembo: dovoli → vprašaj → zavrni" },
+  "resetToDefaults": { "message": "Ponastavi na privzeto" },
+  "optionAllow": { "message": "Dovoli" },
+  "optionAsk": { "message": "Vprašaj" },
+  "optionDeny": { "message": "Zavrni" },
+  "actionAllow": { "message": "dovoli" },
+  "actionAsk": { "message": "vprašaj" },
+  "actionDeny": { "message": "zavrni" },
+  "kindProfileMetadata": { "message": "Metapodatki profila" },
+  "kindContactList": { "message": "Seznam stikov" },
+  "kindRelayList": { "message": "Seznam relejev" },
+  "kindN": {
+    "message": "Vrsta $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Prekini povezavo" },
+
+  "loadingRequest": { "message": "Nalaganje zahteve..." },
+  "missingRequestId": { "message": "Manjka ID zahteve." },
+  "requestNotFound": { "message": "Zahteva ni najdena ali je potekla." },
+  "approveKindProfile": { "message": "Metapodatki profila" },
+  "approveKindContacts": { "message": "Seznam stikov" },
+  "approveKindRelays": { "message": "Seznam relejev" },
+  "signTitle": {
+    "message": "Podpišem $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ želi podpisati dogodek: $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Delim identiteto?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ želi poznati vaš javni ključ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Delim releje?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ želi poznati vaš seznam relejev",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Šifriram sporočilo?" },
+  "decryptTitle": { "message": "Dešifriram sporočilo?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ želi šifrirati sporočilo v starem formatu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ želi dešifrirati sporočilo v starem formatu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ želi šifrirati sporočilo",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ želi dešifrirati sporočilo",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Izpišem identitete?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ želi izpisati identitete na vaši napravi Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Izpeljem identiteto?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ želi na vaši napravi Heartwood izpeljati novo identiteto",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Preklopim identiteto?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ želi preklopiti vašo aktivno podpisno identiteto",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Odobrim zahtevo?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ želi poklicati $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Predlagani profil" },
+  "deny": { "message": "Zavrni" },
+  "allowOnce": { "message": "Dovoli enkrat" },
+  "trustSite": { "message": "Zaupaj strani" }
+}

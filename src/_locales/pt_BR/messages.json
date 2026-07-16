@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Assinatura remota Nostr via NIP-46. As chaves nunca tocam o navegador. Funciona com qualquer bunker; o Heartwood adiciona identidades derivadas." },
+
+  "addSigner": { "message": "Adicionar assinador" },
+  "setupIntro": { "message": "Digite o endereço de um assinador ou ponte, ou cole um URI bunker." },
+  "connect": { "message": "Conectar" },
+  "orPairByQr": { "message": "ou parear por QR" },
+  "pairByQrBtn": { "message": "Parear por QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relays para o pareamento" },
+  "generateQr": { "message": "Gerar QR" },
+  "copyUri": { "message": "Copiar URI" },
+  "cancel": { "message": "Cancelar" },
+  "scanWithSigner": { "message": "Escaneie com seu assinador ou cole o URI nele." },
+  "waitingEllipsis": { "message": "Aguardando..." },
+  "couldNotStartPairing": { "message": "Não foi possível iniciar o pareamento." },
+  "pairingExpired": { "message": "Pareamento expirado. Gere um novo QR." },
+  "connectedStatus": { "message": "Conectado." },
+  "pairingFailedDot": { "message": "Falha no pareamento." },
+
+  "addAnotherSigner": { "message": "Adicionar outro assinador..." },
+  "add": { "message": "Adicionar" },
+  "showAddSigner": { "message": "+ Adicionar assinador" },
+  "remove": { "message": "Remover" },
+  "removeSignerConfirm": { "message": "Remover esta instância de assinador?" },
+  "couldNotRemoveInstance": { "message": "Não foi possível remover a instância." },
+  "couldNotSwitchIdentity": { "message": "Não foi possível trocar de identidade." },
+  "connectingEllipsis": { "message": "conectando..." },
+  "connectingBtn": { "message": "Conectando..." },
+  "enterSignerAddress": { "message": "Digite o endereço de um assinador ou ponte (ex.: heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Sem resposta do processo em segundo plano - tente recarregar a extensão" },
+  "pairingFailed": { "message": "Falha no pareamento" },
+  "pairingPermissionDenied": { "message": "Permissão de pareamento negada." },
+
+  "openApprovalPage": { "message": "Abrir página de aprovação" },
+  "retry": { "message": "Tentar novamente" },
+  "checkAgain": { "message": "Verificar novamente" },
+  "connectionLost": { "message": "Conexão perdida." },
+  "reconnectingIn": {
+    "message": "Reconectando em $SECONDS$ s...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Aprove esta conexão no seu assinador." },
+  "extensionError": { "message": "Erro da extensão" },
+
+  "activePersona": { "message": "Persona ativa" },
+  "defaultName": { "message": "padrão" },
+  "unnamed": { "message": "sem nome" },
+  "personas": { "message": "Personas" },
+  "purposeNamePlaceholder": { "message": "nome da finalidade" },
+  "derive": { "message": "Derivar" },
+  "personaRequiresHeartwood": { "message": "O gerenciamento de personas requer" },
+  "couldNotLoadPersonas": {
+    "message": "Não foi possível carregar as personas: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Não foi possível atualizar as identidades Heartwood." },
+
+  "signingNotTested": { "message": "Assinatura não testada" },
+  "runSignTestHint": { "message": "Execute um teste de assinatura antes de usar sites." },
+  "test": { "message": "Testar" },
+  "signingReady": { "message": "Assinatura pronta" },
+  "lastTested": {
+    "message": "Último teste às $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "O assinador retornou um evento válido." },
+  "waitingForSigner": { "message": "Aguardando o assinador" },
+  "approveOnSigner": { "message": "Aprove a solicitação no seu dispositivo assinador." },
+  "waitingBtn": { "message": "Aguardando" },
+  "signingFailed": { "message": "Falha na assinatura" },
+  "runSignTestAgain": { "message": "Execute o teste de assinatura novamente." },
+
+  "zeroRelays": { "message": "0 relays" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relays conectados",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Políticas de assinatura" },
+  "protectedKinds": { "message": "Kinds protegidos (perguntar antes de assinar)" },
+  "kindNumberPlaceholder": { "message": "Número do kind" },
+  "privacyMode": { "message": "Modo de privacidade" },
+  "privacyModeHint": { "message": "Ocultar o Bark de todos os sites, exceto os que têm uma regra de site abaixo" },
+  "siteRules": { "message": "Regras de site" },
+  "methods": { "message": "Métodos" },
+  "kindOverrides": { "message": "Exceções de kind" },
+  "noKindRules": { "message": "Nenhuma regra de kind configurada" },
+  "noSiteRules": { "message": "Nenhuma regra de site configurada" },
+  "noKindOverrides": { "message": "Nenhuma exceção de kind para este site" },
+  "clickToChange": { "message": "Clique para alterar: permitir → perguntar → negar" },
+  "resetToDefaults": { "message": "Restaurar padrões" },
+  "optionAllow": { "message": "Permitir" },
+  "optionAsk": { "message": "Perguntar" },
+  "optionDeny": { "message": "Negar" },
+  "actionAllow": { "message": "permitir" },
+  "actionAsk": { "message": "perguntar" },
+  "actionDeny": { "message": "negar" },
+  "kindProfileMetadata": { "message": "Metadados do perfil" },
+  "kindContactList": { "message": "Lista de contatos" },
+  "kindRelayList": { "message": "Lista de relays" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Desconectar" },
+
+  "loadingRequest": { "message": "Carregando solicitação..." },
+  "missingRequestId": { "message": "Falta o ID da solicitação." },
+  "requestNotFound": { "message": "Solicitação não encontrada ou expirada." },
+  "approveKindProfile": { "message": "Metadados do Perfil" },
+  "approveKindContacts": { "message": "Lista de Contatos" },
+  "approveKindRelays": { "message": "Lista de Relays" },
+  "signTitle": {
+    "message": "Assinar $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ quer assinar um evento $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Compartilhar identidade?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ quer saber sua chave pública",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Compartilhar relays?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ quer saber sua lista de relays",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Criptografar mensagem?" },
+  "decryptTitle": { "message": "Descriptografar mensagem?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ quer criptografar uma mensagem (formato antigo)",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ quer descriptografar uma mensagem (formato antigo)",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ quer criptografar uma mensagem",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ quer descriptografar uma mensagem",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Listar identidades?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ quer listar as identidades do seu dispositivo Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Derivar identidade?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ quer derivar uma nova identidade no seu dispositivo Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Trocar identidade?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ quer trocar sua identidade de assinatura ativa",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Aprovar solicitação?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ quer chamar $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Perfil proposto" },
+  "deny": { "message": "Negar" },
+  "allowOnce": { "message": "Permitir uma vez" },
+  "trustSite": { "message": "Confiar no site" }
+}

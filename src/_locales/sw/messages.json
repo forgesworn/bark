@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Utiaji saini wa Nostr wa mbali kupitia NIP-46. Funguo hazigusi kivinjari kamwe. Inafanya kazi na bunker yoyote; Heartwood huongeza vitambulisho vilivyozalishwa." },
+
+  "addSigner": { "message": "Ongeza Kitia Saini" },
+  "setupIntro": { "message": "Weka anwani ya kitia saini au daraja, au bandika bunker URI." },
+  "connect": { "message": "Unganisha" },
+  "orPairByQr": { "message": "au oanisha kwa QR" },
+  "pairByQrBtn": { "message": "Oanisha kwa QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relay za mchakato wa kuoanisha" },
+  "generateQr": { "message": "Tengeneza QR" },
+  "copyUri": { "message": "Nakili URI" },
+  "cancel": { "message": "Ghairi" },
+  "scanWithSigner": { "message": "Skani kwa kitia saini chako, au bandika URI ndani yake." },
+  "waitingEllipsis": { "message": "Inasubiri..." },
+  "couldNotStartPairing": { "message": "Imeshindwa kuanzisha uoanishaji." },
+  "pairingExpired": { "message": "Muda wa kuoanisha umekwisha. Tengeneza QR mpya." },
+  "connectedStatus": { "message": "Imeunganishwa." },
+  "pairingFailedDot": { "message": "Uoanishaji umeshindikana." },
+
+  "addAnotherSigner": { "message": "Ongeza kitia saini kingine..." },
+  "add": { "message": "Ongeza" },
+  "showAddSigner": { "message": "+ Ongeza Kitia Saini" },
+  "remove": { "message": "Ondoa" },
+  "removeSignerConfirm": { "message": "Ondoa kitia saini hiki?" },
+  "couldNotRemoveInstance": { "message": "Imeshindwa kuondoa kitia saini." },
+  "couldNotSwitchIdentity": { "message": "Imeshindwa kubadilisha utambulisho." },
+  "connectingEllipsis": { "message": "inaunganisha..." },
+  "connectingBtn": { "message": "Inaunganisha..." },
+  "enterSignerAddress": { "message": "Weka anwani ya kitia saini au daraja (mfano heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Hakuna jibu kutoka kwa mchakato wa nyuma - jaribu kupakia upya kiendelezi" },
+  "pairingFailed": { "message": "Uoanishaji umeshindikana" },
+  "pairingPermissionDenied": { "message": "Ruhusa ya kuoanisha imekataliwa." },
+
+  "openApprovalPage": { "message": "Fungua ukurasa wa idhini" },
+  "retry": { "message": "Jaribu tena" },
+  "checkAgain": { "message": "Angalia tena" },
+  "connectionLost": { "message": "Muunganisho umepotea." },
+  "reconnectingIn": {
+    "message": "Inaunganisha upya baada ya sekunde $SECONDS$...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Idhinisha muunganisho huu kwenye kitia saini chako." },
+  "extensionError": { "message": "Hitilafu ya kiendelezi" },
+
+  "activePersona": { "message": "Persona inayotumika" },
+  "defaultName": { "message": "chaguomsingi" },
+  "unnamed": { "message": "bila jina" },
+  "personas": { "message": "Persona" },
+  "purposeNamePlaceholder": { "message": "jina la madhumuni" },
+  "derive": { "message": "Zalisha" },
+  "personaRequiresHeartwood": { "message": "Usimamizi wa persona unahitaji" },
+  "couldNotLoadPersonas": {
+    "message": "Imeshindwa kupakia persona: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Imeshindwa kusasisha vitambulisho vya Heartwood." },
+
+  "signingNotTested": { "message": "Utiaji saini haujajaribiwa" },
+  "runSignTestHint": { "message": "Fanya jaribio la kutia saini kabla ya kutumia tovuti." },
+  "test": { "message": "Jaribu" },
+  "signingReady": { "message": "Utiaji saini uko tayari" },
+  "lastTested": {
+    "message": "Jaribio la mwisho $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Kitia saini kimerudisha tukio halali." },
+  "waitingForSigner": { "message": "Inasubiri kitia saini" },
+  "approveOnSigner": { "message": "Idhinisha ombi kwenye kifaa chako cha kutia saini." },
+  "waitingBtn": { "message": "Inasubiri" },
+  "signingFailed": { "message": "Utiaji saini umeshindikana" },
+  "runSignTestAgain": { "message": "Fanya jaribio la kutia saini tena." },
+
+  "zeroRelays": { "message": "Relay 0" },
+  "relaysConnected": {
+    "message": "Relay $UP$/$TOTAL$ zimeunganishwa",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Sera za Kutia Saini" },
+  "protectedKinds": { "message": "Aina zilizolindwa (uliza kabla ya kutia saini)" },
+  "kindNumberPlaceholder": { "message": "Namba ya aina" },
+  "privacyMode": { "message": "Hali ya faragha" },
+  "privacyModeHint": { "message": "Ficha Bark kwenye kila tovuti isipokuwa zile zenye sheria ya tovuti hapa chini" },
+  "siteRules": { "message": "Sheria za tovuti" },
+  "methods": { "message": "Mbinu" },
+  "kindOverrides": { "message": "Vighairi vya aina" },
+  "noKindRules": { "message": "Hakuna sheria za aina zilizowekwa" },
+  "noSiteRules": { "message": "Hakuna sheria za tovuti zilizowekwa" },
+  "noKindOverrides": { "message": "Hakuna vighairi vya aina kwa tovuti hii" },
+  "clickToChange": { "message": "Bofya kubadilisha: ruhusu → uliza → kataa" },
+  "resetToDefaults": { "message": "Rejesha chaguomsingi" },
+  "optionAllow": { "message": "Ruhusu" },
+  "optionAsk": { "message": "Uliza" },
+  "optionDeny": { "message": "Kataa" },
+  "actionAllow": { "message": "ruhusu" },
+  "actionAsk": { "message": "uliza" },
+  "actionDeny": { "message": "kataa" },
+  "kindProfileMetadata": { "message": "Maelezo ya wasifu" },
+  "kindContactList": { "message": "Orodha ya anwani" },
+  "kindRelayList": { "message": "Orodha ya relay" },
+  "kindN": {
+    "message": "Aina $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Tenganisha" },
+
+  "loadingRequest": { "message": "Inapakia ombi..." },
+  "missingRequestId": { "message": "Kitambulisho cha ombi hakipo." },
+  "requestNotFound": { "message": "Ombi halijapatikana au muda wake umekwisha." },
+  "approveKindProfile": { "message": "Maelezo ya Wasifu" },
+  "approveKindContacts": { "message": "Orodha ya Anwani" },
+  "approveKindRelays": { "message": "Orodha ya Relay" },
+  "signTitle": {
+    "message": "Tia saini $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ inataka kutia saini tukio la $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Shiriki Utambulisho?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ inataka kujua ufunguo wako wa umma",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Shiriki Relay?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ inataka kujua orodha yako ya relay",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Simba Ujumbe?" },
+  "decryptTitle": { "message": "Simbua Ujumbe?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ inataka kusimba ujumbe wa zamani",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ inataka kusimbua ujumbe wa zamani",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ inataka kusimba ujumbe",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ inataka kusimbua ujumbe",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Orodhesha Vitambulisho?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ inataka kuorodhesha vitambulisho kwenye kifaa chako cha Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Zalisha Utambulisho?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ inataka kuzalisha utambulisho mpya kwenye kifaa chako cha Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Badilisha Utambulisho?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ inataka kubadilisha utambulisho wako wa kutia saini unaotumika",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Idhinisha Ombi?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ inataka kuita $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Wasifu unaopendekezwa" },
+  "deny": { "message": "Kataa" },
+  "allowOnce": { "message": "Ruhusu Mara Moja" },
+  "trustSite": { "message": "Amini Tovuti" }
+}

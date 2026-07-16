@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "NIP-46 வழியாக ரிமோட் Nostr கையொப்பமிடல். கீகள் ஒருபோதும் உலாவியை அடைவதில்லை. எந்த bunker உடனும் வேலை செய்யும்; Heartwood தருவிக்கப்பட்ட அடையாளங்களைச் சேர்க்கிறது."
+  },
+
+  "addSigner": { "message": "சைனரைச் சேர்" },
+  "setupIntro": { "message": "சைனர் அல்லது பிரிட்ஜ் முகவரியை உள்ளிடவும், அல்லது bunker URI-ஐ ஒட்டவும்." },
+  "connect": { "message": "இணை" },
+  "orPairByQr": { "message": "அல்லது QR மூலம் இணைக்கவும்" },
+  "pairByQrBtn": { "message": "QR மூலம் இணைக்கவும் (nostrconnect)" },
+  "qrRelayTitle": { "message": "இணைத்தல் ஹேண்ட்ஷேக்கிற்கான ரிலே(கள்)" },
+  "generateQr": { "message": "QR உருவாக்கு" },
+  "copyUri": { "message": "URI நகலெடு" },
+  "cancel": { "message": "ரத்துசெய்" },
+  "scanWithSigner": { "message": "உங்கள் சைனரால் ஸ்கேன் செய்யவும், அல்லது அதில் URI-ஐ ஒட்டவும்." },
+  "waitingEllipsis": { "message": "காத்திருக்கிறது..." },
+  "couldNotStartPairing": { "message": "இணைத்தலைத் தொடங்க முடியவில்லை." },
+  "pairingExpired": { "message": "இணைத்தல் காலாவதியானது. புதிய QR உருவாக்கவும்." },
+  "connectedStatus": { "message": "இணைக்கப்பட்டது." },
+  "pairingFailedDot": { "message": "இணைத்தல் தோல்வியடைந்தது." },
+
+  "addAnotherSigner": { "message": "மற்றொரு சைனரைச் சேர்..." },
+  "add": { "message": "சேர்" },
+  "showAddSigner": { "message": "+ சைனரைச் சேர்" },
+  "remove": { "message": "அகற்று" },
+  "removeSignerConfirm": { "message": "இந்த சைனர் இன்ஸ்டன்ஸை அகற்றவா?" },
+  "couldNotRemoveInstance": { "message": "இன்ஸ்டன்ஸை அகற்ற முடியவில்லை." },
+  "couldNotSwitchIdentity": { "message": "அடையாளத்தை மாற்ற முடியவில்லை." },
+  "connectingEllipsis": { "message": "இணைக்கிறது..." },
+  "connectingBtn": { "message": "இணைக்கிறது..." },
+  "enterSignerAddress": { "message": "சைனர் அல்லது பிரிட்ஜ் முகவரியை உள்ளிடவும் (எ.கா. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "பின்னணியிலிருந்து பதில் இல்லை - எக்ஸ்டென்ஷனை மீண்டும் ஏற்றிப் பாருங்கள்" },
+  "pairingFailed": { "message": "இணைத்தல் தோல்வி" },
+  "pairingPermissionDenied": { "message": "இணைத்தல் அனுமதி மறுக்கப்பட்டது." },
+
+  "openApprovalPage": { "message": "ஒப்புதல் பக்கத்தைத் திற" },
+  "retry": { "message": "மீண்டும் முயல்" },
+  "checkAgain": { "message": "மீண்டும் சரிபார்" },
+  "connectionLost": { "message": "இணைப்பு துண்டிக்கப்பட்டது." },
+  "reconnectingIn": {
+    "message": "$SECONDS$ வினாடிகளில் மீண்டும் இணைக்கிறது...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "உங்கள் சைனரில் இந்த இணைப்புக்கு ஒப்புதல் அளிக்கவும்." },
+  "extensionError": { "message": "எக்ஸ்டென்ஷன் பிழை" },
+
+  "activePersona": { "message": "செயலில் உள்ள பர்சோனா" },
+  "defaultName": { "message": "இயல்புநிலை" },
+  "unnamed": { "message": "பெயரில்லாதது" },
+  "personas": { "message": "பர்சோனாக்கள்" },
+  "purposeNamePlaceholder": { "message": "நோக்கத்தின் பெயர்" },
+  "derive": { "message": "தருவி" },
+  "personaRequiresHeartwood": { "message": "பர்சோனா நிர்வாகத்திற்குத் தேவை" },
+  "couldNotLoadPersonas": {
+    "message": "பர்சோனாக்களை ஏற்ற முடியவில்லை: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Heartwood அடையாளங்களைப் புதுப்பிக்க முடியவில்லை." },
+
+  "signingNotTested": { "message": "கையொப்பமிடல் சோதிக்கப்படவில்லை" },
+  "runSignTestHint": { "message": "தளங்களைப் பயன்படுத்தும் முன் கையொப்பச் சோதனை நடத்தவும்." },
+  "test": { "message": "சோதி" },
+  "signingReady": { "message": "கையொப்பமிடல் தயார்" },
+  "lastTested": {
+    "message": "கடைசிச் சோதனை $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "சைனர் செல்லுபடியான இவென்டைத் திருப்பியது." },
+  "waitingForSigner": { "message": "சைனருக்காகக் காத்திருக்கிறது" },
+  "approveOnSigner": { "message": "உங்கள் சைனர் சாதனத்தில் கோரிக்கைக்கு ஒப்புதல் அளிக்கவும்." },
+  "waitingBtn": { "message": "காத்திருக்கிறது" },
+  "signingFailed": { "message": "கையொப்பமிடல் தோல்வி" },
+  "runSignTestAgain": { "message": "கையொப்பச் சோதனையை மீண்டும் நடத்தவும்." },
+
+  "zeroRelays": { "message": "0 ரிலேக்கள்" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ ரிலேக்கள் இணைந்துள்ளன",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "கையொப்பக் கொள்கைகள்" },
+  "protectedKinds": { "message": "பாதுகாக்கப்பட்ட கைண்டுகள் (கையொப்பமிடும் முன் கேள்)" },
+  "kindNumberPlaceholder": { "message": "கைண்ட் எண்" },
+  "privacyMode": { "message": "தனியுரிமை பயன்முறை" },
+  "privacyModeHint": { "message": "கீழே தள விதி உள்ள தளங்களைத் தவிர மற்ற எல்லா தளங்களிடமிருந்தும் Bark-ஐ மறை" },
+  "siteRules": { "message": "தள விதிகள்" },
+  "methods": { "message": "மெதடுகள்" },
+  "kindOverrides": { "message": "கைண்ட் ஓவர்ரைடுகள்" },
+  "noKindRules": { "message": "கைண்ட் விதிகள் எதுவும் அமைக்கப்படவில்லை" },
+  "noSiteRules": { "message": "தள விதிகள் எதுவும் அமைக்கப்படவில்லை" },
+  "noKindOverrides": { "message": "இந்தத் தளத்திற்கு கைண்ட் ஓவர்ரைடுகள் இல்லை" },
+  "clickToChange": { "message": "மாற்ற கிளிக் செய்யவும்: அனுமதி → கேள் → மறு" },
+  "resetToDefaults": { "message": "இயல்புகளுக்கு மீட்டமை" },
+  "optionAllow": { "message": "அனுமதி" },
+  "optionAsk": { "message": "கேள்" },
+  "optionDeny": { "message": "மறு" },
+  "actionAllow": { "message": "அனுமதி" },
+  "actionAsk": { "message": "கேள்" },
+  "actionDeny": { "message": "மறு" },
+  "kindProfileMetadata": { "message": "சுயவிவர மெட்டாடேட்டா" },
+  "kindContactList": { "message": "தொடர்புப் பட்டியல்" },
+  "kindRelayList": { "message": "ரிலே பட்டியல்" },
+  "kindN": {
+    "message": "கைண்ட் $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "துண்டி" },
+
+  "loadingRequest": { "message": "கோரிக்கை ஏற்றப்படுகிறது..." },
+  "missingRequestId": { "message": "கோரிக்கை ID இல்லை." },
+  "requestNotFound": { "message": "கோரிக்கை கிடைக்கவில்லை அல்லது காலாவதியானது." },
+  "approveKindProfile": { "message": "சுயவிவர மெட்டாடேட்டா" },
+  "approveKindContacts": { "message": "தொடர்புப் பட்டியல்" },
+  "approveKindRelays": { "message": "ரிலே பட்டியல்" },
+  "signTitle": {
+    "message": "$KIND$ கையொப்பமிடவா?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ ஒரு $KIND$ இவென்டைக் கையொப்பமிட விரும்புகிறது",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "அடையாளத்தைப் பகிரவா?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ உங்கள் பப்ளிக் கீயை அறிய விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "ரிலேக்களைப் பகிரவா?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ உங்கள் ரிலே பட்டியலை அறிய விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "செய்தியை என்க்ரிப்ட் செய்யவா?" },
+  "decryptTitle": { "message": "செய்தியை டீக்ரிப்ட் செய்யவா?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ ஒரு லெகசி செய்தியை என்க்ரிப்ட் செய்ய விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ ஒரு லெகசி செய்தியை டீக்ரிப்ட் செய்ய விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ ஒரு செய்தியை என்க்ரிப்ட் செய்ய விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ ஒரு செய்தியை டீக்ரிப்ட் செய்ய விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "அடையாளங்களைப் பட்டியலிடவா?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ உங்கள் Heartwood சாதனத்தில் உள்ள அடையாளங்களைப் பட்டியலிட விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "அடையாளத்தைத் தருவிக்கவா?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ உங்கள் Heartwood சாதனத்தில் புதிய அடையாளத்தைத் தருவிக்க விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "அடையாளத்தை மாற்றவா?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ உங்கள் செயலில் உள்ள கையொப்ப அடையாளத்தை மாற்ற விரும்புகிறது",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "கோரிக்கைக்கு ஒப்புதல் அளிக்கவா?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ $METHOD$-ஐ அழைக்க விரும்புகிறது",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "முன்மொழியப்பட்ட சுயவிவரம்" },
+  "deny": { "message": "மறு" },
+  "allowOnce": { "message": "ஒருமுறை அனுமதி" },
+  "trustSite": { "message": "தளத்தை நம்பு" }
+}

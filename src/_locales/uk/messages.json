@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Віддалене підписання Nostr через NIP-46. Ключі ніколи не потрапляють у браузер. Працює з будь-яким bunker; Heartwood додає похідні ідентичності." },
+
+  "addSigner": { "message": "Додати підписувач" },
+  "setupIntro": { "message": "Введіть адресу підписувача або мосту, або вставте bunker URI." },
+  "connect": { "message": "Підключити" },
+  "orPairByQr": { "message": "або створіть пару через QR" },
+  "pairByQrBtn": { "message": "Створити пару через QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Релеї для створення пари" },
+  "generateQr": { "message": "Згенерувати QR" },
+  "copyUri": { "message": "Копіювати URI" },
+  "cancel": { "message": "Скасувати" },
+  "scanWithSigner": { "message": "Відскануйте своїм підписувачем або вставте URI в нього." },
+  "waitingEllipsis": { "message": "Очікування..." },
+  "couldNotStartPairing": { "message": "Не вдалося почати створення пари." },
+  "pairingExpired": { "message": "Час створення пари вичерпано. Згенеруйте новий QR." },
+  "connectedStatus": { "message": "Підключено." },
+  "pairingFailedDot": { "message": "Не вдалося створити пару." },
+
+  "addAnotherSigner": { "message": "Додати ще один підписувач..." },
+  "add": { "message": "Додати" },
+  "showAddSigner": { "message": "+ Додати підписувач" },
+  "remove": { "message": "Видалити" },
+  "removeSignerConfirm": { "message": "Видалити цей підписувач?" },
+  "couldNotRemoveInstance": { "message": "Не вдалося видалити екземпляр." },
+  "couldNotSwitchIdentity": { "message": "Не вдалося змінити ідентичність." },
+  "connectingEllipsis": { "message": "підключення..." },
+  "connectingBtn": { "message": "Підключення..." },
+  "enterSignerAddress": { "message": "Введіть адресу підписувача або мосту (напр. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Немає відповіді від фонового процесу — спробуйте перезавантажити розширення" },
+  "pairingFailed": { "message": "Не вдалося створити пару" },
+  "pairingPermissionDenied": { "message": "У дозволі на створення пари відмовлено." },
+
+  "openApprovalPage": { "message": "Відкрити сторінку підтвердження" },
+  "retry": { "message": "Повторити" },
+  "checkAgain": { "message": "Перевірити ще раз" },
+  "connectionLost": { "message": "З'єднання втрачено." },
+  "reconnectingIn": {
+    "message": "Повторне підключення через $SECONDS$ с...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Підтвердьте це з'єднання на своєму підписувачі." },
+  "extensionError": { "message": "Помилка розширення" },
+
+  "activePersona": { "message": "Активна персона" },
+  "defaultName": { "message": "типова" },
+  "unnamed": { "message": "без назви" },
+  "personas": { "message": "Персони" },
+  "purposeNamePlaceholder": { "message": "назва призначення" },
+  "derive": { "message": "Створити" },
+  "personaRequiresHeartwood": { "message": "Для керування персонами потрібен" },
+  "couldNotLoadPersonas": {
+    "message": "Не вдалося завантажити персони: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Не вдалося оновити ідентичності Heartwood." },
+
+  "signingNotTested": { "message": "Підписання не перевірено" },
+  "runSignTestHint": { "message": "Виконайте тест підписання перед використанням сайтів." },
+  "test": { "message": "Тест" },
+  "signingReady": { "message": "Підписання готове" },
+  "lastTested": {
+    "message": "Останній тест: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Підписувач повернув дійсну подію." },
+  "waitingForSigner": { "message": "Очікування підписувача" },
+  "approveOnSigner": { "message": "Підтвердьте запит на своєму пристрої-підписувачі." },
+  "waitingBtn": { "message": "Очікування" },
+  "signingFailed": { "message": "Помилка підписання" },
+  "runSignTestAgain": { "message": "Виконайте тест підписання ще раз." },
+
+  "zeroRelays": { "message": "0 релеїв" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ релеїв підключено",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Політики підписання" },
+  "protectedKinds": { "message": "Захищені типи (запит перед підписанням)" },
+  "kindNumberPlaceholder": { "message": "Номер типу" },
+  "privacyMode": { "message": "Режим приватності" },
+  "privacyModeHint": { "message": "Приховувати Bark від усіх сайтів, окрім тих, що мають правило нижче" },
+  "siteRules": { "message": "Правила для сайтів" },
+  "methods": { "message": "Методи" },
+  "kindOverrides": { "message": "Перевизначення типів" },
+  "noKindRules": { "message": "Правила для типів не налаштовано" },
+  "noSiteRules": { "message": "Правила для сайтів не налаштовано" },
+  "noKindOverrides": { "message": "Немає перевизначень типів для цього сайту" },
+  "clickToChange": { "message": "Натисніть, щоб змінити: дозволити → питати → заборонити" },
+  "resetToDefaults": { "message": "Скинути до типових" },
+  "optionAllow": { "message": "Дозволити" },
+  "optionAsk": { "message": "Питати" },
+  "optionDeny": { "message": "Заборонити" },
+  "actionAllow": { "message": "дозволити" },
+  "actionAsk": { "message": "питати" },
+  "actionDeny": { "message": "заборонити" },
+  "kindProfileMetadata": { "message": "Метадані профілю" },
+  "kindContactList": { "message": "Список контактів" },
+  "kindRelayList": { "message": "Список релеїв" },
+  "kindN": {
+    "message": "Тип $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Від'єднати" },
+
+  "loadingRequest": { "message": "Завантаження запиту..." },
+  "missingRequestId": { "message": "Відсутній ID запиту." },
+  "requestNotFound": { "message": "Запит не знайдено або він застарів." },
+  "approveKindProfile": { "message": "Метадані профілю" },
+  "approveKindContacts": { "message": "Список контактів" },
+  "approveKindRelays": { "message": "Список релеїв" },
+  "signTitle": {
+    "message": "Підписати «$KIND$»?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ хоче підписати подію «$KIND$»",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Поділитися ідентичністю?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ хоче дізнатися ваш публічний ключ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Поділитися релеями?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ хоче дізнатися ваш список релеїв",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Зашифрувати повідомлення?" },
+  "decryptTitle": { "message": "Розшифрувати повідомлення?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ хоче зашифрувати повідомлення в застарілому форматі",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ хоче розшифрувати повідомлення в застарілому форматі",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ хоче зашифрувати повідомлення",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ хоче розшифрувати повідомлення",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Показати список ідентичностей?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ хоче переглянути ідентичності на вашому пристрої Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Створити ідентичність?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ хоче створити нову ідентичність на вашому пристрої Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Змінити ідентичність?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ хоче змінити вашу активну ідентичність для підписання",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Підтвердити запит?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ хоче викликати $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Запропонований профіль" },
+  "deny": { "message": "Відхилити" },
+  "allowOnce": { "message": "Дозволити один раз" },
+  "trustSite": { "message": "Довіряти сайту" }
+}

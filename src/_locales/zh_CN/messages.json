@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "通过 NIP-46 进行远程 Nostr 签名。密钥绝不进入浏览器。适用于任何 bunker;Heartwood 还支持派生身份。" },
+
+  "addSigner": { "message": "添加签名器" },
+  "setupIntro": { "message": "输入签名器或桥接地址,或粘贴 bunker URI。" },
+  "connect": { "message": "连接" },
+  "orPairByQr": { "message": "或通过 QR 码配对" },
+  "pairByQrBtn": { "message": "通过 QR 码配对(nostrconnect)" },
+  "qrRelayTitle": { "message": "用于配对握手的中继" },
+  "generateQr": { "message": "生成 QR 码" },
+  "copyUri": { "message": "复制 URI" },
+  "cancel": { "message": "取消" },
+  "scanWithSigner": { "message": "用你的签名器扫描,或将 URI 粘贴到其中。" },
+  "waitingEllipsis": { "message": "等待中..." },
+  "couldNotStartPairing": { "message": "无法开始配对。" },
+  "pairingExpired": { "message": "配对已过期。请生成新的 QR 码。" },
+  "connectedStatus": { "message": "已连接。" },
+  "pairingFailedDot": { "message": "配对失败。" },
+
+  "addAnotherSigner": { "message": "添加其他签名器..." },
+  "add": { "message": "添加" },
+  "showAddSigner": { "message": "+ 添加签名器" },
+  "remove": { "message": "移除" },
+  "removeSignerConfirm": { "message": "移除此签名器实例?" },
+  "couldNotRemoveInstance": { "message": "无法移除实例。" },
+  "couldNotSwitchIdentity": { "message": "无法切换身份。" },
+  "connectingEllipsis": { "message": "连接中..." },
+  "connectingBtn": { "message": "连接中..." },
+  "enterSignerAddress": { "message": "请输入签名器或桥接地址(例如 heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "后台无响应,请尝试重新加载扩展" },
+  "pairingFailed": { "message": "配对失败" },
+  "pairingPermissionDenied": { "message": "配对权限被拒绝。" },
+
+  "openApprovalPage": { "message": "打开批准页面" },
+  "retry": { "message": "重试" },
+  "checkAgain": { "message": "再次检查" },
+  "connectionLost": { "message": "连接已断开。" },
+  "reconnectingIn": {
+    "message": "$SECONDS$ 秒后重新连接...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "请在签名器上批准此连接。" },
+  "extensionError": { "message": "扩展错误" },
+
+  "activePersona": { "message": "当前角色" },
+  "defaultName": { "message": "默认" },
+  "unnamed": { "message": "未命名" },
+  "personas": { "message": "角色" },
+  "purposeNamePlaceholder": { "message": "用途名称" },
+  "derive": { "message": "派生" },
+  "personaRequiresHeartwood": { "message": "角色管理需要" },
+  "couldNotLoadPersonas": {
+    "message": "无法加载角色:$ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "无法刷新 Heartwood 身份。" },
+
+  "signingNotTested": { "message": "签名未测试" },
+  "runSignTestHint": { "message": "使用网站前请先运行签名测试。" },
+  "test": { "message": "测试" },
+  "signingReady": { "message": "签名就绪" },
+  "lastTested": {
+    "message": "上次测试:$TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "签名器返回了有效事件。" },
+  "waitingForSigner": { "message": "等待签名器" },
+  "approveOnSigner": { "message": "请在签名器设备上批准该请求。" },
+  "waitingBtn": { "message": "等待中" },
+  "signingFailed": { "message": "签名失败" },
+  "runSignTestAgain": { "message": "请再次运行签名测试。" },
+
+  "zeroRelays": { "message": "0 个中继" },
+  "relaysConnected": {
+    "message": "已连接 $UP$/$TOTAL$ 个中继",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "签名策略" },
+  "protectedKinds": { "message": "受保护的 kind(签名前询问)" },
+  "kindNumberPlaceholder": { "message": "kind 编号" },
+  "privacyMode": { "message": "隐私模式" },
+  "privacyModeHint": { "message": "对下方站点规则以外的所有网站隐藏 Bark" },
+  "siteRules": { "message": "站点规则" },
+  "methods": { "message": "方法" },
+  "kindOverrides": { "message": "kind 覆盖" },
+  "noKindRules": { "message": "未配置 kind 规则" },
+  "noSiteRules": { "message": "未配置站点规则" },
+  "noKindOverrides": { "message": "此站点没有 kind 覆盖" },
+  "clickToChange": { "message": "点击切换:允许 → 询问 → 拒绝" },
+  "resetToDefaults": { "message": "恢复默认" },
+  "optionAllow": { "message": "允许" },
+  "optionAsk": { "message": "询问" },
+  "optionDeny": { "message": "拒绝" },
+  "actionAllow": { "message": "允许" },
+  "actionAsk": { "message": "询问" },
+  "actionDeny": { "message": "拒绝" },
+  "kindProfileMetadata": { "message": "个人资料元数据" },
+  "kindContactList": { "message": "联系人列表" },
+  "kindRelayList": { "message": "中继列表" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "断开连接" },
+
+  "loadingRequest": { "message": "正在加载请求..." },
+  "missingRequestId": { "message": "缺少请求 ID。" },
+  "requestNotFound": { "message": "请求不存在或已过期。" },
+  "approveKindProfile": { "message": "个人资料元数据" },
+  "approveKindContacts": { "message": "联系人列表" },
+  "approveKindRelays": { "message": "中继列表" },
+  "signTitle": {
+    "message": "签署 $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ 想要签署一个 $KIND$ 事件",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "共享身份?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ 想要获取你的公钥",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "共享中继?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ 想要获取你的中继列表",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "加密消息?" },
+  "decryptTitle": { "message": "解密消息?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ 想要加密一条旧版消息",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ 想要解密一条旧版消息",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ 想要加密一条消息",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ 想要解密一条消息",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "列出身份?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ 想要列出你 Heartwood 设备上的身份",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "派生身份?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ 想要在你的 Heartwood 设备上派生新身份",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "切换身份?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ 想要切换你当前的签名身份",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "批准请求?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ 想要调用 $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "拟发布的个人资料" },
+  "deny": { "message": "拒绝" },
+  "allowOnce": { "message": "允许一次" },
+  "trustSite": { "message": "信任站点" }
+}

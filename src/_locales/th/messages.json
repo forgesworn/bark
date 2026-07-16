@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "เซ็นชื่อ Nostr ระยะไกลผ่าน NIP-46 คีย์ไม่เข้าเบราว์เซอร์เลย ใช้ได้กับ bunker ทุกตัว ส่วน Heartwood เพิ่มตัวตนย่อยให้ใช้ได้" },
+
+  "addSigner": { "message": "เพิ่ม Signer" },
+  "setupIntro": { "message": "กรอกที่อยู่ของ Signer หรือบริดจ์ หรือวาง bunker URI" },
+  "connect": { "message": "เชื่อมต่อ" },
+  "orPairByQr": { "message": "หรือจับคู่ด้วย QR" },
+  "pairByQrBtn": { "message": "จับคู่ด้วย QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "รีเลย์สำหรับขั้นตอนจับคู่" },
+  "generateQr": { "message": "สร้าง QR" },
+  "copyUri": { "message": "คัดลอก URI" },
+  "cancel": { "message": "ยกเลิก" },
+  "scanWithSigner": { "message": "สแกนด้วย Signer ของคุณ หรือวาง URI ลงในนั้น" },
+  "waitingEllipsis": { "message": "กำลังรอ..." },
+  "couldNotStartPairing": { "message": "ไม่สามารถเริ่มจับคู่ได้" },
+  "pairingExpired": { "message": "การจับคู่หมดอายุ กรุณาสร้าง QR ใหม่" },
+  "connectedStatus": { "message": "เชื่อมต่อแล้ว" },
+  "pairingFailedDot": { "message": "จับคู่ไม่สำเร็จ" },
+
+  "addAnotherSigner": { "message": "เพิ่ม Signer อีก..." },
+  "add": { "message": "เพิ่ม" },
+  "showAddSigner": { "message": "+ เพิ่ม Signer" },
+  "remove": { "message": "ลบ" },
+  "removeSignerConfirm": { "message": "ลบอินสแตนซ์ Signer นี้หรือไม่" },
+  "couldNotRemoveInstance": { "message": "ไม่สามารถลบอินสแตนซ์ได้" },
+  "couldNotSwitchIdentity": { "message": "ไม่สามารถสลับตัวตนได้" },
+  "connectingEllipsis": { "message": "กำลังเชื่อมต่อ..." },
+  "connectingBtn": { "message": "กำลังเชื่อมต่อ..." },
+  "enterSignerAddress": { "message": "กรอกที่อยู่ของ Signer หรือบริดจ์ (เช่น heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "ไม่มีการตอบกลับจากพื้นหลัง ลองโหลดส่วนขยายใหม่" },
+  "pairingFailed": { "message": "จับคู่ไม่สำเร็จ" },
+  "pairingPermissionDenied": { "message": "คำขอจับคู่ถูกปฏิเสธ" },
+
+  "openApprovalPage": { "message": "เปิดหน้าอนุมัติ" },
+  "retry": { "message": "ลองใหม่" },
+  "checkAgain": { "message": "ตรวจสอบอีกครั้ง" },
+  "connectionLost": { "message": "การเชื่อมต่อขาดหาย" },
+  "reconnectingIn": {
+    "message": "จะเชื่อมต่อใหม่ใน $SECONDS$ วินาที...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "อนุมัติการเชื่อมต่อนี้บน Signer ของคุณ" },
+  "extensionError": { "message": "ข้อผิดพลาดของส่วนขยาย" },
+
+  "activePersona": { "message": "เพอร์โซนาที่ใช้งาน" },
+  "defaultName": { "message": "ค่าเริ่มต้น" },
+  "unnamed": { "message": "ไม่มีชื่อ" },
+  "personas": { "message": "เพอร์โซนา" },
+  "purposeNamePlaceholder": { "message": "ชื่อการใช้งาน" },
+  "derive": { "message": "สร้าง" },
+  "personaRequiresHeartwood": { "message": "การจัดการเพอร์โซนาต้องใช้" },
+  "couldNotLoadPersonas": {
+    "message": "โหลดเพอร์โซนาไม่สำเร็จ: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "รีเฟรชตัวตน Heartwood ไม่สำเร็จ" },
+
+  "signingNotTested": { "message": "ยังไม่ได้ทดสอบการเซ็น" },
+  "runSignTestHint": { "message": "ทดสอบการเซ็นก่อนใช้งานกับเว็บไซต์" },
+  "test": { "message": "ทดสอบ" },
+  "signingReady": { "message": "พร้อมเซ็นแล้ว" },
+  "lastTested": {
+    "message": "ทดสอบล่าสุด $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Signer ส่งอีเวนต์ที่ถูกต้องกลับมา" },
+  "waitingForSigner": { "message": "กำลังรอ Signer" },
+  "approveOnSigner": { "message": "อนุมัติคำขอบนอุปกรณ์ Signer ของคุณ" },
+  "waitingBtn": { "message": "กำลังรอ" },
+  "signingFailed": { "message": "เซ็นไม่สำเร็จ" },
+  "runSignTestAgain": { "message": "ทดสอบการเซ็นอีกครั้ง" },
+
+  "zeroRelays": { "message": "รีเลย์ 0 ตัว" },
+  "relaysConnected": {
+    "message": "เชื่อมต่อรีเลย์ $UP$/$TOTAL$ ตัว",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "นโยบายการเซ็น" },
+  "protectedKinds": { "message": "kind ที่ได้รับการป้องกัน (ถามก่อนเซ็น)" },
+  "kindNumberPlaceholder": { "message": "หมายเลข kind" },
+  "privacyMode": { "message": "โหมดความเป็นส่วนตัว" },
+  "privacyModeHint": { "message": "ซ่อน Bark จากทุกเว็บไซต์ ยกเว้นเว็บไซต์ที่มีกฎด้านล่าง" },
+  "siteRules": { "message": "กฎเว็บไซต์" },
+  "methods": { "message": "เมธอด" },
+  "kindOverrides": { "message": "การแทนที่ kind" },
+  "noKindRules": { "message": "ยังไม่มีกฎ kind" },
+  "noSiteRules": { "message": "ยังไม่มีกฎเว็บไซต์" },
+  "noKindOverrides": { "message": "ไม่มีการแทนที่ kind สำหรับเว็บไซต์นี้" },
+  "clickToChange": { "message": "คลิกเพื่อเปลี่ยน: อนุญาต → ถาม → ปฏิเสธ" },
+  "resetToDefaults": { "message": "รีเซ็ตเป็นค่าเริ่มต้น" },
+  "optionAllow": { "message": "อนุญาต" },
+  "optionAsk": { "message": "ถาม" },
+  "optionDeny": { "message": "ปฏิเสธ" },
+  "actionAllow": { "message": "อนุญาต" },
+  "actionAsk": { "message": "ถาม" },
+  "actionDeny": { "message": "ปฏิเสธ" },
+  "kindProfileMetadata": { "message": "ข้อมูลโปรไฟล์" },
+  "kindContactList": { "message": "รายชื่อผู้ติดต่อ" },
+  "kindRelayList": { "message": "รายการรีเลย์" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "ตัดการเชื่อมต่อ" },
+
+  "loadingRequest": { "message": "กำลังโหลดคำขอ..." },
+  "missingRequestId": { "message": "ไม่พบ ID คำขอ" },
+  "requestNotFound": { "message": "ไม่พบคำขอหรือคำขอหมดอายุแล้ว" },
+  "approveKindProfile": { "message": "ข้อมูลโปรไฟล์" },
+  "approveKindContacts": { "message": "รายชื่อผู้ติดต่อ" },
+  "approveKindRelays": { "message": "รายการรีเลย์" },
+  "signTitle": {
+    "message": "เซ็น $KIND$ หรือไม่",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ ต้องการเซ็นอีเวนต์ $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "แชร์ตัวตนหรือไม่" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ ต้องการทราบกุญแจสาธารณะของคุณ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "แชร์รีเลย์หรือไม่" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ ต้องการทราบรายการรีเลย์ของคุณ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "เข้ารหัสข้อความหรือไม่" },
+  "decryptTitle": { "message": "ถอดรหัสข้อความหรือไม่" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ ต้องการเข้ารหัสข้อความแบบเก่า",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ ต้องการถอดรหัสข้อความแบบเก่า",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ ต้องการเข้ารหัสข้อความ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ ต้องการถอดรหัสข้อความ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "แสดงรายการตัวตนหรือไม่" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ ต้องการดูรายการตัวตนบนอุปกรณ์ Heartwood ของคุณ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "สร้างตัวตนใหม่หรือไม่" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ ต้องการสร้างตัวตนใหม่บนอุปกรณ์ Heartwood ของคุณ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "สลับตัวตนหรือไม่" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ ต้องการสลับตัวตนที่ใช้เซ็นอยู่",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "อนุมัติคำขอหรือไม่" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ ต้องการเรียกใช้ $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "โปรไฟล์ที่เสนอ" },
+  "deny": { "message": "ปฏิเสธ" },
+  "allowOnce": { "message": "อนุญาตครั้งเดียว" },
+  "trustSite": { "message": "เชื่อถือเว็บไซต์" }
+}

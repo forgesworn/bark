@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Semnare Nostr de la distanță prin NIP-46. Cheile nu ating niciodată browserul. Funcționează cu orice bunker; Heartwood adaugă identități derivate." },
+
+  "addSigner": { "message": "Adaugă semnatar" },
+  "setupIntro": { "message": "Introdu adresa unui semnatar sau a unei punți, ori lipește un URI bunker." },
+  "connect": { "message": "Conectează" },
+  "orPairByQr": { "message": "sau asociază prin QR" },
+  "pairByQrBtn": { "message": "Asociază prin QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relee pentru asociere" },
+  "generateQr": { "message": "Generează QR" },
+  "copyUri": { "message": "Copiază URI" },
+  "cancel": { "message": "Anulează" },
+  "scanWithSigner": { "message": "Scanează cu semnatarul tău sau lipește URI-ul în el." },
+  "waitingEllipsis": { "message": "Se așteaptă..." },
+  "couldNotStartPairing": { "message": "Nu s-a putut porni asocierea." },
+  "pairingExpired": { "message": "Asocierea a expirat. Generează un QR nou." },
+  "connectedStatus": { "message": "Conectat." },
+  "pairingFailedDot": { "message": "Asocierea a eșuat." },
+
+  "addAnotherSigner": { "message": "Adaugă alt semnatar..." },
+  "add": { "message": "Adaugă" },
+  "showAddSigner": { "message": "+ Adaugă semnatar" },
+  "remove": { "message": "Elimină" },
+  "removeSignerConfirm": { "message": "Elimini această instanță de semnatar?" },
+  "couldNotRemoveInstance": { "message": "Nu s-a putut elimina instanța." },
+  "couldNotSwitchIdentity": { "message": "Nu s-a putut schimba identitatea." },
+  "connectingEllipsis": { "message": "se conectează..." },
+  "connectingBtn": { "message": "Se conectează..." },
+  "enterSignerAddress": { "message": "Introdu adresa unui semnatar sau a unei punți (ex.: heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Niciun răspuns de la procesul din fundal - încearcă să reîncarci extensia" },
+  "pairingFailed": { "message": "Asocierea a eșuat" },
+  "pairingPermissionDenied": { "message": "Permisiunea de asociere a fost refuzată." },
+
+  "openApprovalPage": { "message": "Deschide pagina de aprobare" },
+  "retry": { "message": "Reîncearcă" },
+  "checkAgain": { "message": "Verifică din nou" },
+  "connectionLost": { "message": "Conexiune pierdută." },
+  "reconnectingIn": {
+    "message": "Reconectare în $SECONDS$ s...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Aprobă această conexiune pe semnatarul tău." },
+  "extensionError": { "message": "Eroare de extensie" },
+
+  "activePersona": { "message": "Persona activă" },
+  "defaultName": { "message": "implicită" },
+  "unnamed": { "message": "fără nume" },
+  "personas": { "message": "Personas" },
+  "purposeNamePlaceholder": { "message": "numele scopului" },
+  "derive": { "message": "Derivează" },
+  "personaRequiresHeartwood": { "message": "Gestionarea de personas necesită" },
+  "couldNotLoadPersonas": {
+    "message": "Nu s-au putut încărca personas: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Nu s-au putut reîmprospăta identitățile Heartwood." },
+
+  "signingNotTested": { "message": "Semnarea nu a fost testată" },
+  "runSignTestHint": { "message": "Rulează un test de semnare înainte de a folosi site-uri." },
+  "test": { "message": "Testează" },
+  "signingReady": { "message": "Semnare pregătită" },
+  "lastTested": {
+    "message": "Ultimul test la $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Semnatarul a returnat un eveniment valid." },
+  "waitingForSigner": { "message": "Se așteaptă semnatarul" },
+  "approveOnSigner": { "message": "Aprobă cererea pe dispozitivul semnatar." },
+  "waitingBtn": { "message": "Se așteaptă" },
+  "signingFailed": { "message": "Semnarea a eșuat" },
+  "runSignTestAgain": { "message": "Rulează din nou testul de semnare." },
+
+  "zeroRelays": { "message": "0 relee" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relee conectate",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Politici de semnare" },
+  "protectedKinds": { "message": "Kind-uri protejate (întreabă înainte de a semna)" },
+  "kindNumberPlaceholder": { "message": "Număr kind" },
+  "privacyMode": { "message": "Mod de confidențialitate" },
+  "privacyModeHint": { "message": "Ascunde Bark de toate site-urile, cu excepția celor cu o regulă de site mai jos" },
+  "siteRules": { "message": "Reguli de site" },
+  "methods": { "message": "Metode" },
+  "kindOverrides": { "message": "Excepții de kind" },
+  "noKindRules": { "message": "Nicio regulă de kind configurată" },
+  "noSiteRules": { "message": "Nicio regulă de site configurată" },
+  "noKindOverrides": { "message": "Nicio excepție de kind pentru acest site" },
+  "clickToChange": { "message": "Clic pentru a schimba: permite → întreabă → refuză" },
+  "resetToDefaults": { "message": "Restabilește valorile implicite" },
+  "optionAllow": { "message": "Permite" },
+  "optionAsk": { "message": "Întreabă" },
+  "optionDeny": { "message": "Refuză" },
+  "actionAllow": { "message": "permite" },
+  "actionAsk": { "message": "întreabă" },
+  "actionDeny": { "message": "refuză" },
+  "kindProfileMetadata": { "message": "Metadate de profil" },
+  "kindContactList": { "message": "Listă de contacte" },
+  "kindRelayList": { "message": "Listă de relee" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Deconectează" },
+
+  "loadingRequest": { "message": "Se încarcă cererea..." },
+  "missingRequestId": { "message": "Lipsește ID-ul cererii." },
+  "requestNotFound": { "message": "Cererea nu a fost găsită sau a expirat." },
+  "approveKindProfile": { "message": "Metadate de profil" },
+  "approveKindContacts": { "message": "Listă de contacte" },
+  "approveKindRelays": { "message": "Listă de relee" },
+  "signTitle": {
+    "message": "Semnezi $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ vrea să semneze un eveniment $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Partajezi identitatea?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ vrea să îți afle cheia publică",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Partajezi releele?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ vrea să îți afle lista de relee",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Criptezi mesajul?" },
+  "decryptTitle": { "message": "Decriptezi mesajul?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ vrea să cripteze un mesaj (format vechi)",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ vrea să decripteze un mesaj (format vechi)",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ vrea să cripteze un mesaj",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ vrea să decripteze un mesaj",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Listezi identitățile?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ vrea să listeze identitățile de pe dispozitivul tău Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Derivezi o identitate?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ vrea să deriveze o identitate nouă pe dispozitivul tău Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Schimbi identitatea?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ vrea să îți schimbe identitatea de semnare activă",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Aprobi cererea?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ vrea să apeleze $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Profil propus" },
+  "deny": { "message": "Refuză" },
+  "allowOnce": { "message": "Permite o dată" },
+  "trustSite": { "message": "Acordă încredere site-ului" }
+}

@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "በ NIP-46 በኩል የርቀት Nostr መፈረም። ቁልፎች መቼም አሳሹን አይነኩም። ከማንኛውም bunker ጋር ይሠራል፤ Heartwood የተመነጩ ማንነቶችን ይጨምራል።" },
+
+  "addSigner": { "message": "ፈራሚ ጨምር" },
+  "setupIntro": { "message": "የፈራሚ ወይም የድልድይ አድራሻ ያስገቡ፣ ወይም bunker URI ይለጥፉ።" },
+  "connect": { "message": "አገናኝ" },
+  "orPairByQr": { "message": "ወይም በ QR ያጣምሩ" },
+  "pairByQrBtn": { "message": "በ QR ያጣምሩ (nostrconnect)" },
+  "qrRelayTitle": { "message": "ለማጣመር የሚያገለግሉ relay(ዎች)" },
+  "generateQr": { "message": "QR ፍጠር" },
+  "copyUri": { "message": "URI ቅዳ" },
+  "cancel": { "message": "ይቅር" },
+  "scanWithSigner": { "message": "በፈራሚዎ ይቃኙ፣ ወይም URI-ውን ወደ እሱ ይለጥፉ።" },
+  "waitingEllipsis": { "message": "በመጠበቅ ላይ..." },
+  "couldNotStartPairing": { "message": "ማጣመር መጀመር አልተቻለም።" },
+  "pairingExpired": { "message": "ማጣመሩ ጊዜው አልፎበታል። አዲስ QR ይፍጠሩ።" },
+  "connectedStatus": { "message": "ተገናኝቷል።" },
+  "pairingFailedDot": { "message": "ማጣመር አልተሳካም።" },
+
+  "addAnotherSigner": { "message": "ሌላ ፈራሚ ጨምር..." },
+  "add": { "message": "ጨምር" },
+  "showAddSigner": { "message": "+ ፈራሚ ጨምር" },
+  "remove": { "message": "አስወግድ" },
+  "removeSignerConfirm": { "message": "ይህ ፈራሚ ይወገድ?" },
+  "couldNotRemoveInstance": { "message": "ማስወገድ አልተቻለም።" },
+  "couldNotSwitchIdentity": { "message": "ማንነት መቀየር አልተቻለም።" },
+  "connectingEllipsis": { "message": "በመገናኘት ላይ..." },
+  "connectingBtn": { "message": "በመገናኘት ላይ..." },
+  "enterSignerAddress": { "message": "የፈራሚ ወይም የድልድይ አድራሻ ያስገቡ (ለምሳሌ heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "ከበስተጀርባ ምላሽ የለም - ቅጥያውን እንደገና ይጫኑ" },
+  "pairingFailed": { "message": "ማጣመር አልተሳካም" },
+  "pairingPermissionDenied": { "message": "የማጣመር ፈቃድ ተከልክሏል።" },
+
+  "openApprovalPage": { "message": "የማጽደቂያ ገጽ ክፈት" },
+  "retry": { "message": "እንደገና ሞክር" },
+  "checkAgain": { "message": "እንደገና አረጋግጥ" },
+  "connectionLost": { "message": "ግንኙነት ተቋርጧል።" },
+  "reconnectingIn": {
+    "message": "በ$SECONDS$ ሰከንድ ውስጥ እንደገና በመገናኘት ላይ...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "ይህን ግንኙነት በፈራሚዎ ላይ ያጽድቁ።" },
+  "extensionError": { "message": "የቅጥያ ስህተት" },
+
+  "activePersona": { "message": "ንቁ ፐርሶና" },
+  "defaultName": { "message": "ነባሪ" },
+  "unnamed": { "message": "ስም የሌለው" },
+  "personas": { "message": "ፐርሶናዎች" },
+  "purposeNamePlaceholder": { "message": "የዓላማ ስም" },
+  "derive": { "message": "አመንጭ" },
+  "personaRequiresHeartwood": { "message": "የፐርሶና አስተዳደር የሚፈልገው" },
+  "couldNotLoadPersonas": {
+    "message": "ፐርሶናዎችን መጫን አልተቻለም፦ $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "የ Heartwood ማንነቶችን ማደስ አልተቻለም።" },
+
+  "signingNotTested": { "message": "መፈረም አልተሞከረም" },
+  "runSignTestHint": { "message": "ጣቢያዎችን ከመጠቀምዎ በፊት የፊርማ ሙከራ ያካሂዱ።" },
+  "test": { "message": "ሞክር" },
+  "signingReady": { "message": "መፈረም ዝግጁ ነው" },
+  "lastTested": {
+    "message": "መጨረሻ የተሞከረው $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "ፈራሚው ትክክለኛ ክስተት መልሷል።" },
+  "waitingForSigner": { "message": "ፈራሚን በመጠበቅ ላይ" },
+  "approveOnSigner": { "message": "ጥያቄውን በፈራሚ መሣሪያዎ ላይ ያጽድቁ።" },
+  "waitingBtn": { "message": "በመጠበቅ ላይ" },
+  "signingFailed": { "message": "መፈረም አልተሳካም" },
+  "runSignTestAgain": { "message": "የፊርማ ሙከራውን እንደገና ያካሂዱ።" },
+
+  "zeroRelays": { "message": "0 relay" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relay ተገናኝተዋል",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "የመፈረም ፖሊሲዎች" },
+  "protectedKinds": { "message": "የተጠበቁ ዓይነቶች (ከመፈረም በፊት ጠይቅ)" },
+  "kindNumberPlaceholder": { "message": "የዓይነት ቁጥር" },
+  "privacyMode": { "message": "የግላዊነት ሁነታ" },
+  "privacyModeHint": { "message": "Bark-ን ከታች የጣቢያ ደንብ ካላቸው በስተቀር ከሁሉም ጣቢያዎች ደብቅ" },
+  "siteRules": { "message": "የጣቢያ ደንቦች" },
+  "methods": { "message": "ዘዴዎች" },
+  "kindOverrides": { "message": "የዓይነት ልዩ ደንቦች" },
+  "noKindRules": { "message": "ምንም የዓይነት ደንቦች አልተዋቀሩም" },
+  "noSiteRules": { "message": "ምንም የጣቢያ ደንቦች አልተዋቀሩም" },
+  "noKindOverrides": { "message": "ለዚህ ጣቢያ ምንም የዓይነት ልዩ ደንቦች የሉም" },
+  "clickToChange": { "message": "ለመቀየር ጠቅ ያድርጉ፦ ፍቀድ → ጠይቅ → ከልክል" },
+  "resetToDefaults": { "message": "ወደ ነባሪዎች መልስ" },
+  "optionAllow": { "message": "ፍቀድ" },
+  "optionAsk": { "message": "ጠይቅ" },
+  "optionDeny": { "message": "ከልክል" },
+  "actionAllow": { "message": "ፍቀድ" },
+  "actionAsk": { "message": "ጠይቅ" },
+  "actionDeny": { "message": "ከልክል" },
+  "kindProfileMetadata": { "message": "የመገለጫ መረጃ" },
+  "kindContactList": { "message": "የእውቂያ ዝርዝር" },
+  "kindRelayList": { "message": "የ relay ዝርዝር" },
+  "kindN": {
+    "message": "ዓይነት $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "ግንኙነት አቋርጥ" },
+
+  "loadingRequest": { "message": "ጥያቄ በመጫን ላይ..." },
+  "missingRequestId": { "message": "የጥያቄ መለያ ይጎድላል።" },
+  "requestNotFound": { "message": "ጥያቄው አልተገኘም ወይም ጊዜው አልፎበታል።" },
+  "approveKindProfile": { "message": "የመገለጫ መረጃ" },
+  "approveKindContacts": { "message": "የእውቂያ ዝርዝር" },
+  "approveKindRelays": { "message": "የ relay ዝርዝር" },
+  "signTitle": {
+    "message": "$KIND$ ይፈረም?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ የ$KIND$ ክስተት መፈረም ይፈልጋል",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "ማንነት ይጋራ?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ የይፋ ቁልፍዎን ማወቅ ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Relay-ዎች ይጋሩ?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ የ relay ዝርዝርዎን ማወቅ ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "መልእክት ይመስጠር?" },
+  "decryptTitle": { "message": "የመልእክት ምስጠራ ይፈታ?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ የቆየ መልእክት መመስጠር ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ የቆየ መልእክት ምስጠራ መፍታት ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ መልእክት መመስጠር ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ የመልእክት ምስጠራ መፍታት ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "ማንነቶች ይዘርዘሩ?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ በ Heartwood መሣሪያዎ ላይ ያሉትን ማንነቶች መዘርዘር ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "ማንነት ይመንጭ?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ በ Heartwood መሣሪያዎ ላይ አዲስ ማንነት ማመንጨት ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "ማንነት ይቀየር?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ ንቁ የመፈረሚያ ማንነትዎን መቀየር ይፈልጋል",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "ጥያቄ ይጽደቅ?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ $METHOD$ መጥራት ይፈልጋል",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "የቀረበው መገለጫ" },
+  "deny": { "message": "ከልክል" },
+  "allowOnce": { "message": "አንዴ ፍቀድ" },
+  "trustSite": { "message": "ጣቢያውን እመን" }
+}

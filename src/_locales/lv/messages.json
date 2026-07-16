@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Attālināta Nostr parakstīšana, izmantojot NIP-46. Atslēgas nekad nenonāk pārlūkā. Darbojas ar jebkuru bunker; Heartwood pievieno atvasinātas identitātes." },
+
+  "addSigner": { "message": "Pievienot parakstītāju" },
+  "setupIntro": { "message": "Ievadiet parakstītāja vai tilta adresi vai ielīmējiet bunker URI." },
+  "connect": { "message": "Savienot" },
+  "orPairByQr": { "message": "vai sapārošana ar QR" },
+  "pairByQrBtn": { "message": "Sapārot ar QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Releji sapārošanas procedūrai" },
+  "generateQr": { "message": "Ģenerēt QR" },
+  "copyUri": { "message": "Kopēt URI" },
+  "cancel": { "message": "Atcelt" },
+  "scanWithSigner": { "message": "Skenējiet ar savu parakstītāju vai ielīmējiet tajā URI." },
+  "waitingEllipsis": { "message": "Gaida..." },
+  "couldNotStartPairing": { "message": "Neizdevās sākt sapārošanu." },
+  "pairingExpired": { "message": "Sapārošanas laiks beidzies. Ģenerējiet jaunu QR." },
+  "connectedStatus": { "message": "Savienots." },
+  "pairingFailedDot": { "message": "Sapārošana neizdevās." },
+
+  "addAnotherSigner": { "message": "Pievienot citu parakstītāju..." },
+  "add": { "message": "Pievienot" },
+  "showAddSigner": { "message": "+ Pievienot parakstītāju" },
+  "remove": { "message": "Noņemt" },
+  "removeSignerConfirm": { "message": "Vai noņemt šo parakstītāju?" },
+  "couldNotRemoveInstance": { "message": "Neizdevās noņemt instanci." },
+  "couldNotSwitchIdentity": { "message": "Neizdevās pārslēgt identitāti." },
+  "connectingEllipsis": { "message": "savienojas..." },
+  "connectingBtn": { "message": "Savienojas..." },
+  "enterSignerAddress": { "message": "Ievadiet parakstītāja vai tilta adresi (piem., heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Nav atbildes no fona procesa – mēģiniet pārlādēt paplašinājumu" },
+  "pairingFailed": { "message": "Sapārošana neizdevās" },
+  "pairingPermissionDenied": { "message": "Sapārošanas atļauja noraidīta." },
+
+  "openApprovalPage": { "message": "Atvērt apstiprināšanas lapu" },
+  "retry": { "message": "Mēģināt vēlreiz" },
+  "checkAgain": { "message": "Pārbaudīt vēlreiz" },
+  "connectionLost": { "message": "Savienojums zaudēts." },
+  "reconnectingIn": {
+    "message": "Atkārtota savienošana pēc $SECONDS$ sek...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Apstipriniet šo savienojumu savā parakstītājā." },
+  "extensionError": { "message": "Paplašinājuma kļūda" },
+
+  "activePersona": { "message": "Aktīvā persona" },
+  "defaultName": { "message": "noklusējums" },
+  "unnamed": { "message": "bez nosaukuma" },
+  "personas": { "message": "Personas" },
+  "purposeNamePlaceholder": { "message": "mērķa nosaukums" },
+  "derive": { "message": "Atvasināt" },
+  "personaRequiresHeartwood": { "message": "Personu pārvaldībai nepieciešams" },
+  "couldNotLoadPersonas": {
+    "message": "Neizdevās ielādēt personas: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Neizdevās atsvaidzināt Heartwood identitātes." },
+
+  "signingNotTested": { "message": "Parakstīšana nav pārbaudīta" },
+  "runSignTestHint": { "message": "Pirms vietņu izmantošanas veiciet parakstīšanas testu." },
+  "test": { "message": "Testēt" },
+  "signingReady": { "message": "Parakstīšana gatava" },
+  "lastTested": {
+    "message": "Pēdējais tests: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Parakstītājs atgrieza derīgu notikumu." },
+  "waitingForSigner": { "message": "Gaida parakstītāju" },
+  "approveOnSigner": { "message": "Apstipriniet pieprasījumu savā parakstītāja ierīcē." },
+  "waitingBtn": { "message": "Gaida" },
+  "signingFailed": { "message": "Parakstīšana neizdevās" },
+  "runSignTestAgain": { "message": "Veiciet parakstīšanas testu vēlreiz." },
+
+  "zeroRelays": { "message": "0 releju" },
+  "relaysConnected": {
+    "message": "Savienoti releji: $UP$/$TOTAL$",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Parakstīšanas politikas" },
+  "protectedKinds": { "message": "Aizsargātie tipi (jautāt pirms parakstīšanas)" },
+  "kindNumberPlaceholder": { "message": "Tipa numurs" },
+  "privacyMode": { "message": "Privātuma režīms" },
+  "privacyModeHint": { "message": "Slēpt Bark no visām vietnēm, izņemot tās, kurām zemāk ir noteikums" },
+  "siteRules": { "message": "Vietņu noteikumi" },
+  "methods": { "message": "Metodes" },
+  "kindOverrides": { "message": "Tipu izņēmumi" },
+  "noKindRules": { "message": "Nav konfigurētu tipu noteikumu" },
+  "noSiteRules": { "message": "Nav konfigurētu vietņu noteikumu" },
+  "noKindOverrides": { "message": "Šai vietnei nav tipu izņēmumu" },
+  "clickToChange": { "message": "Noklikšķiniet, lai mainītu: atļaut → jautāt → liegt" },
+  "resetToDefaults": { "message": "Atiestatīt uz noklusējumiem" },
+  "optionAllow": { "message": "Atļaut" },
+  "optionAsk": { "message": "Jautāt" },
+  "optionDeny": { "message": "Liegt" },
+  "actionAllow": { "message": "atļaut" },
+  "actionAsk": { "message": "jautāt" },
+  "actionDeny": { "message": "liegt" },
+  "kindProfileMetadata": { "message": "Profila metadati" },
+  "kindContactList": { "message": "Kontaktu saraksts" },
+  "kindRelayList": { "message": "Releju saraksts" },
+  "kindN": {
+    "message": "Tips $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Atvienot" },
+
+  "loadingRequest": { "message": "Ielādē pieprasījumu..." },
+  "missingRequestId": { "message": "Trūkst pieprasījuma ID." },
+  "requestNotFound": { "message": "Pieprasījums nav atrasts vai ir beidzies." },
+  "approveKindProfile": { "message": "Profila metadati" },
+  "approveKindContacts": { "message": "Kontaktu saraksts" },
+  "approveKindRelays": { "message": "Releju saraksts" },
+  "signTitle": {
+    "message": "Vai parakstīt „$KIND$”?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ vēlas parakstīt notikumu „$KIND$”",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Vai kopīgot identitāti?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ vēlas uzzināt jūsu publisko atslēgu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Vai kopīgot relejus?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ vēlas uzzināt jūsu releju sarakstu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Vai šifrēt ziņu?" },
+  "decryptTitle": { "message": "Vai atšifrēt ziņu?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ vēlas šifrēt vecā formāta ziņu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ vēlas atšifrēt vecā formāta ziņu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ vēlas šifrēt ziņu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ vēlas atšifrēt ziņu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Vai rādīt identitāšu sarakstu?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ vēlas apskatīt identitātes jūsu Heartwood ierīcē",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Vai atvasināt identitāti?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ vēlas jūsu Heartwood ierīcē atvasināt jaunu identitāti",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Vai pārslēgt identitāti?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ vēlas pārslēgt jūsu aktīvo parakstīšanas identitāti",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Vai apstiprināt pieprasījumu?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ vēlas izsaukt $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Piedāvātais profils" },
+  "deny": { "message": "Noraidīt" },
+  "allowOnce": { "message": "Atļaut vienreiz" },
+  "trustSite": { "message": "Uzticēties vietnei" }
+}

@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Távoli Nostr-aláírás NIP-46-on keresztül. A kulcsok soha nem kerülnek a böngészőbe. Bármely bunker használható; a Heartwood származtatott identitásokat ad hozzá." },
+
+  "addSigner": { "message": "Aláíró hozzáadása" },
+  "setupIntro": { "message": "Adjon meg egy aláíró- vagy hídcímet, vagy illesszen be egy bunker URI-t." },
+  "connect": { "message": "Csatlakozás" },
+  "orPairByQr": { "message": "vagy párosítás QR-kóddal" },
+  "pairByQrBtn": { "message": "Párosítás QR-kóddal (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relé(k) a párosítási kézfogáshoz" },
+  "generateQr": { "message": "QR generálása" },
+  "copyUri": { "message": "URI másolása" },
+  "cancel": { "message": "Mégse" },
+  "scanWithSigner": { "message": "Olvassa be a QR-kódot az aláírójával, vagy illessze be oda az URI-t." },
+  "waitingEllipsis": { "message": "Várakozás..." },
+  "couldNotStartPairing": { "message": "A párosítást nem sikerült elindítani." },
+  "pairingExpired": { "message": "A párosítás lejárt. Generáljon új QR-kódot." },
+  "connectedStatus": { "message": "Csatlakozva." },
+  "pairingFailedDot": { "message": "A párosítás nem sikerült." },
+
+  "addAnotherSigner": { "message": "Másik aláíró hozzáadása..." },
+  "add": { "message": "Hozzáadás" },
+  "showAddSigner": { "message": "+ Aláíró hozzáadása" },
+  "remove": { "message": "Eltávolítás" },
+  "removeSignerConfirm": { "message": "Eltávolítja ezt az aláírót?" },
+  "couldNotRemoveInstance": { "message": "A példányt nem sikerült eltávolítani." },
+  "couldNotSwitchIdentity": { "message": "Az identitást nem sikerült átváltani." },
+  "connectingEllipsis": { "message": "csatlakozás..." },
+  "connectingBtn": { "message": "Csatlakozás..." },
+  "enterSignerAddress": { "message": "Adjon meg egy aláíró- vagy hídcímet (pl. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Nincs válasz a háttérfolyamattól – próbálja újratölteni a bővítményt" },
+  "pairingFailed": { "message": "A párosítás nem sikerült" },
+  "pairingPermissionDenied": { "message": "A párosítási engedély megtagadva." },
+
+  "openApprovalPage": { "message": "Jóváhagyási oldal megnyitása" },
+  "retry": { "message": "Újra" },
+  "checkAgain": { "message": "Ellenőrzés újra" },
+  "connectionLost": { "message": "A kapcsolat megszakadt." },
+  "reconnectingIn": {
+    "message": "Újracsatlakozás $SECONDS$ mp múlva...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Hagyja jóvá ezt a kapcsolatot az aláíróján." },
+  "extensionError": { "message": "Bővítményhiba" },
+
+  "activePersona": { "message": "Aktív persona" },
+  "defaultName": { "message": "alapértelmezett" },
+  "unnamed": { "message": "névtelen" },
+  "personas": { "message": "Personák" },
+  "purposeNamePlaceholder": { "message": "cél neve" },
+  "derive": { "message": "Származtatás" },
+  "personaRequiresHeartwood": { "message": "A personák kezeléséhez szükséges:" },
+  "couldNotLoadPersonas": {
+    "message": "Nem sikerült betölteni a personákat: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Nem sikerült frissíteni a Heartwood-identitásokat." },
+
+  "signingNotTested": { "message": "Az aláírás nincs tesztelve" },
+  "runSignTestHint": { "message": "Futtasson aláírástesztet, mielőtt oldalakat használna." },
+  "test": { "message": "Teszt" },
+  "signingReady": { "message": "Aláírás kész" },
+  "lastTested": {
+    "message": "Utoljára tesztelve: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Az aláíró érvényes eseményt adott vissza." },
+  "waitingForSigner": { "message": "Várakozás az aláíróra" },
+  "approveOnSigner": { "message": "Hagyja jóvá a kérést az aláíróeszközén." },
+  "waitingBtn": { "message": "Várakozás" },
+  "signingFailed": { "message": "Az aláírás nem sikerült" },
+  "runSignTestAgain": { "message": "Futtassa újra az aláírástesztet." },
+
+  "zeroRelays": { "message": "0 relé" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relé csatlakozva",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Aláírási szabályok" },
+  "protectedKinds": { "message": "Védett típusok (rákérdezés aláírás előtt)" },
+  "kindNumberPlaceholder": { "message": "Típusszám" },
+  "privacyMode": { "message": "Adatvédelmi mód" },
+  "privacyModeHint": { "message": "A Bark elrejtése minden oldalról, kivéve az alábbi szabállyal rendelkezőket" },
+  "siteRules": { "message": "Oldalszabályok" },
+  "methods": { "message": "Metódusok" },
+  "kindOverrides": { "message": "Típusfelülbírálások" },
+  "noKindRules": { "message": "Nincsenek típusszabályok" },
+  "noSiteRules": { "message": "Nincsenek oldalszabályok" },
+  "noKindOverrides": { "message": "Ehhez az oldalhoz nincs típusfelülbírálás" },
+  "clickToChange": { "message": "Kattintson a váltáshoz: engedélyez → rákérdez → tilt" },
+  "resetToDefaults": { "message": "Alapértelmezések visszaállítása" },
+  "optionAllow": { "message": "Engedélyezés" },
+  "optionAsk": { "message": "Rákérdezés" },
+  "optionDeny": { "message": "Tiltás" },
+  "actionAllow": { "message": "engedélyez" },
+  "actionAsk": { "message": "rákérdez" },
+  "actionDeny": { "message": "tilt" },
+  "kindProfileMetadata": { "message": "Profil-metaadatok" },
+  "kindContactList": { "message": "Kapcsolatlista" },
+  "kindRelayList": { "message": "Relélista" },
+  "kindN": {
+    "message": "Típus $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Kapcsolat bontása" },
+
+  "loadingRequest": { "message": "Kérés betöltése..." },
+  "missingRequestId": { "message": "Hiányzó kérésazonosító." },
+  "requestNotFound": { "message": "A kérés nem található vagy lejárt." },
+  "approveKindProfile": { "message": "Profil-metaadatok" },
+  "approveKindContacts": { "message": "Kapcsolatlista" },
+  "approveKindRelays": { "message": "Relélista" },
+  "signTitle": {
+    "message": "$KIND$ aláírása?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ egy „$KIND$” eseményt szeretne aláírni",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Identitás megosztása?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ tudni szeretné a nyilvános kulcsát",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Relék megosztása?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ tudni szeretné a relélistáját",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Üzenet titkosítása?" },
+  "decryptTitle": { "message": "Üzenet visszafejtése?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ egy régi formátumú üzenetet szeretne titkosítani",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ egy régi formátumú üzenetet szeretne visszafejteni",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ üzenetet szeretne titkosítani",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ üzenetet szeretne visszafejteni",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Identitások listázása?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ listázni szeretné a Heartwood-eszközén lévő identitásokat",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Identitás származtatása?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ új identitást szeretne származtatni a Heartwood-eszközén",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Identitás átváltása?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ át szeretné váltani az aktív aláírási identitását",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Kérés jóváhagyása?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ a(z) $METHOD$ metódust szeretné meghívni",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Javasolt profil" },
+  "deny": { "message": "Elutasítás" },
+  "allowOnce": { "message": "Engedélyezés egyszer" },
+  "trustSite": { "message": "Megbízom az oldalban" }
+}

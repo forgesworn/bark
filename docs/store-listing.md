@@ -32,6 +32,9 @@ request signatures without your private key ever entering the browser.
 - NIP-04 and NIP-44 encryption forwarded to the signer
 - Multiple signer instances with one-click switching; Heartwood devices add
   unlimited derived identities
+- Privacy mode: hide Bark from every site except the ones you whitelist, so
+  pages cannot fingerprint that a Nostr extension is installed
+- Localised into 53 languages
 - Minimal footprint: the only Chrome permission is `storage` — no tabs
   access, no remote code, no analytics, no tracking, no accounts, no wallet
 
@@ -87,11 +90,14 @@ Where Bark leads — make these visible in the listing without naming them:
 - **Hardware**: Heartwood personas, HTTP pairing for local signers, live
   verification against physical hardware; plus a Safari build ready.
 
-Known gaps to close (candidate fast-follows, not launch blockers):
+Both former gaps are closed as of v1.2.0:
 
-- Privacy whitelist mode — Bark currently injects `window.nostr` on every
-  https page, so any site can fingerprint that the extension exists.
-- Localisation — Bunker46 ships 44 locales; Bark is English-only.
+- Privacy mode (popup → Signing Policies) exposes `window.nostr` only to
+  origins with a site rule; hidden origins get silence, not errors, so the
+  extension cannot be fingerprinted. Enforced in the content script and
+  covered by e2e.
+- Bark ships 53 locales (`src/_locales/`), against Bunker46's 44. Missing
+  keys in a locale fall back to English automatically.
 
 ## Assets checklist
 

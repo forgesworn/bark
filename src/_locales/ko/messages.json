@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "NIP-46을 통한 원격 Nostr 서명. 키는 브라우저에 닿지 않습니다. 모든 bunker와 호환되며, Heartwood는 파생 신원을 지원합니다." },
+
+  "addSigner": { "message": "서명자 추가" },
+  "setupIntro": { "message": "서명자 또는 브리지 주소를 입력하거나 bunker URI를 붙여넣으세요." },
+  "connect": { "message": "연결" },
+  "orPairByQr": { "message": "또는 QR로 페어링" },
+  "pairByQrBtn": { "message": "QR로 페어링 (nostrconnect)" },
+  "qrRelayTitle": { "message": "페어링 핸드셰이크용 릴레이" },
+  "generateQr": { "message": "QR 생성" },
+  "copyUri": { "message": "URI 복사" },
+  "cancel": { "message": "취소" },
+  "scanWithSigner": { "message": "서명자로 스캔하거나 URI를 붙여넣으세요." },
+  "waitingEllipsis": { "message": "대기 중..." },
+  "couldNotStartPairing": { "message": "페어링을 시작할 수 없습니다." },
+  "pairingExpired": { "message": "페어링이 만료되었습니다. 새 QR을 생성하세요." },
+  "connectedStatus": { "message": "연결되었습니다." },
+  "pairingFailedDot": { "message": "페어링에 실패했습니다." },
+
+  "addAnotherSigner": { "message": "다른 서명자 추가..." },
+  "add": { "message": "추가" },
+  "showAddSigner": { "message": "+ 서명자 추가" },
+  "remove": { "message": "제거" },
+  "removeSignerConfirm": { "message": "이 서명자 인스턴스를 제거할까요?" },
+  "couldNotRemoveInstance": { "message": "인스턴스를 제거할 수 없습니다." },
+  "couldNotSwitchIdentity": { "message": "신원을 전환할 수 없습니다." },
+  "connectingEllipsis": { "message": "연결 중..." },
+  "connectingBtn": { "message": "연결 중..." },
+  "enterSignerAddress": { "message": "서명자 또는 브리지 주소를 입력하세요 (예: heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "백그라운드 응답이 없습니다. 확장 프로그램을 다시 로드해 보세요" },
+  "pairingFailed": { "message": "페어링 실패" },
+  "pairingPermissionDenied": { "message": "페어링 권한이 거부되었습니다." },
+
+  "openApprovalPage": { "message": "승인 페이지 열기" },
+  "retry": { "message": "다시 시도" },
+  "checkAgain": { "message": "다시 확인" },
+  "connectionLost": { "message": "연결이 끊어졌습니다." },
+  "reconnectingIn": {
+    "message": "$SECONDS$초 후 재연결...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "서명자에서 이 연결을 승인하세요." },
+  "extensionError": { "message": "확장 프로그램 오류" },
+
+  "activePersona": { "message": "활성 페르소나" },
+  "defaultName": { "message": "기본" },
+  "unnamed": { "message": "이름 없음" },
+  "personas": { "message": "페르소나" },
+  "purposeNamePlaceholder": { "message": "용도 이름" },
+  "derive": { "message": "파생" },
+  "personaRequiresHeartwood": { "message": "페르소나 관리에 필요:" },
+  "couldNotLoadPersonas": {
+    "message": "페르소나를 불러올 수 없습니다: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Heartwood 신원을 새로 고칠 수 없습니다." },
+
+  "signingNotTested": { "message": "서명 테스트 안 됨" },
+  "runSignTestHint": { "message": "사이트를 사용하기 전에 서명 테스트를 실행하세요." },
+  "test": { "message": "테스트" },
+  "signingReady": { "message": "서명 준비 완료" },
+  "lastTested": {
+    "message": "마지막 테스트: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "서명자가 유효한 이벤트를 반환했습니다." },
+  "waitingForSigner": { "message": "서명자 대기 중" },
+  "approveOnSigner": { "message": "서명자 기기에서 요청을 승인하세요." },
+  "waitingBtn": { "message": "대기 중" },
+  "signingFailed": { "message": "서명 실패" },
+  "runSignTestAgain": { "message": "서명 테스트를 다시 실행하세요." },
+
+  "zeroRelays": { "message": "릴레이 0개" },
+  "relaysConnected": {
+    "message": "릴레이 $UP$/$TOTAL$개 연결됨",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "서명 정책" },
+  "protectedKinds": { "message": "보호된 kind (서명 전 확인)" },
+  "kindNumberPlaceholder": { "message": "kind 번호" },
+  "privacyMode": { "message": "프라이버시 모드" },
+  "privacyModeHint": { "message": "아래 사이트 규칙이 있는 사이트를 제외한 모든 사이트에서 Bark 숨기기" },
+  "siteRules": { "message": "사이트 규칙" },
+  "methods": { "message": "메서드" },
+  "kindOverrides": { "message": "kind 재정의" },
+  "noKindRules": { "message": "설정된 kind 규칙 없음" },
+  "noSiteRules": { "message": "설정된 사이트 규칙 없음" },
+  "noKindOverrides": { "message": "이 사이트에 대한 kind 재정의 없음" },
+  "clickToChange": { "message": "클릭하여 변경: 허용 → 확인 → 거부" },
+  "resetToDefaults": { "message": "기본값으로 재설정" },
+  "optionAllow": { "message": "허용" },
+  "optionAsk": { "message": "확인" },
+  "optionDeny": { "message": "거부" },
+  "actionAllow": { "message": "허용" },
+  "actionAsk": { "message": "확인" },
+  "actionDeny": { "message": "거부" },
+  "kindProfileMetadata": { "message": "프로필 메타데이터" },
+  "kindContactList": { "message": "연락처 목록" },
+  "kindRelayList": { "message": "릴레이 목록" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "연결 해제" },
+
+  "loadingRequest": { "message": "요청 불러오는 중..." },
+  "missingRequestId": { "message": "요청 ID가 없습니다." },
+  "requestNotFound": { "message": "요청을 찾을 수 없거나 만료되었습니다." },
+  "approveKindProfile": { "message": "프로필 메타데이터" },
+  "approveKindContacts": { "message": "연락처 목록" },
+  "approveKindRelays": { "message": "릴레이 목록" },
+  "signTitle": {
+    "message": "$KIND$에 서명할까요?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$이(가) $KIND$ 이벤트 서명을 요청합니다",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "신원을 공유할까요?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$이(가) 공개 키를 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "릴레이를 공유할까요?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$이(가) 릴레이 목록을 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "메시지를 암호화할까요?" },
+  "decryptTitle": { "message": "메시지를 복호화할까요?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$이(가) 레거시 메시지 암호화를 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$이(가) 레거시 메시지 복호화를 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$이(가) 메시지 암호화를 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$이(가) 메시지 복호화를 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "신원 목록을 조회할까요?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$이(가) Heartwood 기기의 신원 목록 조회를 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "신원을 파생할까요?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$이(가) Heartwood 기기에서 새 신원 파생을 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "신원을 전환할까요?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$이(가) 활성 서명 신원 전환을 요청합니다",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "요청을 승인할까요?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$이(가) $METHOD$ 호출을 요청합니다",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "제안된 프로필" },
+  "deny": { "message": "거부" },
+  "allowOnce": { "message": "한 번만 허용" },
+  "trustSite": { "message": "사이트 신뢰" }
+}

@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "NIP-46 によるリモート Nostr 署名。鍵はブラウザに一切触れません。あらゆる bunker で動作し、Heartwood では派生アイデンティティが使えます。" },
+
+  "addSigner": { "message": "署名者を追加" },
+  "setupIntro": { "message": "署名者またはブリッジのアドレスを入力するか、bunker URI を貼り付けてください。" },
+  "connect": { "message": "接続" },
+  "orPairByQr": { "message": "または QR でペアリング" },
+  "pairByQrBtn": { "message": "QR でペアリング (nostrconnect)" },
+  "qrRelayTitle": { "message": "ペアリングハンドシェイク用のリレー" },
+  "generateQr": { "message": "QR を生成" },
+  "copyUri": { "message": "URI をコピー" },
+  "cancel": { "message": "キャンセル" },
+  "scanWithSigner": { "message": "署名者でスキャンするか、URI を貼り付けてください。" },
+  "waitingEllipsis": { "message": "待機中..." },
+  "couldNotStartPairing": { "message": "ペアリングを開始できませんでした。" },
+  "pairingExpired": { "message": "ペアリングの有効期限が切れました。新しい QR を生成してください。" },
+  "connectedStatus": { "message": "接続しました。" },
+  "pairingFailedDot": { "message": "ペアリングに失敗しました。" },
+
+  "addAnotherSigner": { "message": "別の署名者を追加..." },
+  "add": { "message": "追加" },
+  "showAddSigner": { "message": "+ 署名者を追加" },
+  "remove": { "message": "削除" },
+  "removeSignerConfirm": { "message": "この署名者インスタンスを削除しますか?" },
+  "couldNotRemoveInstance": { "message": "インスタンスを削除できませんでした。" },
+  "couldNotSwitchIdentity": { "message": "アイデンティティを切り替えられませんでした。" },
+  "connectingEllipsis": { "message": "接続中..." },
+  "connectingBtn": { "message": "接続中..." },
+  "enterSignerAddress": { "message": "署名者またはブリッジのアドレスを入力してください(例: heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "バックグラウンドから応答がありません。拡張機能を再読み込みしてください" },
+  "pairingFailed": { "message": "ペアリングに失敗しました" },
+  "pairingPermissionDenied": { "message": "ペアリングの許可が拒否されました。" },
+
+  "openApprovalPage": { "message": "承認ページを開く" },
+  "retry": { "message": "再試行" },
+  "checkAgain": { "message": "再確認" },
+  "connectionLost": { "message": "接続が切断されました。" },
+  "reconnectingIn": {
+    "message": "$SECONDS$秒後に再接続します...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "署名者でこの接続を承認してください。" },
+  "extensionError": { "message": "拡張機能エラー" },
+
+  "activePersona": { "message": "アクティブなペルソナ" },
+  "defaultName": { "message": "デフォルト" },
+  "unnamed": { "message": "名称未設定" },
+  "personas": { "message": "ペルソナ" },
+  "purposeNamePlaceholder": { "message": "用途名" },
+  "derive": { "message": "派生" },
+  "personaRequiresHeartwood": { "message": "ペルソナ管理に必要:" },
+  "couldNotLoadPersonas": {
+    "message": "ペルソナを読み込めませんでした: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Heartwood アイデンティティを更新できませんでした。" },
+
+  "signingNotTested": { "message": "署名は未テスト" },
+  "runSignTestHint": { "message": "サイトを使う前に署名テストを実行してください。" },
+  "test": { "message": "テスト" },
+  "signingReady": { "message": "署名の準備完了" },
+  "lastTested": {
+    "message": "最終テスト: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "署名者から有効なイベントが返されました。" },
+  "waitingForSigner": { "message": "署名者を待機中" },
+  "approveOnSigner": { "message": "署名者デバイスでリクエストを承認してください。" },
+  "waitingBtn": { "message": "待機中" },
+  "signingFailed": { "message": "署名に失敗しました" },
+  "runSignTestAgain": { "message": "署名テストをもう一度実行してください。" },
+
+  "zeroRelays": { "message": "リレー 0 件" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ リレー接続中",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "署名ポリシー" },
+  "protectedKinds": { "message": "保護された kind(署名前に確認)" },
+  "kindNumberPlaceholder": { "message": "kind 番号" },
+  "privacyMode": { "message": "プライバシーモード" },
+  "privacyModeHint": { "message": "以下にサイトルールがあるサイトを除き、すべてのサイトから Bark を隠します" },
+  "siteRules": { "message": "サイトルール" },
+  "methods": { "message": "メソッド" },
+  "kindOverrides": { "message": "kind の上書き" },
+  "noKindRules": { "message": "kind ルールは未設定" },
+  "noSiteRules": { "message": "サイトルールは未設定" },
+  "noKindOverrides": { "message": "このサイトに kind の上書きはありません" },
+  "clickToChange": { "message": "クリックで切り替え: 許可 → 確認 → 拒否" },
+  "resetToDefaults": { "message": "デフォルトに戻す" },
+  "optionAllow": { "message": "許可" },
+  "optionAsk": { "message": "確認" },
+  "optionDeny": { "message": "拒否" },
+  "actionAllow": { "message": "許可" },
+  "actionAsk": { "message": "確認" },
+  "actionDeny": { "message": "拒否" },
+  "kindProfileMetadata": { "message": "プロフィールメタデータ" },
+  "kindContactList": { "message": "コンタクトリスト" },
+  "kindRelayList": { "message": "リレーリスト" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "切断" },
+
+  "loadingRequest": { "message": "リクエストを読み込み中..." },
+  "missingRequestId": { "message": "リクエスト ID がありません。" },
+  "requestNotFound": { "message": "リクエストが見つからないか期限切れです。" },
+  "approveKindProfile": { "message": "プロフィールメタデータ" },
+  "approveKindContacts": { "message": "コンタクトリスト" },
+  "approveKindRelays": { "message": "リレーリスト" },
+  "signTitle": {
+    "message": "$KIND$ に署名しますか?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ が $KIND$ イベントへの署名を求めています",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "アイデンティティを共有しますか?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ が公開鍵の取得を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "リレーを共有しますか?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ がリレーリストの取得を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "メッセージを暗号化しますか?" },
+  "decryptTitle": { "message": "メッセージを復号しますか?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ がレガシーメッセージの暗号化を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ がレガシーメッセージの復号を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ がメッセージの暗号化を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ がメッセージの復号を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "アイデンティティを一覧表示しますか?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ が Heartwood デバイス上のアイデンティティの一覧取得を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "アイデンティティを派生しますか?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ が Heartwood デバイス上での新しいアイデンティティの派生を求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "アイデンティティを切り替えますか?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ がアクティブな署名アイデンティティの切り替えを求めています",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "リクエストを承認しますか?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ が $METHOD$ の呼び出しを求めています",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "提案されたプロフィール" },
+  "deny": { "message": "拒否" },
+  "allowOnce": { "message": "今回のみ許可" },
+  "trustSite": { "message": "サイトを信頼" }
+}

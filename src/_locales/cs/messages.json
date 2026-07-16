@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "Vzdálené podepisování Nostr přes NIP-46. Klíče se nikdy nedostanou do prohlížeče. Funguje s jakýmkoli bunkerem; Heartwood přidává odvozené identity."
+  },
+
+  "addSigner": { "message": "Přidat podepisovatele" },
+  "setupIntro": { "message": "Zadejte adresu podepisovatele nebo mostu, nebo vložte URI bunkeru." },
+  "connect": { "message": "Připojit" },
+  "orPairByQr": { "message": "nebo spárovat přes QR" },
+  "pairByQrBtn": { "message": "Spárovat přes QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relay(e) pro párování" },
+  "generateQr": { "message": "Vygenerovat QR" },
+  "copyUri": { "message": "Kopírovat URI" },
+  "cancel": { "message": "Zrušit" },
+  "scanWithSigner": { "message": "Naskenujte podepisovatelem, nebo do něj vložte URI." },
+  "waitingEllipsis": { "message": "Čekání..." },
+  "couldNotStartPairing": { "message": "Párování se nepodařilo zahájit." },
+  "pairingExpired": { "message": "Platnost párování vypršela. Vygenerujte nový QR." },
+  "connectedStatus": { "message": "Připojeno." },
+  "pairingFailedDot": { "message": "Párování selhalo." },
+
+  "addAnotherSigner": { "message": "Přidat dalšího podepisovatele..." },
+  "add": { "message": "Přidat" },
+  "showAddSigner": { "message": "+ Přidat podepisovatele" },
+  "remove": { "message": "Odebrat" },
+  "removeSignerConfirm": { "message": "Odebrat tuto instanci podepisovatele?" },
+  "couldNotRemoveInstance": { "message": "Instanci se nepodařilo odebrat." },
+  "couldNotSwitchIdentity": { "message": "Identitu se nepodařilo přepnout." },
+  "connectingEllipsis": { "message": "připojování..." },
+  "connectingBtn": { "message": "Připojování..." },
+  "enterSignerAddress": { "message": "Zadejte adresu podepisovatele nebo mostu (např. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Žádná odpověď z pozadí - zkuste rozšíření znovu načíst" },
+  "pairingFailed": { "message": "Párování selhalo" },
+  "pairingPermissionDenied": { "message": "Oprávnění k párování zamítnuto." },
+
+  "openApprovalPage": { "message": "Otevřít schvalovací stránku" },
+  "retry": { "message": "Zkusit znovu" },
+  "checkAgain": { "message": "Zkontrolovat znovu" },
+  "connectionLost": { "message": "Spojení ztraceno." },
+  "reconnectingIn": {
+    "message": "Opětovné připojení za $SECONDS$ s...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Schvalte toto připojení na svém podepisovateli." },
+  "extensionError": { "message": "Chyba rozšíření" },
+
+  "activePersona": { "message": "Aktivní persona" },
+  "defaultName": { "message": "výchozí" },
+  "unnamed": { "message": "nepojmenováno" },
+  "personas": { "message": "Persony" },
+  "purposeNamePlaceholder": { "message": "název účelu" },
+  "derive": { "message": "Odvodit" },
+  "personaRequiresHeartwood": { "message": "Správa person vyžaduje" },
+  "couldNotLoadPersonas": {
+    "message": "Persony se nepodařilo načíst: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Identity Heartwood se nepodařilo obnovit." },
+
+  "signingNotTested": { "message": "Podepisování neotestováno" },
+  "runSignTestHint": { "message": "Před používáním stránek spusťte test podpisu." },
+  "test": { "message": "Otestovat" },
+  "signingReady": { "message": "Podepisování připraveno" },
+  "lastTested": {
+    "message": "Naposledy otestováno $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Podepisovatel vrátil platnou událost." },
+  "waitingForSigner": { "message": "Čekání na podepisovatele" },
+  "approveOnSigner": { "message": "Schvalte požadavek na podepisovacím zařízení." },
+  "waitingBtn": { "message": "Čekání" },
+  "signingFailed": { "message": "Podepisování selhalo" },
+  "runSignTestAgain": { "message": "Spusťte test podpisu znovu." },
+
+  "zeroRelays": { "message": "0 relayů" },
+  "relaysConnected": {
+    "message": "Připojeno $UP$/$TOTAL$ relayů",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Zásady podepisování" },
+  "protectedKinds": { "message": "Chráněné druhy (před podpisem se zeptat)" },
+  "kindNumberPlaceholder": { "message": "Číslo druhu" },
+  "privacyMode": { "message": "Režim soukromí" },
+  "privacyModeHint": { "message": "Skrýt Bark před všemi weby kromě těch s pravidlem níže" },
+  "siteRules": { "message": "Pravidla webů" },
+  "methods": { "message": "Metody" },
+  "kindOverrides": { "message": "Výjimky pro druhy" },
+  "noKindRules": { "message": "Žádná pravidla druhů" },
+  "noSiteRules": { "message": "Žádná pravidla webů" },
+  "noKindOverrides": { "message": "Žádné výjimky druhů pro tento web" },
+  "clickToChange": { "message": "Kliknutím změníte: povolit → zeptat se → zamítnout" },
+  "resetToDefaults": { "message": "Obnovit výchozí" },
+  "optionAllow": { "message": "Povolit" },
+  "optionAsk": { "message": "Zeptat se" },
+  "optionDeny": { "message": "Zamítnout" },
+  "actionAllow": { "message": "povolit" },
+  "actionAsk": { "message": "zeptat se" },
+  "actionDeny": { "message": "zamítnout" },
+  "kindProfileMetadata": { "message": "Metadata profilu" },
+  "kindContactList": { "message": "Seznam kontaktů" },
+  "kindRelayList": { "message": "Seznam relayů" },
+  "kindN": {
+    "message": "Druh $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Odpojit" },
+
+  "loadingRequest": { "message": "Načítání požadavku..." },
+  "missingRequestId": { "message": "Chybí ID požadavku." },
+  "requestNotFound": { "message": "Požadavek nenalezen nebo vypršel." },
+  "approveKindProfile": { "message": "Metadata profilu" },
+  "approveKindContacts": { "message": "Seznam kontaktů" },
+  "approveKindRelays": { "message": "Seznam relayů" },
+  "signTitle": {
+    "message": "Podepsat $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ chce podepsat událost: $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Sdílet identitu?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ chce znát váš veřejný klíč",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Sdílet relaye?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ chce znát váš seznam relayů",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Zašifrovat zprávu?" },
+  "decryptTitle": { "message": "Dešifrovat zprávu?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ chce zašifrovat zprávu ve starém formátu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ chce dešifrovat zprávu ve starém formátu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ chce zašifrovat zprávu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ chce dešifrovat zprávu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Vypsat identity?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ chce vypsat identity na vašem zařízení Heartwood",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Odvodit identitu?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ chce na vašem zařízení Heartwood odvodit novou identitu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Přepnout identitu?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ chce přepnout vaši aktivní podepisovací identitu",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Schválit požadavek?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ chce zavolat $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Navrhovaný profil" },
+  "deny": { "message": "Zamítnout" },
+  "allowOnce": { "message": "Povolit jednou" },
+  "trustSite": { "message": "Důvěřovat webu" }
+}

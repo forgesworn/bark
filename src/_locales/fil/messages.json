@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "Remote na pag-sign sa Nostr sa pamamagitan ng NIP-46. Hindi kailanman dumadaan sa browser ang mga key. Gumagana sa anumang bunker; nagdaragdag ang Heartwood ng mga derived na identity."
+  },
+
+  "addSigner": { "message": "Magdagdag ng Signer" },
+  "setupIntro": { "message": "Maglagay ng address ng signer o bridge, o i-paste ang bunker URI." },
+  "connect": { "message": "Kumonekta" },
+  "orPairByQr": { "message": "o magpares gamit ang QR" },
+  "pairByQrBtn": { "message": "Magpares gamit ang QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Mga relay para sa pairing handshake" },
+  "generateQr": { "message": "Gumawa ng QR" },
+  "copyUri": { "message": "Kopyahin ang URI" },
+  "cancel": { "message": "Kanselahin" },
+  "scanWithSigner": { "message": "I-scan gamit ang iyong signer, o i-paste ang URI sa signer." },
+  "waitingEllipsis": { "message": "Naghihintay..." },
+  "couldNotStartPairing": { "message": "Hindi masimulan ang pagpapares." },
+  "pairingExpired": { "message": "Nag-expire na ang pagpapares. Gumawa ng bagong QR." },
+  "connectedStatus": { "message": "Nakakonekta na." },
+  "pairingFailedDot": { "message": "Nabigo ang pagpapares." },
+
+  "addAnotherSigner": { "message": "Magdagdag ng isa pang signer..." },
+  "add": { "message": "Idagdag" },
+  "showAddSigner": { "message": "+ Magdagdag ng Signer" },
+  "remove": { "message": "Alisin" },
+  "removeSignerConfirm": { "message": "Alisin ang signer instance na ito?" },
+  "couldNotRemoveInstance": { "message": "Hindi maalis ang instance." },
+  "couldNotSwitchIdentity": { "message": "Hindi makapagpalit ng identity." },
+  "connectingEllipsis": { "message": "kumokonekta..." },
+  "connectingBtn": { "message": "Kumokonekta..." },
+  "enterSignerAddress": { "message": "Maglagay ng address ng signer o bridge (hal. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Walang tugon mula sa background - subukang i-reload ang extension" },
+  "pairingFailed": { "message": "Nabigo ang pagpapares" },
+  "pairingPermissionDenied": { "message": "Tinanggihan ang pahintulot sa pagpapares." },
+
+  "openApprovalPage": { "message": "Buksan ang pahina ng pag-apruba" },
+  "retry": { "message": "Subukan muli" },
+  "checkAgain": { "message": "Tingnan muli" },
+  "connectionLost": { "message": "Nawala ang koneksyon." },
+  "reconnectingIn": {
+    "message": "Muling kokonekta sa $SECONDS$s...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Aprubahan ang koneksyong ito sa iyong signer." },
+  "extensionError": { "message": "Error sa extension" },
+
+  "activePersona": { "message": "Aktibong persona" },
+  "defaultName": { "message": "default" },
+  "unnamed": { "message": "walang pangalan" },
+  "personas": { "message": "Mga Persona" },
+  "purposeNamePlaceholder": { "message": "pangalan ng layunin" },
+  "derive": { "message": "I-derive" },
+  "personaRequiresHeartwood": { "message": "Nangangailangan ang pamamahala ng persona ng" },
+  "couldNotLoadPersonas": {
+    "message": "Hindi ma-load ang mga persona: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Hindi ma-refresh ang mga identity ng Heartwood." },
+
+  "signingNotTested": { "message": "Hindi pa na-test ang pag-sign" },
+  "runSignTestHint": { "message": "Magpatakbo ng sign test bago gumamit ng mga site." },
+  "test": { "message": "I-test" },
+  "signingReady": { "message": "Handa na ang pag-sign" },
+  "lastTested": {
+    "message": "Huling na-test noong $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Nagbalik ang signer ng valid na event." },
+  "waitingForSigner": { "message": "Naghihintay sa signer" },
+  "approveOnSigner": { "message": "Aprubahan ang kahilingan sa iyong signer device." },
+  "waitingBtn": { "message": "Naghihintay" },
+  "signingFailed": { "message": "Nabigo ang pag-sign" },
+  "runSignTestAgain": { "message": "Patakbuhin muli ang sign test." },
+
+  "zeroRelays": { "message": "0 relay" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relay ang nakakonekta",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Mga Patakaran sa Pag-sign" },
+  "protectedKinds": { "message": "Mga protektadong kind (magtatanong bago mag-sign)" },
+  "kindNumberPlaceholder": { "message": "Numero ng kind" },
+  "privacyMode": { "message": "Privacy mode" },
+  "privacyModeHint": { "message": "Itago ang Bark sa lahat ng site maliban sa mga may panuntunan sa site sa ibaba" },
+  "siteRules": { "message": "Mga panuntunan sa site" },
+  "methods": { "message": "Mga Method" },
+  "kindOverrides": { "message": "Mga override sa kind" },
+  "noKindRules": { "message": "Walang naka-configure na panuntunan sa kind" },
+  "noSiteRules": { "message": "Walang naka-configure na panuntunan sa site" },
+  "noKindOverrides": { "message": "Walang override sa kind para sa site na ito" },
+  "clickToChange": { "message": "I-click upang baguhin: payagan → tanong → tanggihan" },
+  "resetToDefaults": { "message": "I-reset sa mga default" },
+  "optionAllow": { "message": "Payagan" },
+  "optionAsk": { "message": "Itanong" },
+  "optionDeny": { "message": "Tanggihan" },
+  "actionAllow": { "message": "payagan" },
+  "actionAsk": { "message": "tanong" },
+  "actionDeny": { "message": "tanggihan" },
+  "kindProfileMetadata": { "message": "Metadata ng profile" },
+  "kindContactList": { "message": "Listahan ng contact" },
+  "kindRelayList": { "message": "Listahan ng relay" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Idiskonekta" },
+
+  "loadingRequest": { "message": "Nilo-load ang kahilingan..." },
+  "missingRequestId": { "message": "Walang request ID." },
+  "requestNotFound": { "message": "Hindi nahanap o nag-expire na ang kahilingan." },
+  "approveKindProfile": { "message": "Metadata ng Profile" },
+  "approveKindContacts": { "message": "Listahan ng Contact" },
+  "approveKindRelays": { "message": "Listahan ng Relay" },
+  "signTitle": {
+    "message": "I-sign ang $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "Gusto ng $ORIGIN$ na mag-sign ng $KIND$ na event",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Ibahagi ang Identity?" },
+  "wantsPublicKey": {
+    "message": "Gusto ng $ORIGIN$ na malaman ang iyong public key",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Ibahagi ang Mga Relay?" },
+  "wantsRelayList": {
+    "message": "Gusto ng $ORIGIN$ na malaman ang iyong listahan ng relay",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "I-encrypt ang Mensahe?" },
+  "decryptTitle": { "message": "I-decrypt ang Mensahe?" },
+  "wantsEncryptLegacy": {
+    "message": "Gusto ng $ORIGIN$ na mag-encrypt ng legacy na mensahe",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "Gusto ng $ORIGIN$ na mag-decrypt ng legacy na mensahe",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "Gusto ng $ORIGIN$ na mag-encrypt ng mensahe",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "Gusto ng $ORIGIN$ na mag-decrypt ng mensahe",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Ilista ang Mga Identity?" },
+  "wantsListIdentities": {
+    "message": "Gusto ng $ORIGIN$ na ilista ang mga identity sa iyong Heartwood device",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Mag-derive ng Identity?" },
+  "wantsDeriveIdentity": {
+    "message": "Gusto ng $ORIGIN$ na mag-derive ng bagong identity sa iyong Heartwood device",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Magpalit ng Identity?" },
+  "wantsSwitchIdentity": {
+    "message": "Gusto ng $ORIGIN$ na palitan ang iyong aktibong signing identity",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Aprubahan ang Kahilingan?" },
+  "wantsCallMethod": {
+    "message": "Gusto ng $ORIGIN$ na tawagin ang $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Iminungkahing profile" },
+  "deny": { "message": "Tanggihan" },
+  "allowOnce": { "message": "Payagan Minsan" },
+  "trustSite": { "message": "Pagkatiwalaan ang Site" }
+}

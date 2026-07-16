@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Nuotolinis Nostr pasirašymas per NIP-46. Raktai niekada nepatenka į naršyklę. Veikia su bet kuriuo bunker; Heartwood prideda išvestines tapatybes." },
+
+  "addSigner": { "message": "Pridėti pasirašytoją" },
+  "setupIntro": { "message": "Įveskite pasirašytojo ar tilto adresą arba įklijuokite bunker URI." },
+  "connect": { "message": "Prisijungti" },
+  "orPairByQr": { "message": "arba susiejimas per QR" },
+  "pairByQrBtn": { "message": "Susieti per QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relė(s) susiejimo procedūrai" },
+  "generateQr": { "message": "Generuoti QR" },
+  "copyUri": { "message": "Kopijuoti URI" },
+  "cancel": { "message": "Atšaukti" },
+  "scanWithSigner": { "message": "Nuskaitykite savo pasirašytoju arba įklijuokite URI į jį." },
+  "waitingEllipsis": { "message": "Laukiama..." },
+  "couldNotStartPairing": { "message": "Nepavyko pradėti susiejimo." },
+  "pairingExpired": { "message": "Susiejimo laikas baigėsi. Sugeneruokite naują QR." },
+  "connectedStatus": { "message": "Prisijungta." },
+  "pairingFailedDot": { "message": "Susieti nepavyko." },
+
+  "addAnotherSigner": { "message": "Pridėti kitą pasirašytoją..." },
+  "add": { "message": "Pridėti" },
+  "showAddSigner": { "message": "+ Pridėti pasirašytoją" },
+  "remove": { "message": "Pašalinti" },
+  "removeSignerConfirm": { "message": "Pašalinti šį pasirašytoją?" },
+  "couldNotRemoveInstance": { "message": "Nepavyko pašalinti egzemplioriaus." },
+  "couldNotSwitchIdentity": { "message": "Nepavyko perjungti tapatybės." },
+  "connectingEllipsis": { "message": "jungiamasi..." },
+  "connectingBtn": { "message": "Jungiamasi..." },
+  "enterSignerAddress": { "message": "Įveskite pasirašytojo ar tilto adresą (pvz., heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Nėra atsakymo iš foninio proceso – pabandykite iš naujo įkelti plėtinį" },
+  "pairingFailed": { "message": "Susieti nepavyko" },
+  "pairingPermissionDenied": { "message": "Susiejimo leidimas atmestas." },
+
+  "openApprovalPage": { "message": "Atverti patvirtinimo puslapį" },
+  "retry": { "message": "Bandyti dar kartą" },
+  "checkAgain": { "message": "Tikrinti dar kartą" },
+  "connectionLost": { "message": "Ryšys nutrūko." },
+  "reconnectingIn": {
+    "message": "Jungiamasi iš naujo po $SECONDS$ sek...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Patvirtinkite šį prisijungimą savo pasirašytojo įrenginyje." },
+  "extensionError": { "message": "Plėtinio klaida" },
+
+  "activePersona": { "message": "Aktyvi persona" },
+  "defaultName": { "message": "numatytoji" },
+  "unnamed": { "message": "be pavadinimo" },
+  "personas": { "message": "Personos" },
+  "purposeNamePlaceholder": { "message": "paskirties pavadinimas" },
+  "derive": { "message": "Išvesti" },
+  "personaRequiresHeartwood": { "message": "Personų valdymui reikalingas" },
+  "couldNotLoadPersonas": {
+    "message": "Nepavyko įkelti personų: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Nepavyko atnaujinti Heartwood tapatybių." },
+
+  "signingNotTested": { "message": "Pasirašymas neišbandytas" },
+  "runSignTestHint": { "message": "Prieš naudodami svetaines atlikite pasirašymo testą." },
+  "test": { "message": "Testuoti" },
+  "signingReady": { "message": "Pasirašymas paruoštas" },
+  "lastTested": {
+    "message": "Paskutinis testas: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Pasirašytojas grąžino galiojantį įvykį." },
+  "waitingForSigner": { "message": "Laukiama pasirašytojo" },
+  "approveOnSigner": { "message": "Patvirtinkite užklausą savo pasirašymo įrenginyje." },
+  "waitingBtn": { "message": "Laukiama" },
+  "signingFailed": { "message": "Pasirašyti nepavyko" },
+  "runSignTestAgain": { "message": "Atlikite pasirašymo testą dar kartą." },
+
+  "zeroRelays": { "message": "0 relių" },
+  "relaysConnected": {
+    "message": "Prisijungta relių: $UP$/$TOTAL$",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Pasirašymo politikos" },
+  "protectedKinds": { "message": "Apsaugoti tipai (klausti prieš pasirašant)" },
+  "kindNumberPlaceholder": { "message": "Tipo numeris" },
+  "privacyMode": { "message": "Privatumo režimas" },
+  "privacyModeHint": { "message": "Slėpti Bark nuo visų svetainių, išskyrus tas, kurios turi taisyklę žemiau" },
+  "siteRules": { "message": "Svetainių taisyklės" },
+  "methods": { "message": "Metodai" },
+  "kindOverrides": { "message": "Tipų išimtys" },
+  "noKindRules": { "message": "Tipų taisyklių nenustatyta" },
+  "noSiteRules": { "message": "Svetainių taisyklių nenustatyta" },
+  "noKindOverrides": { "message": "Šiai svetainei tipų išimčių nėra" },
+  "clickToChange": { "message": "Spustelėkite, kad pakeistumėte: leisti → klausti → drausti" },
+  "resetToDefaults": { "message": "Atkurti numatytąsias" },
+  "optionAllow": { "message": "Leisti" },
+  "optionAsk": { "message": "Klausti" },
+  "optionDeny": { "message": "Drausti" },
+  "actionAllow": { "message": "leisti" },
+  "actionAsk": { "message": "klausti" },
+  "actionDeny": { "message": "drausti" },
+  "kindProfileMetadata": { "message": "Profilio metaduomenys" },
+  "kindContactList": { "message": "Kontaktų sąrašas" },
+  "kindRelayList": { "message": "Relių sąrašas" },
+  "kindN": {
+    "message": "Tipas $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Atsijungti" },
+
+  "loadingRequest": { "message": "Įkeliama užklausa..." },
+  "missingRequestId": { "message": "Trūksta užklausos ID." },
+  "requestNotFound": { "message": "Užklausa nerasta arba nebegalioja." },
+  "approveKindProfile": { "message": "Profilio metaduomenys" },
+  "approveKindContacts": { "message": "Kontaktų sąrašas" },
+  "approveKindRelays": { "message": "Relių sąrašas" },
+  "signTitle": {
+    "message": "Pasirašyti „$KIND$“?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ nori pasirašyti įvykį „$KIND$“",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Bendrinti tapatybę?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ nori sužinoti jūsų viešąjį raktą",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Bendrinti reles?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ nori sužinoti jūsų relių sąrašą",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Užšifruoti žinutę?" },
+  "decryptTitle": { "message": "Iššifruoti žinutę?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ nori užšifruoti seno formato žinutę",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ nori iššifruoti seno formato žinutę",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ nori užšifruoti žinutę",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ nori iššifruoti žinutę",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Rodyti tapatybių sąrašą?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ nori peržiūrėti jūsų Heartwood įrenginio tapatybes",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Išvesti tapatybę?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ nori jūsų Heartwood įrenginyje išvesti naują tapatybę",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Perjungti tapatybę?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ nori perjungti jūsų aktyvią pasirašymo tapatybę",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Patvirtinti užklausą?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ nori iškviesti $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Siūlomas profilis" },
+  "deny": { "message": "Atmesti" },
+  "allowOnce": { "message": "Leisti kartą" },
+  "trustSite": { "message": "Pasitikėti svetaine" }
+}

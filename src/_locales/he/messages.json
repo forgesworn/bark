@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "חתימת Nostr מרחוק באמצעות NIP-46. המפתחות לעולם אינם נוגעים בדפדפן. עובד עם כל bunker; Heartwood מוסיף זהויות נגזרות." },
+
+  "addSigner": { "message": "הוספת חותם" },
+  "setupIntro": { "message": "הזן כתובת חותם או גשר, או הדבק bunker URI." },
+  "connect": { "message": "התחבר" },
+  "orPairByQr": { "message": "או צימוד באמצעות QR" },
+  "pairByQrBtn": { "message": "צימוד באמצעות QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "ממסרים ללחיצת היד של הצימוד" },
+  "generateQr": { "message": "יצירת QR" },
+  "copyUri": { "message": "העתקת URI" },
+  "cancel": { "message": "ביטול" },
+  "scanWithSigner": { "message": "סרוק עם החותם שלך, או הדבק בו את ה-URI." },
+  "waitingEllipsis": { "message": "ממתין..." },
+  "couldNotStartPairing": { "message": "לא ניתן להתחיל את הצימוד." },
+  "pairingExpired": { "message": "פג תוקף הצימוד. צור QR חדש." },
+  "connectedStatus": { "message": "מחובר." },
+  "pairingFailedDot": { "message": "הצימוד נכשל." },
+
+  "addAnotherSigner": { "message": "הוספת חותם נוסף..." },
+  "add": { "message": "הוספה" },
+  "showAddSigner": { "message": "+ הוספת חותם" },
+  "remove": { "message": "הסרה" },
+  "removeSignerConfirm": { "message": "להסיר את מופע החותם הזה?" },
+  "couldNotRemoveInstance": { "message": "לא ניתן להסיר את המופע." },
+  "couldNotSwitchIdentity": { "message": "לא ניתן להחליף זהות." },
+  "connectingEllipsis": { "message": "מתחבר..." },
+  "connectingBtn": { "message": "מתחבר..." },
+  "enterSignerAddress": { "message": "הזן כתובת חותם או גשר (לדוגמה heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "אין תגובה מהרקע - נסה לטעון מחדש את התוסף" },
+  "pairingFailed": { "message": "הצימוד נכשל" },
+  "pairingPermissionDenied": { "message": "הרשאת הצימוד נדחתה." },
+
+  "openApprovalPage": { "message": "פתיחת דף האישור" },
+  "retry": { "message": "נסה שוב" },
+  "checkAgain": { "message": "בדוק שוב" },
+  "connectionLost": { "message": "החיבור אבד." },
+  "reconnectingIn": {
+    "message": "מתחבר מחדש בעוד $SECONDS$ שניות...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "אשר את החיבור הזה בחותם שלך." },
+  "extensionError": { "message": "שגיאת תוסף" },
+
+  "activePersona": { "message": "פרסונה פעילה" },
+  "defaultName": { "message": "ברירת מחדל" },
+  "unnamed": { "message": "ללא שם" },
+  "personas": { "message": "פרסונות" },
+  "purposeNamePlaceholder": { "message": "שם מטרה" },
+  "derive": { "message": "גזור" },
+  "personaRequiresHeartwood": { "message": "ניהול פרסונות דורש" },
+  "couldNotLoadPersonas": {
+    "message": "לא ניתן לטעון פרסונות: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "לא ניתן לרענן את זהויות Heartwood." },
+
+  "signingNotTested": { "message": "החתימה לא נבדקה" },
+  "runSignTestHint": { "message": "הרץ בדיקת חתימה לפני שימוש באתרים." },
+  "test": { "message": "בדיקה" },
+  "signingReady": { "message": "החתימה מוכנה" },
+  "lastTested": {
+    "message": "נבדק לאחרונה $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "החותם החזיר אירוע תקין." },
+  "waitingForSigner": { "message": "ממתין לחותם" },
+  "approveOnSigner": { "message": "אשר את הבקשה במכשיר החותם שלך." },
+  "waitingBtn": { "message": "ממתין" },
+  "signingFailed": { "message": "החתימה נכשלה" },
+  "runSignTestAgain": { "message": "הרץ שוב את בדיקת החתימה." },
+
+  "zeroRelays": { "message": "0 ממסרים" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ ממסרים מחוברים",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "מדיניות חתימה" },
+  "protectedKinds": { "message": "סוגים מוגנים (שאל לפני חתימה)" },
+  "kindNumberPlaceholder": { "message": "מספר סוג" },
+  "privacyMode": { "message": "מצב פרטיות" },
+  "privacyModeHint": { "message": "הסתר את Bark מכל אתר מלבד אתרים עם כלל אתר למטה" },
+  "siteRules": { "message": "כללי אתרים" },
+  "methods": { "message": "מתודות" },
+  "kindOverrides": { "message": "עקיפות סוג" },
+  "noKindRules": { "message": "לא הוגדרו כללי סוג" },
+  "noSiteRules": { "message": "לא הוגדרו כללי אתרים" },
+  "noKindOverrides": { "message": "אין עקיפות סוג לאתר זה" },
+  "clickToChange": { "message": "לחץ לשינוי: אפשר ← שאל ← דחה" },
+  "resetToDefaults": { "message": "איפוס לברירות המחדל" },
+  "optionAllow": { "message": "אפשר" },
+  "optionAsk": { "message": "שאל" },
+  "optionDeny": { "message": "דחה" },
+  "actionAllow": { "message": "אפשר" },
+  "actionAsk": { "message": "שאל" },
+  "actionDeny": { "message": "דחה" },
+  "kindProfileMetadata": { "message": "פרטי פרופיל" },
+  "kindContactList": { "message": "רשימת אנשי קשר" },
+  "kindRelayList": { "message": "רשימת ממסרים" },
+  "kindN": {
+    "message": "סוג $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "התנתק" },
+
+  "loadingRequest": { "message": "טוען בקשה..." },
+  "missingRequestId": { "message": "מזהה הבקשה חסר." },
+  "requestNotFound": { "message": "הבקשה לא נמצאה או שפג תוקפה." },
+  "approveKindProfile": { "message": "פרטי פרופיל" },
+  "approveKindContacts": { "message": "רשימת אנשי קשר" },
+  "approveKindRelays": { "message": "רשימת ממסרים" },
+  "signTitle": {
+    "message": "לחתום על $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ מבקש לחתום על אירוע $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "לשתף זהות?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ מבקש לדעת את המפתח הציבורי שלך",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "לשתף ממסרים?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ מבקש לדעת את רשימת הממסרים שלך",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "להצפין הודעה?" },
+  "decryptTitle": { "message": "לפענח הודעה?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ מבקש להצפין הודעה בפורמט ישן",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ מבקש לפענח הודעה בפורמט ישן",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ מבקש להצפין הודעה",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ מבקש לפענח הודעה",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "להציג זהויות?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ מבקש להציג את הזהויות במכשיר ה-Heartwood שלך",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "לגזור זהות?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ מבקש לגזור זהות חדשה במכשיר ה-Heartwood שלך",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "להחליף זהות?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ מבקש להחליף את זהות החתימה הפעילה שלך",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "לאשר את הבקשה?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ מבקש לקרוא ל-$METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "פרופיל מוצע" },
+  "deny": { "message": "דחה" },
+  "allowOnce": { "message": "אפשר פעם אחת" },
+  "trustSite": { "message": "בטח באתר" }
+}

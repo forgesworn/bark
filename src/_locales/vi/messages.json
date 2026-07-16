@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Ký Nostr từ xa qua NIP-46. Khóa không bao giờ chạm vào trình duyệt. Hoạt động với mọi bunker; Heartwood bổ sung danh tính phái sinh." },
+
+  "addSigner": { "message": "Thêm trình ký" },
+  "setupIntro": { "message": "Nhập địa chỉ trình ký hoặc cầu nối, hoặc dán bunker URI." },
+  "connect": { "message": "Kết nối" },
+  "orPairByQr": { "message": "hoặc ghép nối bằng QR" },
+  "pairByQrBtn": { "message": "Ghép nối bằng QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relay dùng cho quá trình ghép nối" },
+  "generateQr": { "message": "Tạo mã QR" },
+  "copyUri": { "message": "Sao chép URI" },
+  "cancel": { "message": "Hủy" },
+  "scanWithSigner": { "message": "Quét bằng trình ký của bạn, hoặc dán URI vào đó." },
+  "waitingEllipsis": { "message": "Đang chờ..." },
+  "couldNotStartPairing": { "message": "Không thể bắt đầu ghép nối." },
+  "pairingExpired": { "message": "Ghép nối đã hết hạn. Hãy tạo mã QR mới." },
+  "connectedStatus": { "message": "Đã kết nối." },
+  "pairingFailedDot": { "message": "Ghép nối thất bại." },
+
+  "addAnotherSigner": { "message": "Thêm trình ký khác..." },
+  "add": { "message": "Thêm" },
+  "showAddSigner": { "message": "+ Thêm trình ký" },
+  "remove": { "message": "Xóa" },
+  "removeSignerConfirm": { "message": "Xóa trình ký này?" },
+  "couldNotRemoveInstance": { "message": "Không thể xóa trình ký." },
+  "couldNotSwitchIdentity": { "message": "Không thể chuyển danh tính." },
+  "connectingEllipsis": { "message": "đang kết nối..." },
+  "connectingBtn": { "message": "Đang kết nối..." },
+  "enterSignerAddress": { "message": "Nhập địa chỉ trình ký hoặc cầu nối (vd: heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Trình nền không phản hồi - hãy thử tải lại tiện ích" },
+  "pairingFailed": { "message": "Ghép nối thất bại" },
+  "pairingPermissionDenied": { "message": "Quyền ghép nối bị từ chối." },
+
+  "openApprovalPage": { "message": "Mở trang phê duyệt" },
+  "retry": { "message": "Thử lại" },
+  "checkAgain": { "message": "Kiểm tra lại" },
+  "connectionLost": { "message": "Mất kết nối." },
+  "reconnectingIn": {
+    "message": "Kết nối lại sau $SECONDS$ giây...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Hãy phê duyệt kết nối này trên trình ký của bạn." },
+  "extensionError": { "message": "Lỗi tiện ích mở rộng" },
+
+  "activePersona": { "message": "Persona đang dùng" },
+  "defaultName": { "message": "mặc định" },
+  "unnamed": { "message": "chưa đặt tên" },
+  "personas": { "message": "Persona" },
+  "purposeNamePlaceholder": { "message": "tên mục đích" },
+  "derive": { "message": "Tạo" },
+  "personaRequiresHeartwood": { "message": "Quản lý persona yêu cầu" },
+  "couldNotLoadPersonas": {
+    "message": "Không thể tải persona: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Không thể làm mới danh tính Heartwood." },
+
+  "signingNotTested": { "message": "Chưa kiểm tra ký" },
+  "runSignTestHint": { "message": "Hãy chạy kiểm tra ký trước khi dùng với các trang web." },
+  "test": { "message": "Kiểm tra" },
+  "signingReady": { "message": "Sẵn sàng ký" },
+  "lastTested": {
+    "message": "Kiểm tra lần cuối $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Trình ký đã trả về sự kiện hợp lệ." },
+  "waitingForSigner": { "message": "Đang chờ trình ký" },
+  "approveOnSigner": { "message": "Hãy phê duyệt yêu cầu trên thiết bị ký của bạn." },
+  "waitingBtn": { "message": "Đang chờ" },
+  "signingFailed": { "message": "Ký thất bại" },
+  "runSignTestAgain": { "message": "Hãy chạy lại kiểm tra ký." },
+
+  "zeroRelays": { "message": "0 relay" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relay đã kết nối",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Chính sách ký" },
+  "protectedKinds": { "message": "Kind được bảo vệ (hỏi trước khi ký)" },
+  "kindNumberPlaceholder": { "message": "Số kind" },
+  "privacyMode": { "message": "Chế độ riêng tư" },
+  "privacyModeHint": { "message": "Ẩn Bark khỏi mọi trang web trừ những trang có quy tắc bên dưới" },
+  "siteRules": { "message": "Quy tắc trang web" },
+  "methods": { "message": "Phương thức" },
+  "kindOverrides": { "message": "Ghi đè kind" },
+  "noKindRules": { "message": "Chưa có quy tắc kind" },
+  "noSiteRules": { "message": "Chưa có quy tắc trang web" },
+  "noKindOverrides": { "message": "Không có ghi đè kind cho trang này" },
+  "clickToChange": { "message": "Nhấp để thay đổi: cho phép → hỏi → từ chối" },
+  "resetToDefaults": { "message": "Đặt lại mặc định" },
+  "optionAllow": { "message": "Cho phép" },
+  "optionAsk": { "message": "Hỏi" },
+  "optionDeny": { "message": "Từ chối" },
+  "actionAllow": { "message": "cho phép" },
+  "actionAsk": { "message": "hỏi" },
+  "actionDeny": { "message": "từ chối" },
+  "kindProfileMetadata": { "message": "Thông tin hồ sơ" },
+  "kindContactList": { "message": "Danh sách liên hệ" },
+  "kindRelayList": { "message": "Danh sách relay" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Ngắt kết nối" },
+
+  "loadingRequest": { "message": "Đang tải yêu cầu..." },
+  "missingRequestId": { "message": "Thiếu ID yêu cầu." },
+  "requestNotFound": { "message": "Không tìm thấy yêu cầu hoặc đã hết hạn." },
+  "approveKindProfile": { "message": "Thông tin hồ sơ" },
+  "approveKindContacts": { "message": "Danh sách liên hệ" },
+  "approveKindRelays": { "message": "Danh sách relay" },
+  "signTitle": {
+    "message": "Ký $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ muốn ký một sự kiện $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Chia sẻ danh tính?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ muốn biết khóa công khai của bạn",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Chia sẻ relay?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ muốn biết danh sách relay của bạn",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Mã hóa tin nhắn?" },
+  "decryptTitle": { "message": "Giải mã tin nhắn?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ muốn mã hóa một tin nhắn kiểu cũ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ muốn giải mã một tin nhắn kiểu cũ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ muốn mã hóa một tin nhắn",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ muốn giải mã một tin nhắn",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Liệt kê danh tính?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ muốn liệt kê các danh tính trên thiết bị Heartwood của bạn",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Tạo danh tính mới?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ muốn tạo danh tính mới trên thiết bị Heartwood của bạn",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Chuyển danh tính?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ muốn chuyển danh tính ký đang dùng của bạn",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Phê duyệt yêu cầu?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ muốn gọi $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Hồ sơ đề xuất" },
+  "deny": { "message": "Từ chối" },
+  "allowOnce": { "message": "Cho phép một lần" },
+  "trustSite": { "message": "Tin cậy trang web" }
+}

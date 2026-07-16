@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "NIP-46 üzerinden uzaktan Nostr imzalama. Anahtarlar tarayıcıya asla dokunmaz. Herhangi bir bunker ile çalışır; Heartwood türetilmiş kimlikler ekler." },
+
+  "addSigner": { "message": "İmzalayıcı Ekle" },
+  "setupIntro": { "message": "Bir imzalayıcı veya köprü adresi girin ya da bir bunker URI'si yapıştırın." },
+  "connect": { "message": "Bağlan" },
+  "orPairByQr": { "message": "veya QR ile eşleştir" },
+  "pairByQrBtn": { "message": "QR ile eşleştir (nostrconnect)" },
+  "qrRelayTitle": { "message": "Eşleştirme el sıkışması için röle(ler)" },
+  "generateQr": { "message": "QR oluştur" },
+  "copyUri": { "message": "URI'yi kopyala" },
+  "cancel": { "message": "İptal" },
+  "scanWithSigner": { "message": "İmzalayıcınızla tarayın veya URI'yi ona yapıştırın." },
+  "waitingEllipsis": { "message": "Bekleniyor..." },
+  "couldNotStartPairing": { "message": "Eşleştirme başlatılamadı." },
+  "pairingExpired": { "message": "Eşleştirmenin süresi doldu. Yeni bir QR oluşturun." },
+  "connectedStatus": { "message": "Bağlandı." },
+  "pairingFailedDot": { "message": "Eşleştirme başarısız oldu." },
+
+  "addAnotherSigner": { "message": "Başka bir imzalayıcı ekle..." },
+  "add": { "message": "Ekle" },
+  "showAddSigner": { "message": "+ İmzalayıcı Ekle" },
+  "remove": { "message": "Kaldır" },
+  "removeSignerConfirm": { "message": "Bu imzalayıcı örneği kaldırılsın mı?" },
+  "couldNotRemoveInstance": { "message": "Örnek kaldırılamadı." },
+  "couldNotSwitchIdentity": { "message": "Kimlik değiştirilemedi." },
+  "connectingEllipsis": { "message": "bağlanıyor..." },
+  "connectingBtn": { "message": "Bağlanıyor..." },
+  "enterSignerAddress": { "message": "Bir imzalayıcı veya köprü adresi girin (örn. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Arka plandan yanıt yok - uzantıyı yeniden yüklemeyi deneyin" },
+  "pairingFailed": { "message": "Eşleştirme başarısız" },
+  "pairingPermissionDenied": { "message": "Eşleştirme izni reddedildi." },
+
+  "openApprovalPage": { "message": "Onay sayfasını aç" },
+  "retry": { "message": "Yeniden dene" },
+  "checkAgain": { "message": "Tekrar kontrol et" },
+  "connectionLost": { "message": "Bağlantı koptu." },
+  "reconnectingIn": {
+    "message": "$SECONDS$ sn içinde yeniden bağlanılıyor...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Bu bağlantıyı imzalayıcınızda onaylayın." },
+  "extensionError": { "message": "Uzantı hatası" },
+
+  "activePersona": { "message": "Etkin persona" },
+  "defaultName": { "message": "varsayılan" },
+  "unnamed": { "message": "adsız" },
+  "personas": { "message": "Personalar" },
+  "purposeNamePlaceholder": { "message": "amaç adı" },
+  "derive": { "message": "Türet" },
+  "personaRequiresHeartwood": { "message": "Persona yönetimi şunu gerektirir:" },
+  "couldNotLoadPersonas": {
+    "message": "Personalar yüklenemedi: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Heartwood kimlikleri yenilenemedi." },
+
+  "signingNotTested": { "message": "İmzalama test edilmedi" },
+  "runSignTestHint": { "message": "Siteleri kullanmadan önce bir imza testi çalıştırın." },
+  "test": { "message": "Test et" },
+  "signingReady": { "message": "İmzalama hazır" },
+  "lastTested": {
+    "message": "Son test: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "İmzalayıcı geçerli bir etkinlik döndürdü." },
+  "waitingForSigner": { "message": "İmzalayıcı bekleniyor" },
+  "approveOnSigner": { "message": "İsteği imzalayıcı cihazınızda onaylayın." },
+  "waitingBtn": { "message": "Bekleniyor" },
+  "signingFailed": { "message": "İmzalama başarısız" },
+  "runSignTestAgain": { "message": "İmza testini yeniden çalıştırın." },
+
+  "zeroRelays": { "message": "0 röle" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ röle bağlı",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "İmzalama Politikaları" },
+  "protectedKinds": { "message": "Korunan türler (imzalamadan önce sor)" },
+  "kindNumberPlaceholder": { "message": "Tür numarası" },
+  "privacyMode": { "message": "Gizlilik modu" },
+  "privacyModeHint": { "message": "Aşağıda site kuralı olan siteler dışında Bark'ı tüm sitelerden gizle" },
+  "siteRules": { "message": "Site kuralları" },
+  "methods": { "message": "Yöntemler" },
+  "kindOverrides": { "message": "Tür geçersiz kılmaları" },
+  "noKindRules": { "message": "Yapılandırılmış tür kuralı yok" },
+  "noSiteRules": { "message": "Yapılandırılmış site kuralı yok" },
+  "noKindOverrides": { "message": "Bu site için tür geçersiz kılması yok" },
+  "clickToChange": { "message": "Değiştirmek için tıklayın: izin ver → sor → reddet" },
+  "resetToDefaults": { "message": "Varsayılanlara sıfırla" },
+  "optionAllow": { "message": "İzin ver" },
+  "optionAsk": { "message": "Sor" },
+  "optionDeny": { "message": "Reddet" },
+  "actionAllow": { "message": "izin ver" },
+  "actionAsk": { "message": "sor" },
+  "actionDeny": { "message": "reddet" },
+  "kindProfileMetadata": { "message": "Profil meta verileri" },
+  "kindContactList": { "message": "Kişi listesi" },
+  "kindRelayList": { "message": "Röle listesi" },
+  "kindN": {
+    "message": "Tür $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Bağlantıyı kes" },
+
+  "loadingRequest": { "message": "İstek yükleniyor..." },
+  "missingRequestId": { "message": "İstek kimliği eksik." },
+  "requestNotFound": { "message": "İstek bulunamadı veya süresi doldu." },
+  "approveKindProfile": { "message": "Profil Meta Verileri" },
+  "approveKindContacts": { "message": "Kişi Listesi" },
+  "approveKindRelays": { "message": "Röle Listesi" },
+  "signTitle": {
+    "message": "$KIND$ imzalansın mı?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ bir $KIND$ etkinliği imzalamak istiyor",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Kimlik Paylaşılsın mı?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ açık anahtarınızı öğrenmek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Röleler Paylaşılsın mı?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ röle listenizi öğrenmek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Mesaj Şifrelensin mi?" },
+  "decryptTitle": { "message": "Mesajın Şifresi Çözülsün mü?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ eski biçimde bir mesaj şifrelemek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ eski biçimde bir mesajın şifresini çözmek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ bir mesaj şifrelemek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ bir mesajın şifresini çözmek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Kimlikler Listelensin mi?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ Heartwood cihazınızdaki kimlikleri listelemek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Kimlik Türetilsin mi?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ Heartwood cihazınızda yeni bir kimlik türetmek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Kimlik Değiştirilsin mi?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ etkin imzalama kimliğinizi değiştirmek istiyor",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "İstek Onaylansın mı?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$, $METHOD$ yöntemini çağırmak istiyor",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Önerilen profil" },
+  "deny": { "message": "Reddet" },
+  "allowOnce": { "message": "Bir Kez İzin Ver" },
+  "trustSite": { "message": "Siteye Güven" }
+}

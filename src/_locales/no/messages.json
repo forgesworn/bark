@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "Ekstern Nostr-signering via NIP-46. Nøkler berører aldri nettleseren. For enhver bunker; Heartwood gir avledede identiteter."
+  },
+
+  "addSigner": { "message": "Legg til signer" },
+  "setupIntro": { "message": "Skriv inn en signer- eller bridge-adresse, eller lim inn en bunker-URI." },
+  "connect": { "message": "Koble til" },
+  "orPairByQr": { "message": "eller par via QR" },
+  "pairByQrBtn": { "message": "Par via QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relé(er) for paringshåndtrykket" },
+  "generateQr": { "message": "Generer QR" },
+  "copyUri": { "message": "Kopier URI" },
+  "cancel": { "message": "Avbryt" },
+  "scanWithSigner": { "message": "Skann med signeren din, eller lim inn URI-en i den." },
+  "waitingEllipsis": { "message": "Venter..." },
+  "couldNotStartPairing": { "message": "Kunne ikke starte paringen." },
+  "pairingExpired": { "message": "Paringen utløp. Generer en ny QR." },
+  "connectedStatus": { "message": "Tilkoblet." },
+  "pairingFailedDot": { "message": "Paring mislyktes." },
+
+  "addAnotherSigner": { "message": "Legg til enda en signer..." },
+  "add": { "message": "Legg til" },
+  "showAddSigner": { "message": "+ Legg til signer" },
+  "remove": { "message": "Fjern" },
+  "removeSignerConfirm": { "message": "Fjerne denne signer-instansen?" },
+  "couldNotRemoveInstance": { "message": "Kunne ikke fjerne instansen." },
+  "couldNotSwitchIdentity": { "message": "Kunne ikke bytte identitet." },
+  "connectingEllipsis": { "message": "kobler til..." },
+  "connectingBtn": { "message": "Kobler til..." },
+  "enterSignerAddress": { "message": "Skriv inn en signer- eller bridge-adresse (f.eks. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Ingen respons fra bakgrunnsprosessen - prøv å laste utvidelsen på nytt" },
+  "pairingFailed": { "message": "Paring mislyktes" },
+  "pairingPermissionDenied": { "message": "Tillatelse til paring avslått." },
+
+  "openApprovalPage": { "message": "Åpne godkjenningssiden" },
+  "retry": { "message": "Prøv igjen" },
+  "checkAgain": { "message": "Sjekk igjen" },
+  "connectionLost": { "message": "Mistet tilkoblingen." },
+  "reconnectingIn": {
+    "message": "Kobler til på nytt om $SECONDS$ s...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Godkjenn denne tilkoblingen på signeren din." },
+  "extensionError": { "message": "Utvidelsesfeil" },
+
+  "activePersona": { "message": "Aktiv persona" },
+  "defaultName": { "message": "standard" },
+  "unnamed": { "message": "uten navn" },
+  "personas": { "message": "Personaer" },
+  "purposeNamePlaceholder": { "message": "formålsnavn" },
+  "derive": { "message": "Avled" },
+  "personaRequiresHeartwood": { "message": "Personahåndtering krever" },
+  "couldNotLoadPersonas": {
+    "message": "Kunne ikke laste personaer: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Kunne ikke oppdatere Heartwood-identiteter." },
+
+  "signingNotTested": { "message": "Signering ikke testet" },
+  "runSignTestHint": { "message": "Kjør en signeringstest før du bruker nettsteder." },
+  "test": { "message": "Test" },
+  "signingReady": { "message": "Signering klar" },
+  "lastTested": {
+    "message": "Sist testet $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Signeren returnerte et gyldig event." },
+  "waitingForSigner": { "message": "Venter på signer" },
+  "approveOnSigner": { "message": "Godkjenn forespørselen på signer-enheten din." },
+  "waitingBtn": { "message": "Venter" },
+  "signingFailed": { "message": "Signering mislyktes" },
+  "runSignTestAgain": { "message": "Kjør signeringstesten på nytt." },
+
+  "zeroRelays": { "message": "0 releer" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ releer tilkoblet",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Signeringsregler" },
+  "protectedKinds": { "message": "Beskyttede kinds (spør før signering)" },
+  "kindNumberPlaceholder": { "message": "Kind-nummer" },
+  "privacyMode": { "message": "Personvernmodus" },
+  "privacyModeHint": { "message": "Skjul Bark for alle nettsteder unntatt de med en nettstedsregel nedenfor" },
+  "siteRules": { "message": "Nettstedsregler" },
+  "methods": { "message": "Metoder" },
+  "kindOverrides": { "message": "Kind-unntak" },
+  "noKindRules": { "message": "Ingen kind-regler konfigurert" },
+  "noSiteRules": { "message": "Ingen nettstedsregler konfigurert" },
+  "noKindOverrides": { "message": "Ingen kind-unntak for dette nettstedet" },
+  "clickToChange": { "message": "Klikk for å endre: tillat → spør → avslå" },
+  "resetToDefaults": { "message": "Tilbakestill til standard" },
+  "optionAllow": { "message": "Tillat" },
+  "optionAsk": { "message": "Spør" },
+  "optionDeny": { "message": "Avslå" },
+  "actionAllow": { "message": "tillat" },
+  "actionAsk": { "message": "spør" },
+  "actionDeny": { "message": "avslå" },
+  "kindProfileMetadata": { "message": "Profilmetadata" },
+  "kindContactList": { "message": "Kontaktliste" },
+  "kindRelayList": { "message": "Reléliste" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Koble fra" },
+
+  "loadingRequest": { "message": "Laster forespørsel..." },
+  "missingRequestId": { "message": "Mangler forespørsels-ID." },
+  "requestNotFound": { "message": "Forespørselen ble ikke funnet eller er utløpt." },
+  "approveKindProfile": { "message": "Profilmetadata" },
+  "approveKindContacts": { "message": "Kontaktliste" },
+  "approveKindRelays": { "message": "Reléliste" },
+  "signTitle": {
+    "message": "Signere $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ vil signere et $KIND$-event",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Dele identitet?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ vil vite den offentlige nøkkelen din",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Dele releer?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ vil vite relélisten din",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Kryptere melding?" },
+  "decryptTitle": { "message": "Dekryptere melding?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ vil kryptere en legacy-melding",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ vil dekryptere en legacy-melding",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ vil kryptere en melding",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ vil dekryptere en melding",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Liste opp identiteter?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ vil liste opp identitetene på Heartwood-enheten din",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Avlede identitet?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ vil avlede en ny identitet på Heartwood-enheten din",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Bytte identitet?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ vil bytte den aktive signeringsidentiteten din",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Godkjenne forespørsel?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ vil kalle $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Foreslått profil" },
+  "deny": { "message": "Avslå" },
+  "allowOnce": { "message": "Tillat én gang" },
+  "trustSite": { "message": "Stol på nettstedet" }
+}

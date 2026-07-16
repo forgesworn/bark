@@ -1,0 +1,183 @@
+{
+  "extDescription": { "message": "Отдалечено подписване в Nostr чрез NIP-46. Ключовете никога не докосват браузъра. Работи с всеки bunker; Heartwood добавя производни самоличности." },
+
+  "addSigner": { "message": "Добавяне на подписващ" },
+  "setupIntro": { "message": "Въведете адрес на подписващ или мост, или поставете bunker URI." },
+  "connect": { "message": "Свързване" },
+  "orPairByQr": { "message": "или сдвояване чрез QR" },
+  "pairByQrBtn": { "message": "Сдвояване чрез QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Реле(та) за сдвояването" },
+  "generateQr": { "message": "Генериране на QR" },
+  "copyUri": { "message": "Копиране на URI" },
+  "cancel": { "message": "Отказ" },
+  "scanWithSigner": { "message": "Сканирайте с подписващия или поставете URI в него." },
+  "waitingEllipsis": { "message": "Изчакване..." },
+  "couldNotStartPairing": { "message": "Сдвояването не можа да започне." },
+  "pairingExpired": { "message": "Сдвояването изтече. Генерирайте нов QR." },
+  "connectedStatus": { "message": "Свързано." },
+  "pairingFailedDot": { "message": "Сдвояването е неуспешно." },
+
+  "addAnotherSigner": { "message": "Добавяне на друг подписващ..." },
+  "add": { "message": "Добавяне" },
+  "showAddSigner": { "message": "+ Добавяне на подписващ" },
+  "remove": { "message": "Премахване" },
+  "removeSignerConfirm": { "message": "Да се премахне ли този подписващ?" },
+  "couldNotRemoveInstance": { "message": "Инстанцията не можа да бъде премахната." },
+  "couldNotSwitchIdentity": { "message": "Самоличността не можа да бъде превключена." },
+  "connectingEllipsis": { "message": "свързване..." },
+  "connectingBtn": { "message": "Свързване..." },
+  "enterSignerAddress": { "message": "Въведете адрес на подписващ или мост (напр. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Няма отговор от фоновия процес – опитайте да презаредите разширението" },
+  "pairingFailed": { "message": "Сдвояването е неуспешно" },
+  "pairingPermissionDenied": { "message": "Разрешението за сдвояване е отказано." },
+
+  "openApprovalPage": { "message": "Отваряне на страницата за одобрение" },
+  "retry": { "message": "Повторен опит" },
+  "checkAgain": { "message": "Повторна проверка" },
+  "connectionLost": { "message": "Връзката е прекъсната." },
+  "reconnectingIn": {
+    "message": "Повторно свързване след $SECONDS$ сек...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Одобрете тази връзка на подписващия си." },
+  "extensionError": { "message": "Грешка в разширението" },
+
+  "activePersona": { "message": "Активна персона" },
+  "defaultName": { "message": "по подразбиране" },
+  "unnamed": { "message": "без име" },
+  "personas": { "message": "Персони" },
+  "purposeNamePlaceholder": { "message": "име на предназначение" },
+  "derive": { "message": "Извеждане" },
+  "personaRequiresHeartwood": { "message": "Управлението на персони изисква" },
+  "couldNotLoadPersonas": {
+    "message": "Персоните не можаха да се заредят: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Самоличностите от Heartwood не можаха да се обновят." },
+
+  "signingNotTested": { "message": "Подписването не е тествано" },
+  "runSignTestHint": { "message": "Изпълнете тест за подписване, преди да използвате сайтове." },
+  "test": { "message": "Тест" },
+  "signingReady": { "message": "Подписването е готово" },
+  "lastTested": {
+    "message": "Последен тест: $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Подписващият върна валидно събитие." },
+  "waitingForSigner": { "message": "Изчакване на подписващия" },
+  "approveOnSigner": { "message": "Одобрете заявката на подписващото си устройство." },
+  "waitingBtn": { "message": "Изчакване" },
+  "signingFailed": { "message": "Подписването е неуспешно" },
+  "runSignTestAgain": { "message": "Изпълнете отново теста за подписване." },
+
+  "zeroRelays": { "message": "0 релета" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ свързани релета",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Политики за подписване" },
+  "protectedKinds": { "message": "Защитени типове (питане преди подписване)" },
+  "kindNumberPlaceholder": { "message": "Номер на тип" },
+  "privacyMode": { "message": "Режим на поверителност" },
+  "privacyModeHint": { "message": "Скрива Bark от всички сайтове освен тези с правило по-долу" },
+  "siteRules": { "message": "Правила за сайтове" },
+  "methods": { "message": "Методи" },
+  "kindOverrides": { "message": "Правила за типове" },
+  "noKindRules": { "message": "Няма зададени правила за типове" },
+  "noSiteRules": { "message": "Няма зададени правила за сайтове" },
+  "noKindOverrides": { "message": "Няма правила за типове за този сайт" },
+  "clickToChange": { "message": "Кликнете за промяна: разреши → питай → забрани" },
+  "resetToDefaults": { "message": "Възстановяване по подразбиране" },
+  "optionAllow": { "message": "Разреши" },
+  "optionAsk": { "message": "Питай" },
+  "optionDeny": { "message": "Забрани" },
+  "actionAllow": { "message": "разреши" },
+  "actionAsk": { "message": "питай" },
+  "actionDeny": { "message": "забрани" },
+  "kindProfileMetadata": { "message": "Профилни метаданни" },
+  "kindContactList": { "message": "Списък с контакти" },
+  "kindRelayList": { "message": "Списък с релета" },
+  "kindN": {
+    "message": "Тип $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Прекъсване на връзката" },
+
+  "loadingRequest": { "message": "Зареждане на заявката..." },
+  "missingRequestId": { "message": "Липсва ID на заявката." },
+  "requestNotFound": { "message": "Заявката не е намерена или е изтекла." },
+  "approveKindProfile": { "message": "Профилни метаданни" },
+  "approveKindContacts": { "message": "Списък с контакти" },
+  "approveKindRelays": { "message": "Списък с релета" },
+  "signTitle": {
+    "message": "Да се подпише ли „$KIND$“?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ иска да подпише събитие „$KIND$“",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Споделяне на самоличност?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ иска да научи публичния ви ключ",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Споделяне на релета?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ иска да научи списъка ви с релета",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Шифроване на съобщение?" },
+  "decryptTitle": { "message": "Дешифриране на съобщение?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ иска да шифрова съобщение в стар формат",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ иска да дешифрира съобщение в стар формат",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ иска да шифрова съобщение",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ иска да дешифрира съобщение",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Списък на самоличностите?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ иска да види самоличностите на вашето Heartwood устройство",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Извеждане на самоличност?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ иска да изведе нова самоличност на вашето Heartwood устройство",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Превключване на самоличност?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ иска да превключи активната ви самоличност за подписване",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Одобряване на заявката?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ иска да извика $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Предложен профил" },
+  "deny": { "message": "Отхвърляне" },
+  "allowOnce": { "message": "Еднократно разрешаване" },
+  "trustSite": { "message": "Доверяване на сайта" }
+}

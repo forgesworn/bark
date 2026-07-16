@@ -1,0 +1,185 @@
+{
+  "extDescription": {
+    "message": "Tandatangan Nostr jarak jauh melalui NIP-46. Kunci tidak pernah menyentuh pelayar. Berfungsi dengan mana-mana bunker; Heartwood menambah identiti terbitan."
+  },
+
+  "addSigner": { "message": "Tambah Penandatangan" },
+  "setupIntro": { "message": "Masukkan alamat penandatangan atau bridge, atau tampal URI bunker." },
+  "connect": { "message": "Sambung" },
+  "orPairByQr": { "message": "atau ganding melalui QR" },
+  "pairByQrBtn": { "message": "Ganding melalui QR (nostrconnect)" },
+  "qrRelayTitle": { "message": "Relay untuk proses penggandingan" },
+  "generateQr": { "message": "Jana QR" },
+  "copyUri": { "message": "Salin URI" },
+  "cancel": { "message": "Batal" },
+  "scanWithSigner": { "message": "Imbas dengan penandatangan anda, atau tampal URI ke dalamnya." },
+  "waitingEllipsis": { "message": "Menunggu..." },
+  "couldNotStartPairing": { "message": "Tidak dapat memulakan penggandingan." },
+  "pairingExpired": { "message": "Penggandingan tamat tempoh. Jana QR baharu." },
+  "connectedStatus": { "message": "Disambungkan." },
+  "pairingFailedDot": { "message": "Penggandingan gagal." },
+
+  "addAnotherSigner": { "message": "Tambah penandatangan lain..." },
+  "add": { "message": "Tambah" },
+  "showAddSigner": { "message": "+ Tambah Penandatangan" },
+  "remove": { "message": "Buang" },
+  "removeSignerConfirm": { "message": "Buang instans penandatangan ini?" },
+  "couldNotRemoveInstance": { "message": "Tidak dapat membuang instans." },
+  "couldNotSwitchIdentity": { "message": "Tidak dapat menukar identiti." },
+  "connectingEllipsis": { "message": "menyambung..." },
+  "connectingBtn": { "message": "Menyambung..." },
+  "enterSignerAddress": { "message": "Masukkan alamat penandatangan atau bridge (cth. heartwood.local:3000)" },
+  "noResponseFromBackground": { "message": "Tiada respons daripada background - cuba muat semula ekstensi" },
+  "pairingFailed": { "message": "Penggandingan gagal" },
+  "pairingPermissionDenied": { "message": "Kebenaran penggandingan ditolak." },
+
+  "openApprovalPage": { "message": "Buka halaman kelulusan" },
+  "retry": { "message": "Cuba lagi" },
+  "checkAgain": { "message": "Semak lagi" },
+  "connectionLost": { "message": "Sambungan terputus." },
+  "reconnectingIn": {
+    "message": "Menyambung semula dalam $SECONDS$ saat...",
+    "placeholders": { "seconds": { "content": "$1", "example": "5" } }
+  },
+  "approveConnectionOnSigner": { "message": "Luluskan sambungan ini pada penandatangan anda." },
+  "extensionError": { "message": "Ralat ekstensi" },
+
+  "activePersona": { "message": "Persona aktif" },
+  "defaultName": { "message": "lalai" },
+  "unnamed": { "message": "tanpa nama" },
+  "personas": { "message": "Persona" },
+  "purposeNamePlaceholder": { "message": "nama tujuan" },
+  "derive": { "message": "Terbitkan" },
+  "personaRequiresHeartwood": { "message": "Pengurusan persona memerlukan" },
+  "couldNotLoadPersonas": {
+    "message": "Tidak dapat memuatkan persona: $ERROR$",
+    "placeholders": { "error": { "content": "$1", "example": "timed out" } }
+  },
+  "couldNotRefreshIdentities": { "message": "Tidak dapat menyegarkan identiti Heartwood." },
+
+  "signingNotTested": { "message": "Tandatangan belum diuji" },
+  "runSignTestHint": { "message": "Jalankan ujian tandatangan sebelum menggunakan laman." },
+  "test": { "message": "Uji" },
+  "signingReady": { "message": "Sedia untuk menandatangani" },
+  "lastTested": {
+    "message": "Terakhir diuji $TIME$",
+    "placeholders": { "time": { "content": "$1", "example": "09:58" } }
+  },
+  "signerReturnedValid": { "message": "Penandatangan memulangkan event yang sah." },
+  "waitingForSigner": { "message": "Menunggu penandatangan" },
+  "approveOnSigner": { "message": "Luluskan permintaan pada peranti penandatangan anda." },
+  "waitingBtn": { "message": "Menunggu" },
+  "signingFailed": { "message": "Tandatangan gagal" },
+  "runSignTestAgain": { "message": "Jalankan ujian tandatangan sekali lagi." },
+
+  "zeroRelays": { "message": "0 relay" },
+  "relaysConnected": {
+    "message": "$UP$/$TOTAL$ relay disambungkan",
+    "placeholders": {
+      "up": { "content": "$1", "example": "2" },
+      "total": { "content": "$2", "example": "4" }
+    }
+  },
+
+  "signingPolicies": { "message": "Dasar Tandatangan" },
+  "protectedKinds": { "message": "Kind yang dilindungi (tanya sebelum menandatangani)" },
+  "kindNumberPlaceholder": { "message": "Nombor kind" },
+  "privacyMode": { "message": "Mod privasi" },
+  "privacyModeHint": { "message": "Sembunyikan Bark daripada semua laman kecuali yang mempunyai peraturan laman di bawah" },
+  "siteRules": { "message": "Peraturan laman" },
+  "methods": { "message": "Kaedah" },
+  "kindOverrides": { "message": "Override kind" },
+  "noKindRules": { "message": "Tiada peraturan kind ditetapkan" },
+  "noSiteRules": { "message": "Tiada peraturan laman ditetapkan" },
+  "noKindOverrides": { "message": "Tiada override kind untuk laman ini" },
+  "clickToChange": { "message": "Klik untuk menukar: benarkan → tanya → tolak" },
+  "resetToDefaults": { "message": "Tetapkan semula kepada lalai" },
+  "optionAllow": { "message": "Benarkan" },
+  "optionAsk": { "message": "Tanya" },
+  "optionDeny": { "message": "Tolak" },
+  "actionAllow": { "message": "benarkan" },
+  "actionAsk": { "message": "tanya" },
+  "actionDeny": { "message": "tolak" },
+  "kindProfileMetadata": { "message": "Metadata profil" },
+  "kindContactList": { "message": "Senarai kenalan" },
+  "kindRelayList": { "message": "Senarai relay" },
+  "kindN": {
+    "message": "Kind $N$",
+    "placeholders": { "n": { "content": "$1", "example": "30023" } }
+  },
+
+  "disconnect": { "message": "Putuskan sambungan" },
+
+  "loadingRequest": { "message": "Memuatkan permintaan..." },
+  "missingRequestId": { "message": "ID permintaan tiada." },
+  "requestNotFound": { "message": "Permintaan tidak ditemui atau tamat tempoh." },
+  "approveKindProfile": { "message": "Metadata Profil" },
+  "approveKindContacts": { "message": "Senarai Kenalan" },
+  "approveKindRelays": { "message": "Senarai Relay" },
+  "signTitle": {
+    "message": "Tandatangan $KIND$?",
+    "placeholders": { "kind": { "content": "$1", "example": "Kind 1" } }
+  },
+  "wantsToSignEvent": {
+    "message": "$ORIGIN$ mahu menandatangani event $KIND$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "kind": { "content": "$2", "example": "Kind 1" }
+    }
+  },
+  "shareIdentityTitle": { "message": "Kongsi Identiti?" },
+  "wantsPublicKey": {
+    "message": "$ORIGIN$ mahu mengetahui kunci awam anda",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "shareRelaysTitle": { "message": "Kongsi Relay?" },
+  "wantsRelayList": {
+    "message": "$ORIGIN$ mahu mengetahui senarai relay anda",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "encryptTitle": { "message": "Sulitkan Mesej?" },
+  "decryptTitle": { "message": "Nyahsulitkan Mesej?" },
+  "wantsEncryptLegacy": {
+    "message": "$ORIGIN$ mahu menyulitkan mesej format lama",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecryptLegacy": {
+    "message": "$ORIGIN$ mahu menyahsulitkan mesej format lama",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsEncrypt": {
+    "message": "$ORIGIN$ mahu menyulitkan mesej",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "wantsDecrypt": {
+    "message": "$ORIGIN$ mahu menyahsulitkan mesej",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "listIdentitiesTitle": { "message": "Senaraikan Identiti?" },
+  "wantsListIdentities": {
+    "message": "$ORIGIN$ mahu menyenaraikan identiti pada peranti Heartwood anda",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "deriveIdentityTitle": { "message": "Terbitkan Identiti?" },
+  "wantsDeriveIdentity": {
+    "message": "$ORIGIN$ mahu menerbitkan identiti baharu pada peranti Heartwood anda",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "switchIdentityTitle": { "message": "Tukar Identiti?" },
+  "wantsSwitchIdentity": {
+    "message": "$ORIGIN$ mahu menukar identiti tandatangan aktif anda",
+    "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
+  },
+  "approveRequestTitle": { "message": "Luluskan Permintaan?" },
+  "wantsCallMethod": {
+    "message": "$ORIGIN$ mahu memanggil $METHOD$",
+    "placeholders": {
+      "origin": { "content": "$1", "example": "https://primal.net" },
+      "method": { "content": "$2", "example": "getPublicKey" }
+    }
+  },
+  "proposedProfile": { "message": "Profil yang dicadangkan" },
+  "deny": { "message": "Tolak" },
+  "allowOnce": { "message": "Benarkan Sekali" },
+  "trustSite": { "message": "Percayai Laman" }
+}
