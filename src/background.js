@@ -1435,7 +1435,9 @@ async function finaliseConnection(active, instances, bunkerUri, relays) {
     connectionState.isHeartwood = true
   } catch (err) {
     const msg = String(err?.message || err || '')
-    if (msg.includes('not approved')) {
+    // heartwood-esp32 firmware answers "unauthorised" for unbound clients;
+    // older signers said "not approved".
+    if (msg.includes('not approved') || msg.includes('unauthorised') || msg.includes('unauthorized')) {
       // Connected to Heartwood but client needs approval
       connectionState.isHeartwood = true
       connectionState.status = 'awaiting-approval'

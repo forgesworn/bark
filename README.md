@@ -85,7 +85,7 @@ Bark works as a standard NIP-07 provider with any NIP-46 bunker. The signing flo
 
 - **Paste a `bunker://` URI** from nsecBunker, Amber, nsec.app, or any compliant signer.
 - **Pair by QR (nostrconnect)** — Bark generates a `nostrconnect://` URI and QR code; scan it with your signer (or paste it in) and the signer connects back over the relay. Signers that require a browser approval step (e.g. nsec.app) get an "Open approval page" button in the popup.
-- **Heartwood HTTP address** for local devices (e.g. `heartwood.local:3000`).
+- **Heartwood HTTP address** for local devices (e.g. `heartwood.local:3000`). This targets the legacy Pi web UI's `/api/pair` contract; current `heartwoodd` deployments pair by bunker URI or QR instead — fetch the URI from Sapwood or `GET /api/slots/{master}/{slot}/uri`.
 
 Identity features (derive and list) require [Heartwood](https://github.com/forgesworn/heartwood). When you pair by a Heartwood HTTP address, Bark also imports the per-identity bunker URI manifest from `/api/identities`. That endpoint can be a Wi-Fi Heartwood appliance, a Pi daemon, or another Heartwood-compatible host sitting in front of cheap tethered hardware. The current Heartwood model is that each identity has its own bunker URI, and selecting a persona in Bark selects the matching bunker instance.
 
