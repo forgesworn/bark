@@ -2,6 +2,25 @@
 
 All notable changes to Bark are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- Heartwood identity methods (`heartwood_list_identities`, `heartwood_derive`,
+  `heartwood_derive_persona`, `heartwood_switch`) now default to ask instead
+  of falling through to deny, so Heartwood-aware web apps can request them
+  with user approval. They remain excluded from trusted-site grants.
+- The firmware's `unauthorised` error is now recognised as
+  awaiting-client-approval alongside the older `not approved` phrasing.
+
+### Verified
+
+- The full feature surface was verified live against a physical
+  heartwood-esp32 signer over public relays on 2026-07-16: NIP-07 core,
+  NIP-44 both directions, keep-alive ping, Heartwood detection, and the
+  complete persona lifecycle (derive, list, switch, sign-as-persona) with
+  physical button approval, including the button-timeout deny path.
+
 ## [1.1.0] — 2026-07-16
 
 ### Added

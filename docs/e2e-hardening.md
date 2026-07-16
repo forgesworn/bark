@@ -92,6 +92,29 @@ Browser target smoke tests:
 - Safari: convert `dist-safari/` with Apple's Safari Web Extension tooling and
   run a manual smoke until CI has a macOS/Safari runner.
 
+## Live Device Verification
+
+Last full run: 2026-07-16, against a physical heartwood-esp32 signer reached
+over four public relays. Verified: connect (4-param metadata), getPublicKey,
+signEvent via `window.nostr` (slot-policy auto-approve), NIP-44 round-trip,
+keep-alive ping, Heartwood detection, and the persona lifecycle — derive,
+list, switch by name, sign-as-persona, switch back — each behind a physical
+button approval, plus the 30s button-timeout deny path surfacing cleanly to
+the page.
+
+To repeat: obtain the slot's `bunker://` URI, then
+
+```bash
+BARK_LIVE_BUNKER_URI='bunker://…' \
+BARK_LIVE_CLIENT_SECRET=<64-hex, reuse across runs> \
+npm run e2e:live
+```
+
+`heartwoodd --mode soft` (heartwood-esp32 repo) provides the same daemon
+codebase without hardware: unlock, create a master and slot via its HTTP API,
+allow `sign_event` on the slot with `auto_approve`, and point the same command
+at the slot URI with a local relay.
+
 ## Out Of Scope For Bark
 
 Bark should not test serial firmware directly. That belongs in Heartwood and
