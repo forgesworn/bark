@@ -78,6 +78,28 @@ Firefox additionally declares `wss://*/*` and loopback `ws://` host
 permissions for relay WebSockets (user-optional under MV3). The Chromium
 build needs no host permissions for WebSockets.
 
+## Data usage (CWS Privacy tab)
+
+Tick **none** of the nine data categories. Bark collects nothing: all state
+(bunker URI, client secret, policies) is stored locally and never
+transmitted off the device except as NIP-46 traffic to the user's own
+signer, encrypted end to end, at the user's direction. That is the item's
+single purpose, not data collection. (The bunker URI is credential-like but
+never leaves the machine other than to authenticate to the user's own
+signer, so "Authentication information" is not collected under CWS's
+definition of transmission off-device for collection purposes.)
+
+Certify all three disclosures — each is true:
+
+- No sale/transfer to third parties apart from approved use cases ✓
+- No use/transfer unrelated to the single purpose ✓
+- No use/transfer for creditworthiness or lending ✓
+
+Privacy policy URL: https://github.com/forgesworn/bark/blob/main/PRIVACY.md
+(updated 2026-07-16 to cover QR pairing, auth_url, end-to-end encryption of
+request payloads, relay transport metadata, and privacy mode — keep it in
+step with any future data-flow change).
+
 No remote code: all scripts are bundled; the CSP is `script-src 'self'`.
 
 ## AMO reviewer build instructions
