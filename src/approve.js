@@ -122,6 +122,9 @@ async function init() {
     0: t('approveKindProfile'),
     3: t('approveKindContacts'),
     10002: t('approveKindRelays'),
+    // V4V gated content (Pulsewire); kind numbers provisional until NIP review.
+    27117: t('approveKindGatedDeposit'),
+    30808: t('approveKindGatedContent'),
   }
 
   // Substitutions carry pre-escaped markup for the origin; the message

@@ -128,6 +128,8 @@
   "approveKindProfile": { "message": "Profile Metadata", "description": "Title-case name for event kind 0 in the approval window." },
   "approveKindContacts": { "message": "Contact List", "description": "Title-case name for event kind 3 in the approval window." },
   "approveKindRelays": { "message": "Relay List", "description": "Title-case name for event kind 10002 in the approval window." },
+  "approveKindGatedDeposit": { "message": "Gated Deposit Authorisation", "description": "Title-case name for event kind 27117 (V4V paywall deposit terms, never published) in the approval window." },
+  "approveKindGatedContent": { "message": "Gated Content Listing", "description": "Title-case name for event kind 30808 (public V4V paywall event) in the approval window." },
   "signTitle": {
     "message": "Sign $KIND$?",
     "description": "Approval window title for a signing request. $KIND$ is e.g. 'Kind 1' or 'Profile Metadata'.",
