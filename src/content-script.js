@@ -112,10 +112,13 @@ async function sendToBackground(payload) {
       // Genuine invalidation — extension was updated/reloaded. No retry.
       if (msg.includes('context invalidated')) throw err
 
-      // Service worker waking up — retry after a short delay.
+      // Service worker waking up — retry after a short delay. "message port
+      // closed" is Chrome's wording when the worker is woken by the message
+      // but torn down before it responds — the first call after idle.
       const isWakeupError = msg.includes('does not exist') ||
         msg.includes('Receiving end does not exist') ||
-        msg.includes('Could not establish connection')
+        msg.includes('Could not establish connection') ||
+        msg.includes('message port closed')
       if (isWakeupError && attempt < MAX_RETRIES - 1) {
         debug('[bark:content] retrying after', RETRY_DELAY, 'ms (service worker waking)')
         await new Promise(r => setTimeout(r, RETRY_DELAY))
