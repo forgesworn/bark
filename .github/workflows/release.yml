@@ -33,11 +33,26 @@ jobs:
       - name: Package all targets
         run: npm run package:all
 
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" {found=1; next}
+            found && /^## \[/ {exit}
+            found {print}
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if ! grep -q '[^[:space:]]' RELEASE_NOTES.md; then
+            echo "No CHANGELOG.md section for $VERSION — add release notes before tagging" >&2
+            exit 1
+          fi
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
+          body_path: RELEASE_NOTES.md
           generate_release_notes: true
+          append_body: true
           files: |
             bark-v*.zip
             bark-firefox-v*.zip
