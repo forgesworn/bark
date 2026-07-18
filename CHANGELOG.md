@@ -2,6 +2,14 @@
 
 All notable changes to Bark are documented here.
 
+## [Unreleased]
+
+### Added
+
+- The approval window names the V4V gated kinds: 27117 "Gated Deposit
+  Authorisation" and 30808 "Gated Content Listing", instead of the generic
+  unknown-kind label. Kind numbers are provisional until NIP review.
+
 ## [1.3.4] — 2026-07-18
 
 ### Fixed
