@@ -2,6 +2,15 @@
 
 All notable changes to Bark are documented here.
 
+## [1.3.4] — 2026-07-18
+
+### Fixed
+
+- "The message port closed before a response was received" is now treated
+  as a service-worker wake-up error and retried, matching the other
+  wake-up wordings. Previously the first request after the worker idled
+  out could fail with this error instead of retrying.
+
 ## [1.3.3] — 2026-07-16
 
 ### Changed

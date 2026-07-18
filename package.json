@@ -1,6 +1,6 @@
 {
   "name": "@forgesworn/bark",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Heartwood-aware NIP-07 browser extension. Signs through your Heartwood device via NIP-46.",
   "private": true,
   "type": "module",
