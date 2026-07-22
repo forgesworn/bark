@@ -4,8 +4,14 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.5] — 2026-07-22
+
 ### Added
 
+- Policy-gated website requests now show an unmistakable in-page Bark notice
+  with a "Review in Bark" action. The action foregrounds Bark's approval
+  window, covering browsers and window managers that open it out of sight;
+  the notice clears automatically when the request settles.
 - The approval window names the V4V gated kinds: 27117 "Gated Deposit
   Authorisation" and 30808 "Gated Content Listing", instead of the generic
   unknown-kind label. Kind numbers are provisional until NIP review.
