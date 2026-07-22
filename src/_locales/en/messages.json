@@ -187,6 +187,10 @@
     "placeholders": { "origin": { "content": "$1", "example": "https://primal.net" } }
   },
   "approveRequestTitle": { "message": "Approve Request?" },
+  "approvalNoticeTitle": { "message": "Bark needs your approval", "description": "Heading of the in-page notice shown while a website request awaits Bark approval." },
+  "approvalNoticeBody": { "message": "Review the request to continue on this site.", "description": "Body of the in-page pending approval notice." },
+  "approvalNoticeReview": { "message": "Review in Bark", "description": "Button that foregrounds Bark's approval window." },
+  "approvalNoticeFallback": { "message": "Open Bark from the browser toolbar to review the request.", "description": "Fallback when Bark cannot foreground its approval window." },
   "wantsCallMethod": {
     "message": "$ORIGIN$ wants to call $METHOD$",
     "description": "$METHOD$ is a technical method name, already wrapped in code markup.",

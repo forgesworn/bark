@@ -42,7 +42,7 @@ three add the approval and policy systems.
 | File | Role |
 |------|------|
 | `provider.js` | Injected into every page. Implements `window.nostr`. Posts `bark-request` messages to the content script and resolves pending promises on `bark-response`. Includes a 60-second timeout and a stale-extension banner. |
-| `content-script.js` | Bridge between the page and the extension. Relays `postMessage` ↔ `chrome.runtime.sendMessage`. Validates message origin and structure. Handles MV3 service-worker wakeup (one automatic retry after 500 ms). Marks itself stale on context invalidation and notifies pending pages. |
+| `content-script.js` | Bridge between the page and the extension. Relays `postMessage` ↔ `chrome.runtime.sendMessage`, validates message origin and structure, retries MV3 service-worker wakeups, and shows the temporary in-page approval notice without reading page content. |
 | `background.js` | Service worker. Holds the NIP-46 connection via `nostr-tools` `BunkerSigner`. Routes requests, validates methods, applies policies, manages multi-instance storage, and sanitises errors before returning them to the page. |
 | `popup.js` | Popup UI. Two-tier rendering: standard bunker mode and Heartwood mode. Shows relay health, active persona, and connection controls. |
 | `popup.html` | Popup markup and styles. Dark theme, 320 px wide. |
@@ -185,14 +185,17 @@ Background enforces a layered allow/ask/deny policy before forwarding requests:
 2. Site-specific method default
 3. Global kind rule
 4. Global method default
-5. Fallback: allow
+5. Fallback: ask
 
 Default policy: `getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt`
-are all `allow`. Event kinds 0 (profile), 3 (contact list), and 10002 (relay
-list) require confirmation (`ask`).
+are all `ask`. Event kinds 0 (profile), 3 (contact list), and 10002 (relay
+list) remain protected on trusted sites unless explicitly overridden.
 
-When a request is `ask`, Bark opens a 420 × 520 popup for the user to allow or
-deny. The request times out after 60 seconds if the popup is not acted on.
+When a request is `ask`, Bark opens a 420 × 520 popup for the user to allow
+once, trust the site, or deny. The requesting page also receives a temporary
+Bark notice whose action foregrounds the approval popup. The notice clears when
+the request settles; the request times out after 60 seconds if the popup is not
+acted on.
 
 ---
 

@@ -38,7 +38,7 @@ Bark is a standard NIP-07 provider backed by standard NIP-46. It works with Hear
 • Enter a local Heartwood device address for HTTP pairing (Firefox; on Chrome, pair the device by bunker URI or QR).
 
 NOTHING SIGNS WITHOUT YOUR SAY
-The first time a site asks for your identity, a signature, or encryption, Bark asks you. Allow the request once, trust the site for routine signing, or deny it. Sensitive event kinds (your profile, contact list, and relay list) keep asking even on trusted sites unless you explicitly override them. Concurrent requests queue in order with a toolbar badge instead of failing.
+The first time a site asks for your identity, a signature, or encryption, Bark asks you. Allow the request once, trust the site for routine signing, or deny it. Sensitive event kinds (your profile, contact list, and relay list) keep asking even on trusted sites unless you explicitly override them. If the browser opens the approval window out of sight, an unmistakable in-page Bark notice tells you approval is waiting and its "Review in Bark" button brings the window forward. Concurrent requests queue in order with a toolbar badge instead of failing.
 
 POLICY CONTROL DOWN TO METHOD AND EVENT KIND
 The policy editor gives every site an allow/ask/deny rule, and each rule can override individual methods (for example, deny nip44.decrypt on one site while allowing signing) and individual event kinds. Sensible defaults protect newcomers; full control is there when you want it.
@@ -58,10 +58,11 @@ BUILT TO STAY OUT OF THE WAY
 • Multiple signer instances with one-click switching.
 • Keep-alive pings hold the relay connection open while you browse, so actions stay fast.
 • Provider injected before page scripts run: apps never see window.nostr as undefined.
+• Pending approvals stay visible with a temporary in-page notice and one-click return to Bark.
 • Localised into 53 languages.
 
 MINIMAL FOOTPRINT
-Bark declares no host permissions at all. Out of the box its content script runs only on a named list of popular Nostr clients; any other site works the moment you click Enable in the popup, for that visit, on that tab, and nowhere else. No browsing history, no remote code, no analytics, no tracking, no accounts, no wallet. The script reads nothing from the pages you visit and sends nothing anywhere except NIP-46 traffic to your own signer. The extension is fully open source (MIT) at github.com/forgesworn/bark, with a CI-tested build you can reproduce yourself.
+Bark declares no host permissions at all. Out of the box its content script runs only on a named list of popular Nostr clients; any other site works the moment you click Enable in the popup, for that visit, on that tab, and nowhere else. No browsing history, no remote code, no analytics, no tracking, no accounts, no wallet. The script does not read page content. It only exposes the standard NIP-07 interface and, while one of that site's requests awaits approval, adds a temporary Bark notice. Nothing is sent anywhere except NIP-46 traffic to your own signer. The extension is fully open source (MIT) at github.com/forgesworn/bark, with a CI-tested build you can reproduce yourself.
 
 Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hardware signer, and works just as well without it.
 ```
@@ -71,7 +72,7 @@ Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hard
 | Permission | Why |
 |---|---|
 | `storage` | Persists signer connection details (bunker URI, client auth key), site policies, enabled-site list, and connection health locally. Nothing leaves the machine except NIP-46 relay traffic to the user's own signer. |
-| `scripting` | Registers the NIP-07 provider content scripts for origins the user explicitly enables from the popup, and injects them into the invoking tab so the site works without a reload. Never used to read or modify page content. |
+| `scripting` | Registers the NIP-07 provider content scripts for origins the user explicitly enables from the popup, and injects them into the invoking tab so the site works without a reload. Bark does not read page content; it adds only the standard NIP-07 interface and a temporary, request-triggered approval notice. |
 | `activeTab` | Lets the popup show which site the user is on so they can enable Bark for it, and covers the immediate injection into that tab after they click Enable. No tab data is used beyond the origin shown to the user. |
 | Content scripts (curated list) | Baked-in matches for twelve well-known Nostr web clients plus localhost, so Bark works out of the box where most users need it. The Chromium manifest declares no host permissions at all, required or optional. |
 
@@ -98,7 +99,9 @@ patterns as host permissions. Paste this:
 > these sites need the window.nostr object injected before their scripts
 > run. For any other site, the user clicks Enable in the popup and
 > activeTab injects the same two scripts into that tab only, for that
-> visit only. The scripts read nothing from pages and transmit nothing
+> visit only. The scripts do not read page content. They expose the
+> standard NIP-07 interface and add a temporary Bark notice only while a
+> request from that site awaits user approval. They transmit nothing
 > except the user's own signing requests to their configured signer over
 > encrypted NIP-46. An optional privacy mode can further hide Bark from
 > any site without an explicit rule.
@@ -125,9 +128,9 @@ Certify all three disclosures — each is true:
 - No use/transfer for creditworthiness or lending ✓
 
 Privacy policy URL: https://github.com/forgesworn/bark/blob/main/PRIVACY.md
-(updated 2026-07-16 to cover QR pairing, auth_url, end-to-end encryption of
-request payloads, relay transport metadata, and privacy mode — keep it in
-step with any future data-flow change).
+(updated 2026-07-22 to cover QR pairing, auth_url, end-to-end encryption of
+request payloads, relay transport metadata, privacy mode, and the local-only
+approval notice — keep it in step with any future data-flow change).
 
 No remote code: all scripts are bundled; the CSP is `script-src 'self'`.
 
@@ -143,10 +146,12 @@ instructions:
 > impossible. That is the sole reason for the content script matches on
 > https://*/* (plus localhost/127.0.0.1 for local development and loopback
 > bridge pages). The provider only exposes the standard NIP-07 API; the
-> isolated content script validates origin and message shape, reads
-> nothing from pages, and transmits nothing except the user's own signing
-> requests to their configured signer over encrypted NIP-46. An optional
-> privacy mode further restricts injection to user-whitelisted sites only.
+> isolated content script validates origin and message shape, does not
+> read page content, and adds a temporary in-page notice only while that
+> site's request awaits approval. It transmits nothing except the user's
+> own signing requests to their configured signer over encrypted NIP-46.
+> An optional privacy mode further restricts injection to user-whitelisted
+> sites only.
 >
 > The declared wss://*/* and loopback ws:// host permissions cover the
 > WebSocket connections to the Nostr relays named in the user's own bunker
@@ -192,8 +197,9 @@ Where Bark leads — make these visible in the listing without naming them:
 - **Injection correctness**: MAIN-world declarative content script — no
   `window.nostr`-undefined race; Bunker46 uses script-tag injection via
   web-accessible resources.
-- **UX under load**: approval queue with badge count, keep-alive pings,
-  `auth_url` handling for nsec.app-style bunkers.
+- **UX under load**: approval queue with badge count, a request-triggered
+  in-page notice that foregrounds hidden approval windows, keep-alive pings,
+  and `auth_url` handling for nsec.app-style bunkers.
 - **Hardware**: Heartwood personas, HTTP pairing for local signers, live
   verification against physical hardware; plus a Safari build ready.
 

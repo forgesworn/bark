@@ -1,4 +1,5 @@
 import { isOriginExposed } from './policy.js'
+import { t } from './i18n.js'
 
 const extensionApi = globalThis.chrome || globalThis.browser
 
@@ -28,6 +29,147 @@ function runtimeSendMessage(payload) {
   }
   if (globalThis.browser?.runtime?.sendMessage) return globalThis.browser.runtime.sendMessage(payload)
   return Promise.reject(new Error('Extension runtime unavailable.'))
+}
+
+// ---------------------------------------------------------------------------
+// In-page approval attention
+// ---------------------------------------------------------------------------
+
+const APPROVAL_NOTICE_HOST_ID = 'bark-approval-notice-host'
+const pendingApprovalNotices = new Set()
+let approvalNoticeHost = null
+
+function removeApprovalNoticeIfIdle() {
+  if (pendingApprovalNotices.size > 0) return
+  approvalNoticeHost?.remove()
+  approvalNoticeHost = null
+}
+
+function clearApprovalNotice(requestId) {
+  pendingApprovalNotices.delete(requestId)
+  removeApprovalNoticeIfIdle()
+}
+
+function showApprovalNotice(requestId) {
+  pendingApprovalNotices.add(requestId)
+  if (approvalNoticeHost?.isConnected) return
+
+  const host = document.createElement('div')
+  host.id = APPROVAL_NOTICE_HOST_ID
+  const shadow = host.attachShadow({ mode: 'open' })
+
+  const style = document.createElement('style')
+  style.textContent = `
+    :host {
+      all: initial !important;
+      position: fixed !important;
+      right: 18px !important;
+      bottom: 18px !important;
+      z-index: 2147483647 !important;
+      display: block !important;
+      max-width: min(380px, calc(100vw - 36px)) !important;
+      color-scheme: dark !important;
+    }
+    .notice {
+      box-sizing: border-box;
+      width: 360px;
+      max-width: 100%;
+      padding: 16px;
+      border: 2px solid #55d86a;
+      border-radius: 10px;
+      background: #111820;
+      color: #f4f7f8;
+      box-shadow: 0 14px 42px rgba(0, 0, 0, .48);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+    }
+    .brand {
+      margin: 0 0 4px;
+      color: #55d86a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .14em;
+    }
+    h2 {
+      margin: 0 0 6px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 750;
+    }
+    p {
+      margin: 0 0 12px;
+      color: #c8d1d5;
+      font-size: 14px;
+    }
+    button {
+      appearance: none;
+      box-sizing: border-box;
+      border: 0;
+      border-radius: 7px;
+      background: #55d86a;
+      color: #07120a;
+      cursor: pointer;
+      padding: 9px 13px;
+      font: 750 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button:hover { background: #72e484; }
+    button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .status {
+      min-height: 0;
+      margin: 8px 0 0;
+      color: #ffcf70;
+      font-size: 12px;
+    }
+    .status:empty { display: none; }
+  `
+
+  const notice = document.createElement('section')
+  notice.className = 'notice'
+  notice.setAttribute('role', 'status')
+  notice.setAttribute('aria-live', 'assertive')
+
+  const brand = document.createElement('div')
+  brand.className = 'brand'
+  brand.textContent = 'BARK'
+
+  const title = document.createElement('h2')
+  title.textContent = t('approvalNoticeTitle')
+
+  const body = document.createElement('p')
+  body.textContent = t('approvalNoticeBody')
+
+  const review = document.createElement('button')
+  review.type = 'button'
+  review.textContent = t('approvalNoticeReview')
+
+  const status = document.createElement('p')
+  status.className = 'status'
+
+  review.addEventListener('click', async () => {
+    review.disabled = true
+    status.textContent = ''
+    try {
+      const result = await runtimeSendMessage({ type: 'bark-focus-approval' })
+      if (!result?.ok) status.textContent = t('approvalNoticeFallback')
+    } catch {
+      status.textContent = t('approvalNoticeFallback')
+    } finally {
+      review.disabled = false
+    }
+  })
+
+  notice.append(brand, title, body, review, status)
+  shadow.append(style, notice)
+  approvalNoticeHost = host
+  ;(document.body || document.documentElement).appendChild(host)
+}
+
+if (extensionApi.runtime?.onMessage) {
+  extensionApi.runtime.onMessage.addListener((message) => {
+    if (message?.type !== 'bark-approval-pending') return
+    if (!Number.isInteger(message.requestId) || message.requestId <= 0) return
+    showApprovalNotice(message.requestId)
+  })
 }
 
 // Chromium and Firefox (128+) inject provider.js declaratively via a
@@ -159,7 +301,7 @@ window.addEventListener('message', async (event) => {
   }
 
   try {
-    const result = await enqueueSend({ type: 'bark-request', method, params })
+    const result = await enqueueSend({ type: 'bark-request', method, params, pageRequestId: id })
     // Background sends errors as {error: 'msg'} via sendResponse — unwrap them.
     if (result && result.error) {
       window.postMessage({ type: 'bark-response', id, error: result.error }, window.location.origin)
@@ -182,5 +324,7 @@ window.addEventListener('message', async (event) => {
         window.location.origin,
       )
     }
+  } finally {
+    clearApprovalNotice(id)
   }
 })

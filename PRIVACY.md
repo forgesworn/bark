@@ -61,6 +61,16 @@ per-identity bunker URI manifest. For Wi-Fi-less hardware behind
 `heartwood-bridge`, Bark does not communicate with the board over USB/serial;
 the host daemon handles that transport.
 
+## Approval notices
+
+When a website request needs your approval, Bark temporarily adds a small
+notice to that page so a browser-hidden approval window cannot leave the site
+appearing stuck. The notice contains Bark's own text and a button that brings
+the approval window forward. Bark does not read the page's content to show it,
+and the notice is removed as soon as the request succeeds, is denied, or fails.
+This is local presentation only and does not add any network activity or data
+collection.
+
 With privacy mode enabled, Bark additionally hides `window.nostr` from every
 site without a site rule, so unlisted sites cannot detect that the extension
 is installed. This is a local behaviour switch; it involves no network

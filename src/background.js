@@ -597,7 +597,7 @@ const APPROVAL_QUEUE_TIMEOUT_MS = 180_000
 // Approval system — pending requests awaiting user decision
 // ---------------------------------------------------------------------------
 
-/** @type {Map<string, { method: string, params: any, event?: object, pubkey: string, personaName: string, origin: string, instanceId?: string, sendResponse: Function, timeoutId: number, windowId?: number }>} */
+/** @type {Map<string, { method: string, params: any, event?: object, pubkey: string, personaName: string, origin: string, instanceId?: string, tabId?: number, frameId?: number, pageRequestId?: number, sendResponse: Function, timeoutId: number, windowId?: number }>} */
 const pendingApprovals = new Map()
 
 /** @type {string[]} FIFO of requestIds waiting for their approval window. */
@@ -622,6 +622,36 @@ function updateApprovalBadge() {
 }
 
 /**
+ * Tell the originating content script that Bark is waiting for approval. The
+ * page-level notice is a fallback for browsers/window managers that create the
+ * approval popup behind the current window or otherwise fail to draw attention
+ * to it. Delivery is best-effort; the approval popup and toolbar badge remain
+ * the authoritative controls.
+ */
+function notifyApprovalPending(details) {
+  if (typeof chrome === 'undefined' || !chrome.tabs?.sendMessage) return
+  if (!Number.isInteger(details.tabId) || details.tabId < 0) return
+  if (!Number.isInteger(details.pageRequestId) || details.pageRequestId <= 0) return
+
+  const options = Number.isInteger(details.frameId) ? { frameId: details.frameId } : undefined
+  try {
+    chrome.tabs.sendMessage(
+      details.tabId,
+      {
+        type: 'bark-approval-pending',
+        requestId: details.pageRequestId,
+        method: details.method,
+      },
+      options,
+      () => { void chrome.runtime.lastError },
+    )
+  } catch {
+    // The tab may have navigated or closed between the request and policy
+    // evaluation. The original request will settle through its normal path.
+  }
+}
+
+/**
  * Queue an approval request. Sites often fire several NIP-07 calls at once
  * (e.g. getPublicKey + signEvent on login), so requests queue and display
  * one at a time instead of rejecting while another approval is pending.
@@ -634,7 +664,22 @@ function enqueueApproval(requestId, details) {
   pendingApprovals.set(requestId, { ...details, timeoutId })
   approvalQueue.push(requestId)
   updateApprovalBadge()
+  notifyApprovalPending(details)
   void openNextApproval()
+}
+
+/** Foreground the active approval window for a request from the same tab. */
+async function focusActiveApprovalForTab(tabId) {
+  if (!Number.isInteger(tabId) || !activeApprovalId) return false
+  const entry = pendingApprovals.get(activeApprovalId)
+  if (!entry || entry.tabId !== tabId || !Number.isInteger(entry.windowId)) return false
+
+  try {
+    await chrome.windows.update(entry.windowId, { focused: true })
+    return true
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -1973,6 +2018,17 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       return true
     }
 
+    if (message.type === 'bark-focus-approval') {
+      ;(async () => {
+        const focused = await focusActiveApprovalForTab(sender.tab?.id)
+        sendResponse({
+          ok: focused,
+          ...(focused ? {} : { error: 'No Bark approval window is ready for this tab.' }),
+        })
+      })()
+      return true
+    }
+
     if (message.type === 'bark-site-status') {
       (async () => {
         try {
@@ -2359,6 +2415,9 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               personaName,
               instanceId: approvalInstanceId,
               origin,
+              tabId: sender.tab?.id,
+              frameId: sender.frameId,
+              pageRequestId: message.pageRequestId,
               sendResponse,
             })
           } catch (err) {

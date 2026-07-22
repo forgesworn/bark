@@ -45,7 +45,7 @@ Five source files, one dependency (nostr-tools):
 - **No local keys** — unlike nos2x or Alby, keys never exist in the browser
 - **NIP-46 remote signing** — like Remote NIP-07, but works with any bunker
 - **Persona derivation** — unique to Bark+Heartwood, no other extension does this
-- **Minimal** — 5 files, ~800 lines, 1 dependency
+- **Focused** — one job: expose standard NIP-07 while signing through NIP-46
 
 ## Policy system
 
@@ -56,15 +56,18 @@ are checked in priority order; first match wins:
 2. Site-specific method default
 3. Global kind rule
 4. Global method default
-5. Fallback: allow
+5. Fallback: ask
 
 Default policy: `getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt` are
-`allow`. Event kinds 0 (profile metadata), 3 (contact list), and 10002 (relay list)
-require explicit user confirmation (`ask`).
+`ask`. Event kinds 0 (profile metadata), 3 (contact list), and 10002 (relay list)
+remain protected even after a site is trusted unless explicitly overridden.
 
 When a request triggers `ask`, Bark opens a 420 × 520 approval popup. The user
-allows or denies. The request times out after 60 seconds if the popup is not acted on.
-The policy is configurable per method, per event kind, and per origin.
+can allow once, trust the site, or deny. Bark also shows a temporary notice in
+the requesting page; its Review in Bark action foregrounds an approval window
+that the browser opened out of sight. The request times out after 60 seconds if
+the popup is not acted on. The policy is configurable per method, per event kind,
+and per origin.
 
 ## Multi-instance support
 
