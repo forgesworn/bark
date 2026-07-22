@@ -64,7 +64,7 @@ describe('locale catalogues', () => {
 
   it('covers every key referenced from source', () => {
     const referenced = new Set()
-    for (const file of ['popup.js', 'approve.js', 'popup.html', 'approve.html']) {
+    for (const file of ['popup.js', 'approve.js', 'content-script.js', 'popup.html', 'approve.html']) {
       const source = readFileSync(resolve(srcDir, file), 'utf8')
       for (const match of source.matchAll(/\bt\(\s*'([A-Za-z0-9_]+)'/g)) referenced.add(match[1])
       for (const match of source.matchAll(/data-i18n(?:-placeholder|-title)?="([A-Za-z0-9_]+)"/g)) referenced.add(match[1])

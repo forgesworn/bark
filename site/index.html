@@ -256,7 +256,7 @@
     <div class="grid">
       <div class="card">
         <h3>It asks first</h3>
-        <p>The first time a site wants your identity or a signature, you decide: allow once, trust the site, or deny. Your profile, contact list, and relay list stay protected even on trusted sites. Multiple requests queue politely instead of failing.</p>
+        <p>The first time a site wants your identity or a signature, you decide: allow once, trust the site, or deny. If the browser hides the approval window, Bark puts a clear notice on the page with one button to bring it forward. Your profile, contact list, and relay list stay protected even on trusted sites. Multiple requests queue politely instead of failing.</p>
       </div>
       <div class="card">
         <h3>Rules you set once</h3>
@@ -272,7 +272,7 @@
       </div>
       <div class="card">
         <h3>Nothing to leak</h3>
-        <p>No blanket site access: on Chrome, Bark runs only on well-known Nostr apps out of the box, and anywhere else needs your one-click say-so. No browsing history, no remote code, no analytics, and it reads nothing from the pages you visit.</p>
+        <p>No blanket site access: on Chrome, Bark runs only on well-known Nostr apps out of the box, and anywhere else needs your one-click say-so. No browsing history, no remote code, no analytics, and no reading page content. Bark adds only the NIP-07 bridge and a temporary notice when your approval is needed.</p>
       </div>
       <div class="card">
         <h3>Speaks your language</h3>
@@ -305,7 +305,7 @@
 <section class="alt" id="screenshots">
   <div class="wrap">
     <h2>A quick look</h2>
-    <p class="lede">The popup, the approval window, and the policy editor. Dark theme only, because we know our audience.</p>
+    <p class="lede">The popup, visible approval prompts, and the policy editor. Bark tells you on the page when a request is waiting, even if your browser hid the approval window.</p>
     <div class="shots">
       <img src="assets/01-connected.png" alt="Bark popup connected to a remote signer" loading="lazy">
       <img src="assets/02-approval.png" alt="Approval window asking before signing" loading="lazy">

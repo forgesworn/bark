@@ -95,6 +95,19 @@ test('enforces approval popup deny, allow-once, trust-site, and protected-kind f
         await page.goto(url)
         await waitForNostr(page)
 
+        // First-use identity requests must be visible in the page even when
+        // the browser opens Bark's approval window behind the current window.
+        const publicKeyApprovalPagePromise = waitForApprovalPage(context)
+        const publicKeyResultPromise = callNostrResult(page, 'getPublicKey', undefined, 30_000)
+        const publicKeyApprovalPage = await publicKeyApprovalPagePromise
+        await expect(page.getByText('Bark needs your approval')).toBeVisible()
+        const reviewInBark = page.getByRole('button', { name: 'Review in Bark' })
+        await expect(reviewInBark).toBeVisible()
+        await reviewInBark.click()
+        await clickDecision(publicKeyApprovalPage, 'Allow Once')
+        await expect(publicKeyResultPromise).resolves.toEqual({ ok: true, result: signer.pubkey })
+        await expect(page.locator('#bark-approval-notice-host')).toHaveCount(0)
+
         const deniedTemplate = noteEvent('deny this untrusted signEvent', [['client', 'bark-approval-deny']])
         const denied = await submitSignRequestAndWaitForApproval(context, page, deniedTemplate)
         await expect(denied.approvalPage.getByRole('heading', { name: 'Sign Kind 1?' })).toBeVisible()

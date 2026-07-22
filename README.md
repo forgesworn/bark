@@ -13,6 +13,8 @@ Bark is a minimal NIP-07 browser extension that signs Nostr events through a rem
 - **Switches Heartwood identities**: imports Heartwood's per-identity bunker URIs and switches by selecting the right bunker instance
 - **Bridge-friendly**: works with Wi-Fi devices, Heartwood daemons, or relay-to-serial bridges for tethered low-cost hardware
 - **Self-sovereign**: keys live on your signer hardware, never touch the browser
+- **Visible approvals**: policy-gated requests show an in-page Bark notice that
+  can bring a hidden approval window to the front
 - **Privacy mode**: optionally hide `window.nostr` from every site except the ones you whitelist, so pages cannot fingerprint the extension
 - **Speaks your language**: the UI ships in 53 locales
 
@@ -119,7 +121,9 @@ contacts, and relay lists continue to ask unless you add an explicit site kind
 override in the popup policy settings. Each site rule can also override
 individual methods (for example, deny `nip44.decrypt` on one site while
 allowing signing), and privacy mode hides Bark entirely from sites without a
-rule.
+rule. While approval is pending, Bark also shows a temporary notice inside the
+requesting page. Its **Review in Bark** button foregrounds the approval window
+when the browser or window manager opened it out of sight.
 
 ## Heartwood RPC extensions
 
