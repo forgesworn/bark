@@ -870,6 +870,39 @@ export function isInternalSender(sender, extensionBaseUrl) {
 }
 
 /**
+ * Message types a content script is allowed to send. Everything else is
+ * extension-UI only: instance management, pairing, connection teardown, and
+ * above all the approval verdict, which must never be reachable from a page's
+ * side of the bridge.
+ */
+const CONTENT_SCRIPT_MESSAGE_TYPES = new Set([
+  'bark-request',
+  'bark-focus-approval',
+])
+
+/**
+ * Whether a message from `sender` is allowed to reach the handler for
+ * `messageType`.
+ *
+ * The content script only ever relays `bark-request` (and `bark-focus-approval`
+ * from its own approval notice), so today no page can address the privileged
+ * handlers. That is one filter in one file standing between a web page and, for
+ * instance, `bark-approval-response` — with which a page could approve its own
+ * pending signing request. This is the second lock: privileged types are
+ * checked against the sender here as well, so a future change to the bridge
+ * cannot silently open them up.
+ *
+ * @param {chrome.runtime.MessageSender|object} sender
+ * @param {string} messageType
+ * @param {string} extensionBaseUrl  chrome.runtime.getURL('')
+ * @returns {boolean}
+ */
+export function isSenderAllowedForMessage(sender, messageType, extensionBaseUrl) {
+  if (isInternalSender(sender, extensionBaseUrl)) return true
+  return CONTENT_SCRIPT_MESSAGE_TYPES.has(messageType)
+}
+
+/**
  * Canonicalize a Chrome message sender into a web origin. Only http/https
  * origins are valid for site policies and web-page NIP-07 requests.
  *
@@ -2012,6 +2045,14 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     // sources.
     if (sender.id && sender.id !== chrome.runtime.id) return
     if (!sender.id && !sender.tab && sender.url && !sender.url.startsWith(chrome.runtime.getURL(''))) return
+
+    // Content scripts may only reach the two types the bridge actually sends.
+    // Everything below — pairing, instance management, connection teardown,
+    // approval verdicts — is extension UI only.
+    if (!isSenderAllowedForMessage(sender, message.type, chrome.runtime.getURL(''))) {
+      debug('[bark:bg] rejected privileged message from content script:', message.type)
+      return
+    }
 
     if (message.type === 'bark-status') {
       sendResponse({ ...connectionState })

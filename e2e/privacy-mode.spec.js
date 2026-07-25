@@ -46,28 +46,38 @@ test('hides window.nostr from unlisted origins when privacy mode is on', async (
 
     const page = await context.newPage()
     try {
-      await page.goto(url)
-
-      // Give the exposure check ample time to settle, then assert absence.
-      await page.waitForTimeout(1_000)
-      expect(await page.evaluate(() => typeof window.nostr)).toBe('undefined')
-
       // A page that fakes the provider's postMessage protocol must get
-      // silence, not a response — a response would fingerprint Bark.
-      const sawResponse = await page.evaluate(() => new Promise((resolve) => {
-        const timer = setTimeout(() => resolve(false), 1_500)
-        window.addEventListener('message', (event) => {
-          if (event.data?.type === 'bark-response') {
-            clearTimeout(timer)
-            resolve(true)
-          }
+      // silence, not a response — a response would fingerprint Bark. Probe
+      // from the first moment of the document and keep probing: the exposure
+      // verdict costs a chrome.storage round trip, so the interesting window
+      // is the first few milliseconds, before a page's own scripts would
+      // normally get a turn. Any response to any probe means a hidden origin
+      // was served.
+      await page.addInitScript(() => {
+        window.__barkSawResponse = new Promise((resolve) => {
+          window.addEventListener('message', (event) => {
+            if (event.data?.type === 'bark-response') resolve(true)
+          })
+          let id = 0
+          const probe = setInterval(() => {
+            window.postMessage(
+              { type: 'bark-request', id: ++id, method: 'getPublicKey' },
+              window.location.origin,
+            )
+            if (id >= 60) {
+              clearInterval(probe)
+              // A forwarded request retries through MV3 service-worker
+              // wake-up for several seconds before it can answer, so a short
+              // wait here would read as silence whatever the bridge did.
+              setTimeout(() => resolve(false), 12_000)
+            }
+          }, 5)
         })
-        window.postMessage(
-          { type: 'bark-request', id: 1, method: 'getPublicKey' },
-          window.location.origin,
-        )
-      }))
-      expect(sawResponse).toBe(false)
+      })
+
+      await page.goto(url)
+      expect(await page.evaluate(() => typeof window.nostr)).toBe('undefined')
+      expect(await page.evaluate(() => window.__barkSawResponse)).toBe(false)
     } finally {
       await page.close()
     }
