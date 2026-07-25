@@ -185,17 +185,22 @@ const INJECT_PROVIDER = typeof __BARK_INJECT_PROVIDER__ === 'undefined' || __BAR
 // deleting window.nostr alone would not stop a page that synthesises
 // bark-request messages by hand. On a storage failure we fail open: privacy
 // mode off is the default state, and a transient error must not kill NIP-07.
-let siteHidden = false
-
+//
+// The verdict is a promise, not a boolean, because reading it takes a trip
+// through chrome.storage. Both content scripts run at document_start, so a
+// page script can post a bark-request before that read resolves — a mutable
+// "hidden" flag still reading its permissive default at that moment would
+// forward the request (and pop an approval window) on an origin the user has
+// hidden. The request handler awaits this instead, so early requests queue
+// until the verdict is known rather than racing it.
 async function applyExposure() {
   let exposed = true
   try {
     const { privacy, policies } = await storageGet(['privacy', 'policies'])
     exposed = isOriginExposed(policies, Boolean(privacy?.enabled), window.location.origin)
   } catch { /* fail open */ }
-  siteHidden = !exposed
   if (INJECT_PROVIDER) {
-    if (!exposed) return
+    if (!exposed) return exposed
     const script = document.createElement('script')
     script.src = runtimeGetURL('provider.js')
     script.onload = () => script.remove()
@@ -203,8 +208,10 @@ async function applyExposure() {
   } else if (!exposed) {
     window.postMessage({ type: 'bark-expose', exposed: false }, window.location.origin)
   }
+  return exposed
 }
-applyExposure()
+
+const exposureVerdict = applyExposure()
 
 const DEBUG = false
 function debug(...args) {
@@ -278,10 +285,6 @@ window.addEventListener('message', async (event) => {
   if (event.origin !== window.location.origin) return
   if (event.data?.type !== 'bark-request') return
 
-  // Hidden origins get silence, not an error — an error would itself be a
-  // fingerprint that Bark is installed.
-  if (siteHidden) return
-
   const { id, method, params } = event.data
 
   // Validate id is a positive integer to prevent spoofed/replayed responses.
@@ -289,6 +292,13 @@ window.addEventListener('message', async (event) => {
 
   // Validate method is a non-empty string.
   if (typeof method !== 'string' || method.length === 0) return
+
+  // Hidden origins get silence, not an error — an error would itself be a
+  // fingerprint that Bark is installed. Awaiting the verdict (rather than
+  // reading a flag that may not be set yet) is what makes a request arriving
+  // in the first milliseconds after document_start subject to the same check
+  // as every later one.
+  if (!(await exposureVerdict)) return
 
   debug('[bark:content] → bg', method, 'id=' + id)
 

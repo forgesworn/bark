@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, originToMatchPattern, originCoveredByPatterns } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -658,6 +658,46 @@ describe('isInternalSender', () => {
     expect(isInternalSender({ tab: { id: 1 }, origin: 'chrome-extension://otherextension' }, base)).toBe(false)
     expect(isInternalSender({ tab: { id: 1 } }, base)).toBe(false)
     expect(isInternalSender({ tab: { id: 1 }, origin: '' }, base)).toBe(false)
+  })
+})
+
+describe('isSenderAllowedForMessage', () => {
+  const base = 'chrome-extension://abcdefghijklmnop/'
+  const popup = {}
+  const contentScript = { tab: { id: 1 }, origin: 'https://snort.social' }
+
+  it('lets extension UI send anything', () => {
+    for (const type of [
+      'bark-status', 'bark-request', 'bark-reset', 'bark-pair', 'bark-switch',
+      'bark-remove', 'bark-site-enable', 'bark-site-disable', 'bark-prime-signer',
+      'bark-approval-query', 'bark-approval-response', 'bark-nostrconnect-start',
+    ]) {
+      expect(isSenderAllowedForMessage(popup, type, base)).toBe(true)
+    }
+  })
+
+  it('lets content scripts send the two bridge messages', () => {
+    expect(isSenderAllowedForMessage(contentScript, 'bark-request', base)).toBe(true)
+    expect(isSenderAllowedForMessage(contentScript, 'bark-focus-approval', base)).toBe(true)
+  })
+
+  it('blocks privileged messages from content scripts', () => {
+    // bark-approval-response is the one that matters most: reaching it from a
+    // page would let the page approve its own pending signing request.
+    for (const type of [
+      'bark-approval-response', 'bark-approval-query', 'bark-pair', 'bark-switch',
+      'bark-remove', 'bark-reset', 'bark-site-enable', 'bark-site-disable',
+      'bark-prime-signer', 'bark-status', 'bark-nostrconnect-start',
+      'bark-nostrconnect-status', 'bark-nostrconnect-cancel',
+      'bark-refresh-heartwood-identities',
+    ]) {
+      expect(isSenderAllowedForMessage(contentScript, type, base)).toBe(false)
+    }
+  })
+
+  it('blocks unknown message types from content scripts', () => {
+    expect(isSenderAllowedForMessage(contentScript, 'bark-not-a-real-type', base)).toBe(false)
+    expect(isSenderAllowedForMessage(contentScript, undefined, base)).toBe(false)
   })
 })
 

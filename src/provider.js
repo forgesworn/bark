@@ -98,6 +98,14 @@
   // this origin. Retract window.nostr (only if it is still ours) so the page
   // cannot detect the extension. The content script independently drops any
   // requests from hidden origins, so this is presentation, not enforcement.
+  //
+  // Presentation is also best-effort: this script is injected declaratively at
+  // document_start and the retraction cannot arrive until the content script
+  // has read chrome.storage, so a page that snapshots window.nostr in its very
+  // first statements can still observe it. Enforcement does not share that
+  // window — the content script awaits its exposure verdict before forwarding
+  // anything, so a hidden origin gets no key material and no approval prompt
+  // however early it asks.
   window.addEventListener('message', (event) => {
     if (event.source !== window) return
     if (event.origin !== window.location.origin) return
