@@ -889,7 +889,9 @@ describe('explainOversizeSigningFailure', () => {
     const out = explainOversizeSigningFailure(big, err)
     expect(out).toBeInstanceOf(Error)
     expect(out.message).toMatch(/timed out\./)
-    expect(out.message).toMatch(/20 KB/)
+    // Derived, not a literal: this asserted /20 KB/ and went stale twice as the
+    // measured signer ceiling moved 20480 -> 16384 -> 12288.
+    expect(out.message).toContain(`${Math.round(LARGE_EVENT_HINT_BYTES / 1024)} KB`)
     // The original is preserved so nothing downstream loses the real cause.
     expect(out.cause).toBe(err)
   })

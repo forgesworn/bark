@@ -1375,17 +1375,21 @@ async function markSigningFailed(err) {
 /** Event content at or above which a signing timeout is more likely to be a
  *  hardware size limit than a connectivity problem.
  *
- *  A Heartwood signer accepts about 20 KB of event content over the relay
- *  transport: its inbound WebSocket cap, once you undo NIP-44 padding, the
- *  base64 expansion and the event envelope, lands on 20480 bytes. Past that the
- *  device drops the frame and reconnects, so the client sees a plain timeout
- *  with nothing to distinguish it from a dead relay.
+ *  A Heartwood signer accepts about 12 KB of event content over the relay
+ *  transport. That figure is not a wire limit, which is where earlier guesses of
+ *  20480 and 16384 came from. It is a PARSING limit: NIP-46 carries the event as
+ *  a JSON string inside params, so unescaping it grows a buffer by doubling, and
+ *  the device runs out of one contiguous block long before it runs out of memory.
+ *
+ *  Current firmware answers "request is too large for this signer" outright, so
+ *  this hint is for the case that produced it: older firmware, or another bunker,
+ *  going quiet and leaving a bare timeout that looks like a dead relay.
  *
  *  This is a HINT, not a gate. Bark speaks NIP-46 to any bunker, and a software
  *  signer has no such ceiling, so refusing large events outright would break
  *  perfectly valid signing. We only use the size to explain a failure that has
  *  already happened. */
-export const LARGE_EVENT_HINT_BYTES = 20480
+export const LARGE_EVENT_HINT_BYTES = 12288
 
 /** Byte length of the content a signer actually has to carry. */
 export function eventContentBytes(event) {
