@@ -1372,6 +1372,53 @@ async function markSigningFailed(err) {
   })
 }
 
+/** Event content at or above which a signing timeout is more likely to be a
+ *  hardware size limit than a connectivity problem.
+ *
+ *  A Heartwood signer accepts about 20 KB of event content over the relay
+ *  transport: its inbound WebSocket cap, once you undo NIP-44 padding, the
+ *  base64 expansion and the event envelope, lands on 20480 bytes. Past that the
+ *  device drops the frame and reconnects, so the client sees a plain timeout
+ *  with nothing to distinguish it from a dead relay.
+ *
+ *  This is a HINT, not a gate. Bark speaks NIP-46 to any bunker, and a software
+ *  signer has no such ceiling, so refusing large events outright would break
+ *  perfectly valid signing. We only use the size to explain a failure that has
+ *  already happened. */
+export const LARGE_EVENT_HINT_BYTES = 20480
+
+/** Byte length of the content a signer actually has to carry. */
+export function eventContentBytes(event) {
+  try {
+    return new TextEncoder().encode(JSON.stringify(event ?? {})).length
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * Given a failed signing attempt, return a better-explained Error when the
+ * event's size is the likely cause, or null to leave the original alone.
+ *
+ * Pure, so the decision can be tested without driving a bunker.
+ */
+export function explainOversizeSigningFailure(event, err) {
+  const msg = typeof err === 'string' ? err : (err?.message || '')
+  // Only timeouts: an explicit signer error already says what went wrong, and
+  // a user denial has nothing to do with size.
+  if (!msg.endsWith(' timed out.')) return null
+  const bytes = eventContentBytes(event)
+  if (bytes < LARGE_EVENT_HINT_BYTES) return null
+
+  const sized = new Error(
+    `${msg} This event is ${Math.round(bytes / 1024)} KB. A hardware signer typically ` +
+    `accepts about ${Math.round(LARGE_EVENT_HINT_BYTES / 1024)} KB, so it may be too large ` +
+    `to sign rather than the connection being at fault.`,
+  )
+  sized.cause = err
+  return sized
+}
+
 async function signWithHealthTracking(bunker, event, label, reason = 'request') {
   setSigningState('pending', {
     signingLastError: null,
@@ -1383,8 +1430,12 @@ async function signWithHealthTracking(bunker, event, label, reason = 'request') 
     await markSigningSucceeded(signed)
     return signed
   } catch (err) {
-    await markSigningFailed(err)
-    throw err
+    // A timeout on a large event is almost always the signer's size limit
+    // rather than the connection. Say so, with the actual number, instead of
+    // sending the user to check their relays.
+    const sized = explainOversizeSigningFailure(event, err)
+    await markSigningFailed(sized ?? err)
+    throw sized ?? err
   }
 }
 

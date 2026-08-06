@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -877,5 +877,61 @@ describe('chromium manifest host patterns', () => {
         expect(pattern, `wildcard subdomain in ${pattern}`).not.toContain('*.')
       }
     }
+  })
+})
+
+describe('explainOversizeSigningFailure', () => {
+  const big = { kind: 1, content: 'a'.repeat(LARGE_EVENT_HINT_BYTES) }
+  const small = { kind: 1, content: 'hello' }
+
+  it('explains a timeout on a large event in terms of size', () => {
+    const err = new Error('signEvent timed out.')
+    const out = explainOversizeSigningFailure(big, err)
+    expect(out).toBeInstanceOf(Error)
+    expect(out.message).toMatch(/timed out\./)
+    expect(out.message).toMatch(/20 KB/)
+    // The original is preserved so nothing downstream loses the real cause.
+    expect(out.cause).toBe(err)
+  })
+
+  it('leaves a timeout on a small event alone', () => {
+    // A small event timing out is a connection problem; blaming size would
+    // send the user chasing the wrong thing.
+    expect(explainOversizeSigningFailure(small, new Error('signEvent timed out.'))).toBeNull()
+  })
+
+  it('leaves non-timeout failures alone however large the event', () => {
+    // An explicit refusal already says what happened, and a user denial has
+    // nothing to do with size.
+    expect(explainOversizeSigningFailure(big, new Error('user denied'))).toBeNull()
+    expect(explainOversizeSigningFailure(big, new Error('signer returned an error'))).toBeNull()
+  })
+
+  it('handles string errors and unserialisable events without throwing', () => {
+    expect(explainOversizeSigningFailure(big, 'signEvent timed out.')).toBeInstanceOf(Error)
+    const circular = { kind: 1 }
+    circular.self = circular
+    expect(explainOversizeSigningFailure(circular, new Error('x timed out.'))).toBeNull()
+  })
+})
+
+describe('eventContentBytes', () => {
+  it('measures the serialised event, not just its content', () => {
+    expect(eventContentBytes({ kind: 1, content: 'abc' })).toBe(
+      new TextEncoder().encode(JSON.stringify({ kind: 1, content: 'abc' })).length,
+    )
+  })
+
+  it('counts multi-byte characters as their UTF-8 length', () => {
+    // A naive .length would undercount here and let an oversize event through.
+    expect(eventContentBytes({ content: '€' })).toBeGreaterThan(
+      JSON.stringify({ content: '€' }).length - 1,
+    )
+  })
+
+  it('returns 0 rather than throwing on a circular event', () => {
+    const circular = {}
+    circular.self = circular
+    expect(eventContentBytes(circular)).toBe(0)
   })
 })
