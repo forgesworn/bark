@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -935,5 +935,44 @@ describe('eventContentBytes', () => {
     const circular = {}
     circular.self = circular
     expect(eventContentBytes(circular)).toBe(0)
+  })
+})
+
+describe('compact signing dialect', () => {
+  const template = { kind: 1, created_at: 1700000000, tags: [], content: 'hello' }
+  const compact = JSON.stringify({
+    id: 'a'.repeat(64),
+    pubkey: 'b'.repeat(64),
+    created_at: 1700000000,
+    sig: 'c'.repeat(128),
+  })
+
+  it('rebuilds the full event from the parts the client already had', () => {
+    const signed = rebuildCompactSignedEvent(template, compact, () => true)
+    // Content and tags come from OUR template: the signer never sent them back.
+    expect(signed.content).toBe('hello')
+    expect(signed.tags).toEqual([])
+    expect(signed.kind).toBe(1)
+    expect(signed.id).toBe('a'.repeat(64))
+    expect(signed.sig).toBe('c'.repeat(128))
+    // The signer is entitled to set these, so its values win.
+    expect(signed.pubkey).toBe('b'.repeat(64))
+  })
+
+  it('rejects a compact reply whose signature does not check out', () => {
+    // The safety property behind returning no content: a sig that belongs to
+    // different content cannot verify against the event we rebuild.
+    expect(() => rebuildCompactSignedEvent(template, compact, () => false)).toThrow(/improperly signed/)
+  })
+
+  it('falls back only when the bunker does not know the method', () => {
+    expect(looksLikeUnknownMethod(new Error('Unknown method: sign_event_compact'))).toBe(true)
+    expect(looksLikeUnknownMethod(new Error('method not found'))).toBe(true)
+    expect(looksLikeUnknownMethod('unsupported')).toBe(true)
+    // These fail identically on the standard path, so retrying would only
+    // double the wait and re-prompt the user for approval.
+    expect(looksLikeUnknownMethod(new Error('signEvent timed out.'))).toBe(false)
+    expect(looksLikeUnknownMethod(new Error('user denied'))).toBe(false)
+    expect(looksLikeUnknownMethod(new Error('request is too large for this signer'))).toBe(false)
   })
 })

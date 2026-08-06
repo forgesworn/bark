@@ -1,7 +1,7 @@
 // Background service worker — handles NIP-46 relay communication with Heartwood.
 
 import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } from 'nostr-tools/nip46'
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
+import { generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
 import {
   buildTrustedSiteRule,
@@ -1423,6 +1423,94 @@ export function explainOversizeSigningFailure(event, err) {
   return sized
 }
 
+/**
+ * Rebuild a full signed event from a compact reply.
+ *
+ * `sign_event_compact` returns only what the client cannot work out for itself:
+ * the id, the signature, and the two fields the signer is entitled to set. We
+ * already hold the event we asked to be signed, so the rest is ours.
+ *
+ * Pure, and it VERIFIES rather than trusting: if the signer returned an id or
+ * sig belonging to different content, the signature will not check out against
+ * the event we rebuild, which is exactly the property that makes returning no
+ * content safe.
+ *
+ * @param {object} template the event we asked to have signed
+ * @param {string} resultJson the bunker's result string
+ * @returns {object} the full signed event
+ */
+export function rebuildCompactSignedEvent(template, resultJson, verify = verifyEvent) {
+  const compact = JSON.parse(resultJson)
+  const signed = {
+    ...template,
+    pubkey: compact.pubkey ?? template.pubkey,
+    created_at: compact.created_at ?? template.created_at,
+    id: compact.id,
+    sig: compact.sig,
+  }
+  if (!verify(signed)) {
+    throw new Error('event returned from bunker is improperly signed (compact)')
+  }
+  return signed
+}
+
+/**
+ * Which signing dialect each bunker speaks, keyed by its pubkey.
+ *
+ * `sign_event_compact` is a Heartwood extension, so an ordinary bunker answers
+ * it with an error. That costs one wasted round trip, which is fine once and
+ * wasteful for every signature after, hence remembering the answer. Cleared
+ * with the signer, since a firmware update can change it.
+ *
+ * @type {Map<string, 'compact'|'standard'>}
+ */
+const signingDialect = new Map()
+
+export function resetSigningDialect() {
+  signingDialect.clear()
+}
+
+/**
+ * Sign via the compact dialect when the bunker supports it, else the standard
+ * one, remembering which.
+ *
+ * Worth doing at every size, not just large ones: the compact reply is a few
+ * hundred bytes instead of the whole event echoed back, so it is smaller and
+ * measurably quicker on hardware signers (~700 ms against ~1000 ms at 18 KB).
+ * Sending params[0] as an object rather than a stringified event saves the
+ * signer an unescape pass that costs it twice the content in one allocation.
+ */
+async function signViaBestDialect(bunker, event, label) {
+  const key = bunker?.bp?.pubkey ?? 'unknown'
+  if (signingDialect.get(key) !== 'standard') {
+    try {
+      const result = await withBunkerRequestTimeout(
+        bunker.sendRequest('sign_event_compact', [event]),
+        label,
+      )
+      const signed = rebuildCompactSignedEvent(event, result)
+      signingDialect.set(key, 'compact')
+      return signed
+    } catch (err) {
+      // Only a refusal of the METHOD means fall back. A timeout, a denial or a
+      // size refusal would fail the same way on the standard path, and retrying
+      // those would double the user's wait and re-prompt for approval.
+      if (signingDialect.get(key) === 'compact' || !looksLikeUnknownMethod(err)) throw err
+      signingDialect.set(key, 'standard')
+    }
+  }
+  return withBunkerRequestTimeout(bunker.signEvent(event), label)
+}
+
+/** Whether an error reads as "this bunker has never heard of that method". */
+export function looksLikeUnknownMethod(err) {
+  const msg = (typeof err === 'string' ? err : err?.message || '').toLowerCase()
+  return msg.includes('unknown method')
+    || msg.includes('unsupported')
+    || msg.includes('not supported')
+    || msg.includes('method not found')
+}
+
 async function signWithHealthTracking(bunker, event, label, reason = 'request') {
   setSigningState('pending', {
     signingLastError: null,
@@ -1430,7 +1518,7 @@ async function signWithHealthTracking(bunker, event, label, reason = 'request') 
   })
 
   try {
-    const signed = await withBunkerRequestTimeout(bunker.signEvent(event), label)
+    const signed = await signViaBestDialect(bunker, event, label)
     await markSigningSucceeded(signed)
     return signed
   } catch (err) {
