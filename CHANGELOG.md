@@ -4,6 +4,8 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.6] — 2026-08-08
+
 ### Added
 
 - Identity imports from Heartwood now require explicit confirmation. Pairing
