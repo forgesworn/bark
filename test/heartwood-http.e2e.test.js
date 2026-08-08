@@ -109,6 +109,11 @@ describe('Heartwood/bridge HTTP pairing contract', () => {
       })
       expect(result.instances[0].clientSecret).toMatch(/^[0-9a-f]{64}$/)
       expect(result.instances[1].clientSecret).toBe(result.instances[0].clientSecret)
+
+      // Fresh pairing adds identities over plain HTTP — must be confirmed.
+      expect(result.requiresConfirmation).toBe(true)
+      expect(result.classification.added).toHaveLength(2)
+      expect(result.classification.changed).toHaveLength(0)
     })
   })
 
@@ -150,6 +155,96 @@ describe('Heartwood/bridge HTTP pairing contract', () => {
         heartwoodIdentityLabel: 'master',
         heartwoodIdentityPubkey: masterPubkey,
       })
+      expect(result.requiresConfirmation).toBe(true)
+      expect(result.classification.added).toHaveLength(1)
+    })
+  })
+
+  it('does not require confirmation when a re-pair returns identical identities', async () => {
+    const handler = async (req, res) => {
+      if (req.method === 'POST' && req.url === '/api/pair') {
+        await readBody(req)
+        sendJson(res, 200, { instance: 'heartwood', npub: 'npub1master', bunkerUri: masterUri })
+        return
+      }
+      if (req.method === 'GET' && req.url === '/api/identities') {
+        sendJson(res, 200, {
+          identities: [{ label: 'master', pubkey: masterPubkey, npub: 'npub1master', uri: masterUri }],
+        })
+        return
+      }
+      sendJson(res, 404, { error: 'not found' })
+    }
+
+    await withHttpServer(handler, async (baseUrl) => {
+      const first = await pairHeartwoodHttpAddress(baseUrl, {
+        instances: [],
+        activeInstanceId: null,
+      })
+      expect(first.requiresConfirmation).toBe(true)
+
+      const second = await pairHeartwoodHttpAddress(baseUrl, {
+        instances: first.instances,
+        activeInstanceId: first.activeInstanceId,
+      })
+      expect(second.requiresConfirmation).toBe(false)
+      expect(second.classification.unchanged).toHaveLength(1)
+      // Unchanged re-pair keeps the current active instance.
+      expect(second.activeInstanceId).toBe('heartwood-aaaaaaaa')
+    })
+  })
+
+  it('flags a MITM swapping in an attacker identity, without mutating stored instances', async () => {
+    const attackerPubkey = 'c'.repeat(64)
+    const attackerUri = `bunker://${attackerPubkey}?relay=wss://evil.example.com`
+
+    await withHttpServer(async (req, res) => {
+      if (req.method === 'POST' && req.url === '/api/pair') {
+        await readBody(req)
+        sendJson(res, 200, { instance: 'heartwood', npub: 'npub1attacker', bunkerUri: attackerUri })
+        return
+      }
+      if (req.method === 'GET' && req.url === '/api/identities') {
+        sendJson(res, 200, {
+          identities: [
+            { label: 'master', pubkey: attackerPubkey, npub: 'npub1attacker', uri: attackerUri },
+          ],
+        })
+        return
+      }
+      sendJson(res, 404, { error: 'not found' })
+    }, async (baseUrl) => {
+      const stored = [{
+        id: 'heartwood-aaaaaaaa',
+        name: 'heartwood',
+        address: baseUrl,
+        bunkerUri: masterUri,
+        clientSecret: '01'.repeat(32),
+        npub: 'npub1master',
+        signingPubkey: '',
+        signingVerifiedAt: 0,
+        signingLastError: null,
+        isHeartwood: true,
+        heartwoodBaseName: 'heartwood',
+        heartwoodIdentityLabel: 'master',
+        heartwoodIdentityPubkey: masterPubkey,
+      }]
+
+      const result = await pairHeartwoodHttpAddress(baseUrl, {
+        instances: stored,
+        activeInstanceId: 'heartwood-aaaaaaaa',
+      })
+
+      // Attacker pubkey does not match the stored master identity → added,
+      // confirmation required, and the current active instance is kept.
+      expect(result.requiresConfirmation).toBe(true)
+      expect(result.classification.added).toHaveLength(1)
+      expect(result.classification.added[0].heartwoodIdentityPubkey).toBe(attackerPubkey)
+      expect(result.activeInstanceId).toBe('heartwood-aaaaaaaa')
+
+      // Stored instances untouched — the merged result is a copy.
+      expect(stored).toHaveLength(1)
+      expect(stored[0].bunkerUri).toBe(masterUri)
     })
   })
 

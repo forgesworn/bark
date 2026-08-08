@@ -156,6 +156,28 @@
       margin-top: 2px;
     }
 
+    /* ---- Import confirmation ---- */
+    .import-row {
+      margin-bottom: 8px;
+    }
+
+    .import-row .import-label {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .import-row .import-npub {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 11px;
+      color: #a09080;
+      word-break: break-all;
+    }
+
+    #active-npub {
+      word-break: break-all;
+      color: #888;
+    }
+
     /* ---- Persona list ---- */
     .persona-list {
       max-height: 180px;
@@ -672,6 +694,17 @@
       <button id="site-card-btn" class="btn-sm btn-save"></button>
     </div>
     <div id="site-card-hint" class="site-kind-hint" style="display:none; margin-top:6px;" data-i18n="reloadHint">Reload the page if it was already open.</div>
+  </div>
+
+  <!-- Identity import confirmation: shown when pairing/refresh adds or changes identities -->
+  <div id="import-confirm" style="display:none; margin: 10px 12px 0; padding: 12px; background: #2a1a1a; border: 1px solid #6a3a2a; border-radius: 8px;">
+    <div style="font-size:14px; font-weight:700; color:#f0c0a0; margin-bottom:6px;" data-i18n="confirmImportTitle">Confirm signer identities</div>
+    <div style="font-size:12px; color:#c0a090; margin-bottom:10px;" data-i18n="confirmImportHint">Compare each key with your signer device before confirming. An unexpected key means someone may be intercepting the connection.</div>
+    <div id="import-confirm-list" style="margin-bottom:10px;"></div>
+    <div style="display:flex; gap:8px;">
+      <button id="import-confirm-yes" class="btn btn-primary" style="flex:1;" data-i18n="confirmImportYes">Confirm</button>
+      <button id="import-confirm-no" class="btn btn-secondary" style="flex:1;" data-i18n="cancel">Cancel</button>
+    </div>
   </div>
 
   <!-- Setup screen: shown when no instances are paired -->

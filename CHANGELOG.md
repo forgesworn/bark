@@ -4,6 +4,16 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Identity imports from Heartwood now require explicit confirmation. Pairing
+  and refresh responses travel over unauthenticated HTTP on the local network,
+  so added identities and changed bunker URIs are staged and shown in the
+  popup — with npubs to compare against the signer device — before anything is
+  stored. Imports no longer auto-activate an identity; the active identity
+  changes only when the user picks one (fresh pairings still land on the
+  master identity after confirmation).
+
 ## [1.3.5] — 2026-07-22
 
 ### Added

@@ -47,6 +47,7 @@ Web page → provider.js (postMessage) → content-script.js (chrome.runtime.sen
 - `bark-pair` / `bark-switch` / `bark-remove` — instance management
 - `bark-nostrconnect-start` / `-status` / `-cancel` — QR pairing flow
 - `bark-approval-query` / `bark-approval-response` — approval window RPC
+- `bark-heartwood-import-confirm` — confirm/discard a staged identity import (pairing/refresh over plain HTTP requires user confirmation of added or changed identities)
 - `bark-prime-signer` — signer health check (signs a kind 22242 probe)
 
 ## Conventions

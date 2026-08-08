@@ -1,6 +1,7 @@
 // Background service worker — handles NIP-46 relay communication with Heartwood.
 
 import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } from 'nostr-tools/nip46'
+import { nip19 } from 'nostr-tools'
 import { generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
 import {
@@ -198,6 +199,68 @@ function upsertInstances(instances, nextInstances, activeInstanceId) {
   return { instances, activeInstanceId: mappedActiveId }
 }
 
+/**
+ * Classify imported Heartwood identity instances against the stored ones.
+ *
+ * Pairing and identity refresh run over unauthenticated HTTP on the local
+ * network, so anything the server returns is untrusted: a LAN attacker could
+ * inject identities pointing at their own bunker pubkey and relays. This
+ * classification drives the confirmation flow — added identities and changed
+ * bunker URIs must be explicitly confirmed by the user before they are
+ * stored, and imported identities are never auto-activated.
+ *
+ * @returns {{ added: object[], changed: {previous: object, next: object}[],
+ *   unchanged: object[], requiresConfirmation: boolean }}
+ */
+export function classifyHeartwoodImport(instances, nextInstances) {
+  const added = []
+  const changed = []
+  const unchanged = []
+  for (const next of nextInstances) {
+    const existing = findExistingInstance(instances, next)
+    if (!existing) {
+      added.push(next)
+    } else if (existing.bunkerUri !== next.bunkerUri) {
+      changed.push({ previous: existing, next })
+    } else {
+      unchanged.push(next)
+    }
+  }
+  return {
+    added,
+    changed,
+    unchanged,
+    requiresConfirmation: added.length > 0 || changed.length > 0,
+  }
+}
+
+/** Best-effort npub for an instance: stored npub, else encode the pubkey. */
+function instanceNpub(instance) {
+  if (typeof instance?.npub === 'string' && instance.npub) return instance.npub
+  const pubkey = instance?.heartwoodIdentityPubkey || bunkerPubkey(instance?.bunkerUri || '')
+  if (!pubkey) return ''
+  try { return nip19.npubEncode(pubkey) } catch { return '' }
+}
+
+/**
+ * Build a message-safe summary of an import classification for the popup
+ * confirmation card. npubs are always encoded from the pubkey so the user
+ * can compare them against the signer device.
+ */
+export function summariseHeartwoodImport(classification) {
+  return {
+    added: classification.added.map(instance => ({
+      name: instance.name,
+      npub: instanceNpub(instance),
+    })),
+    changed: classification.changed.map(({ previous, next }) => ({
+      name: next.name,
+      previousNpub: instanceNpub(previous),
+      nextNpub: instanceNpub(next),
+    })),
+  }
+}
+
 async function fetchJsonResponse(res, fallbackMessage) {
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -238,25 +301,54 @@ export async function importHeartwoodIdentities({
       instances,
       activeInstanceId,
       imported: 0,
-      activeImportedId: null,
+      nextInstances,
+      classification: classifyHeartwoodImport(instances, []),
+      suggestedActiveId: null,
     }
   }
 
-  const upserted = upsertInstances(instances, nextInstances, activeInstanceId)
-  let activeImported = nextInstances.find((instance) => (
+  // Work on a copy so an unconfirmed import never mutates stored instances.
+  const classification = classifyHeartwoodImport(instances, nextInstances)
+  const working = instances.map(instance => ({ ...instance }))
+  const upserted = upsertInstances(working, nextInstances, activeInstanceId)
+
+  // Only an explicit activation request (user picked an identity in the
+  // popup) suggests a new active instance — imports never auto-activate.
+  const activeImported = nextInstances.find((instance) => (
     (activatePubkey && instance.heartwoodIdentityPubkey === activatePubkey) ||
     (activateLabel && instance.heartwoodIdentityLabel === activateLabel)
   ))
-  if (!activeImported) {
-    activeImported = nextInstances.find(instance => instance.heartwoodIdentityLabel === 'master') || nextInstances[0]
-  }
 
   return {
     instances: upserted.instances,
     activeInstanceId: upserted.activeInstanceId,
     imported: nextInstances.length,
-    activeImportedId: activeImported?.id || null,
+    nextInstances,
+    classification,
+    suggestedActiveId: activeImported?.id || null,
   }
+}
+
+/**
+ * Resolve which instance should be active after an import is applied.
+ * Explicit user activation wins; otherwise keep the current active instance
+ * if it still exists. Only when nothing is active (fresh pairing) fall back
+ * to the master identity — and that path always requires confirmation first.
+ */
+export function resolveImportedActiveId({
+  mergedInstances,
+  activeInstanceId,
+  suggestedActiveId,
+  nextInstances,
+}) {
+  if (suggestedActiveId && mergedInstances.some(i => i.id === suggestedActiveId)) {
+    return suggestedActiveId
+  }
+  if (activeInstanceId && mergedInstances.some(i => i.id === activeInstanceId)) {
+    return activeInstanceId
+  }
+  const fallback = nextInstances.find(i => i.heartwoodIdentityLabel === 'master') || nextInstances[0]
+  return fallback?.id || null
 }
 
 function validClientSecret(value) {
@@ -457,16 +549,23 @@ export async function pairHeartwoodHttpAddress(address, {
       activeInstanceId,
       baseName: instanceName,
       clientSecret,
-      activateLabel: 'master',
       fetchImpl,
     })
 
     if (imported.imported > 0) {
       return {
         instances: imported.instances,
-        activeInstanceId: imported.activeImportedId || imported.activeInstanceId,
+        activeInstanceId: resolveImportedActiveId({
+          mergedInstances: imported.instances,
+          activeInstanceId,
+          suggestedActiveId: null,
+          nextInstances: imported.nextInstances,
+        }),
         imported: imported.imported,
         address: url,
+        nextInstances: imported.nextInstances,
+        classification: imported.classification,
+        requiresConfirmation: imported.classification.requiresConfirmation,
       }
     }
   } catch (err) {
@@ -474,41 +573,38 @@ export async function pairHeartwoodHttpAddress(address, {
   }
 
   const id = makeInstanceId(instanceName, bunkerUri)
-  if (existing) {
-    existing.bunkerUri = bunkerUri
-    existing.npub = npub || existing.npub
-    existing.name = instanceName || existing.name
-    existing.id = id
-    existing.clientSecret = clientSecret
-    existing.signingVerifiedAt = 0
-    existing.signingLastError = null
-    existing.signingPubkey = ''
-    existing.heartwoodBaseName = instanceName
-    existing.heartwoodIdentityLabel = 'master'
-    existing.heartwoodIdentityPubkey = bunkerPubkey(bunkerUri)
-  } else {
-    instances.push({
-      id,
-      name: instanceName,
-      address: url,
-      bunkerUri,
-      clientSecret,
-      npub,
-      signingPubkey: '',
-      signingVerifiedAt: 0,
-      signingLastError: null,
-      isHeartwood: true,
-      heartwoodBaseName: instanceName,
-      heartwoodIdentityLabel: 'master',
-      heartwoodIdentityPubkey: bunkerPubkey(bunkerUri),
-    })
+  const nextInstance = {
+    id,
+    name: instanceName,
+    address: url,
+    bunkerUri,
+    clientSecret,
+    npub: npub || existing?.npub || '',
+    signingPubkey: '',
+    signingVerifiedAt: 0,
+    signingLastError: null,
+    isHeartwood: true,
+    heartwoodBaseName: instanceName,
+    heartwoodIdentityLabel: 'master',
+    heartwoodIdentityPubkey: bunkerPubkey(bunkerUri),
   }
+  const classification = classifyHeartwoodImport(instances, [nextInstance])
+  const working = instances.map(instance => ({ ...instance }))
+  const upserted = upsertInstances(working, [nextInstance], activeInstanceId)
 
   return {
-    instances,
-    activeInstanceId: id,
+    instances: upserted.instances,
+    activeInstanceId: resolveImportedActiveId({
+      mergedInstances: upserted.instances,
+      activeInstanceId: upserted.activeInstanceId,
+      suggestedActiveId: null,
+      nextInstances: [nextInstance],
+    }),
     imported: 0,
     address: url,
+    nextInstances: [nextInstance],
+    classification,
+    requiresConfirmation: classification.requiresConfirmation,
   }
 }
 
@@ -1205,6 +1301,15 @@ let signer = null
 
 /** @type {Promise<BunkerSigner>|null} Mutex to prevent concurrent connect attempts. */
 let connectPromise = null
+
+/**
+ * Staged Heartwood identity import awaiting user confirmation. Pairing and
+ * refresh responses arrive over unauthenticated HTTP, so added/changed
+ * identities are held here until the popup confirms them; nothing is stored
+ * before that. A new staging replaces any previous one.
+ * @type {{ instances: object[], activeInstanceId: string|null }|null}
+ */
+let pendingHeartwoodImport = null
 
 /**
  * Timestamp of the last site/popup request. Gates the keep-alive window so
@@ -2285,6 +2390,20 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               instances,
               activeInstanceId,
             })
+            if (result.requiresConfirmation) {
+              // Untrusted HTTP response added or changed identities — stage
+              // the import and let the user verify the npubs before storing.
+              pendingHeartwoodImport = {
+                instances: result.instances,
+                activeInstanceId: result.activeInstanceId,
+              }
+              sendResponse({
+                ok: true,
+                requiresConfirmation: true,
+                summary: summariseHeartwoodImport(result.classification),
+              })
+              return
+            }
             await chrome.storage.local.set({
               instances: result.instances,
               activeInstanceId: result.activeInstanceId,
@@ -2398,7 +2517,28 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             activateLabel,
           })
 
-          const nextActiveId = imported.activeImportedId || imported.activeInstanceId
+          const nextActiveId = resolveImportedActiveId({
+            mergedInstances: imported.instances,
+            activeInstanceId,
+            suggestedActiveId: imported.suggestedActiveId,
+            nextInstances: imported.nextInstances,
+          })
+
+          if (imported.classification.requiresConfirmation) {
+            // Identities were added or changed over plain HTTP — stage and
+            // require explicit user confirmation before storing anything.
+            pendingHeartwoodImport = {
+              instances: imported.instances,
+              activeInstanceId: nextActiveId,
+            }
+            sendResponse({
+              ok: true,
+              requiresConfirmation: true,
+              summary: summariseHeartwoodImport(imported.classification),
+            })
+            return
+          }
+
           await chrome.storage.local.set({
             instances: imported.instances,
             activeInstanceId: nextActiveId,
@@ -2419,6 +2559,38 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             imported: imported.imported,
             activeInstanceId: nextActiveId,
           })
+        } catch (err) {
+          sendResponse({ ok: false, error: sanitiseError(err) })
+        }
+      })()
+      return true
+    }
+
+    if (message.type === 'bark-heartwood-import-confirm') {
+      const pending = pendingHeartwoodImport
+      pendingHeartwoodImport = null
+      if (!pending) {
+        sendResponse({ ok: false, error: 'No pending import.' })
+        return true
+      }
+      if (!message.accept) {
+        sendResponse({ ok: true, rejected: true })
+        return true
+      }
+      (async () => {
+        try {
+          await chrome.storage.local.set({
+            instances: pending.instances,
+            activeInstanceId: pending.activeInstanceId,
+          })
+          if (signer) {
+            try { signer.close() } catch {}
+            signer = null
+          }
+          connectPromise = null
+          connectionState.status = 'connecting'
+          ensureConnected().catch(() => {})
+          sendResponse({ ok: true })
         } catch (err) {
           sendResponse({ ok: false, error: sanitiseError(err) })
         }

@@ -59,6 +59,14 @@
   },
   "couldNotRefreshIdentities": { "message": "Could not refresh Heartwood identities." },
 
+  "confirmImportTitle": { "message": "Confirm signer identities", "description": "Title of the card asking the user to confirm identities received during pairing or refresh." },
+  "confirmImportHint": { "message": "Compare each key with your signer device before confirming. An unexpected key means someone may be intercepting the connection.", "description": "Warning shown above the identity confirmation list." },
+  "confirmImportNew": { "message": "New identity", "description": "Label prefix for an identity added by pairing or refresh." },
+  "confirmImportChanged": { "message": "Key changed", "description": "Label prefix for an identity whose key changed during pairing or refresh." },
+  "confirmImportWas": { "message": "was", "description": "Prefix for the previously stored key in the identity confirmation card." },
+  "confirmImportNow": { "message": "now", "description": "Prefix for the newly received key in the identity confirmation card." },
+  "confirmImportYes": { "message": "Confirm", "description": "Button accepting the identity import." },
+
   "signingNotTested": { "message": "Signing not tested" },
   "runSignTestHint": { "message": "Run a sign test before using sites." },
   "test": { "message": "Test", "description": "Button that runs a signing test." },
