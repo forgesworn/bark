@@ -85,6 +85,10 @@ const addInstanceSection = document.getElementById('add-instance-section')
 const heartwoodBadge = document.getElementById('heartwood-badge')
 const activeName = document.getElementById('active-name')
 const activeNpub = document.getElementById('active-npub')
+const importConfirm = document.getElementById('import-confirm')
+const importConfirmList = document.getElementById('import-confirm-list')
+const importConfirmYes = document.getElementById('import-confirm-yes')
+const importConfirmNo = document.getElementById('import-confirm-no')
 const connectedContent = document.getElementById('connected-content')
 const signStatusDot = document.getElementById('sign-status-dot')
 const signStatusText = document.getElementById('sign-status-text')
@@ -363,6 +367,68 @@ async function renderInstances() {
   return true
 }
 
+/**
+ * Show the identity-import confirmation card and resolve with the user's
+ * decision. Pairing/refresh responses travel over unauthenticated HTTP, so
+ * added or changed identities are stored only after explicit confirmation.
+ */
+function showImportConfirmation(summary) {
+  importConfirmList.innerHTML = ''
+
+  const appendRow = (labelText, npubs) => {
+    const row = document.createElement('div')
+    row.className = 'import-row'
+    const label = document.createElement('div')
+    label.className = 'import-label'
+    label.textContent = labelText
+    row.appendChild(label)
+    for (const npubText of npubs) {
+      const npub = document.createElement('div')
+      npub.className = 'import-npub'
+      npub.textContent = npubText
+      row.appendChild(npub)
+    }
+    importConfirmList.appendChild(row)
+  }
+
+  for (const added of summary?.added || []) {
+    appendRow(`${t('confirmImportNew')}: ${added.name}`, [added.npub || '—'])
+  }
+  for (const change of summary?.changed || []) {
+    appendRow(`${t('confirmImportChanged')}: ${change.name}`, [
+      `${t('confirmImportWas')}: ${change.previousNpub || '—'}`,
+      `${t('confirmImportNow')}: ${change.nextNpub || '—'}`,
+    ])
+  }
+
+  importConfirm.style.display = ''
+  return new Promise((resolve) => {
+    const done = (accepted) => {
+      importConfirm.style.display = 'none'
+      importConfirmYes.removeEventListener('click', onYes)
+      importConfirmNo.removeEventListener('click', onNo)
+      resolve(accepted)
+    }
+    const onYes = () => done(true)
+    const onNo = () => done(false)
+    importConfirmYes.addEventListener('click', onYes)
+    importConfirmNo.addEventListener('click', onNo)
+  })
+}
+
+/**
+ * Ask the user to confirm a staged identity import, then tell the background
+ * whether to apply or discard it. Resolves true only when the import was
+ * confirmed and applied.
+ */
+async function confirmPendingImport(summary) {
+  const accepted = await showImportConfirmation(summary)
+  const resp = await sendRuntimeMessage({ type: 'bark-heartwood-import-confirm', accept: accepted })
+  if (!accepted) return false
+  if (!resp?.ok) throw new Error(resp?.error || t('pairingFailed'))
+  return true
+}
+
 async function pairHeartwood(address) {
   if (!address) {
     pairError.textContent = t('enterSignerAddress')
@@ -381,6 +447,11 @@ async function pairHeartwood(address) {
     const resp = await sendRuntimeMessage({ type: 'bark-pair', address })
     if (!resp) throw new Error(t('noResponseFromBackground'))
     if (!resp.ok) throw new Error(resp.error || t('pairingFailed'))
+
+    if (resp.requiresConfirmation) {
+      const applied = await confirmPendingImport(resp.summary)
+      if (!applied) return
+    }
 
     await renderInstances()
     await refreshState()
@@ -755,8 +826,12 @@ async function refreshState() {
   renderRelays(status.relays)
   renderSigningStatus(status)
 
-  // Active persona
-  activeNpub.textContent = truncateNpub(pubkey)
+  // Active persona — show the full npub so a substituted signer key is visible
+  try {
+    activeNpub.textContent = nip19.npubEncode(pubkey)
+  } catch {
+    activeNpub.textContent = truncateNpub(pubkey)
+  }
 
   if (status.isHeartwood) {
     // Heartwood mode — show full persona UI
@@ -879,10 +954,13 @@ async function derivePersona() {
     const derivedPubkey = derived?.pubkey || ''
 
     try {
-      await refreshHeartwoodIdentityInstances({
+      const refreshed = await refreshHeartwoodIdentityInstances({
         activatePubkey: derivedPubkey,
         activateLabel: purpose,
       })
+      if (refreshed.requiresConfirmation) {
+        await confirmPendingImport(refreshed.summary)
+      }
     } catch {
       const identities = await rpc('heartwood_list_identities')
       const match = Array.isArray(identities)

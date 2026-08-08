@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod, classifyHeartwoodImport, summariseHeartwoodImport, resolveImportedActiveId, importHeartwoodIdentities } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -573,6 +573,182 @@ describe('Heartwood identity import helpers', () => {
   })
 })
 
+describe('Heartwood import confirmation', () => {
+  const masterPubkey = 'a'.repeat(64)
+  const socialPubkey = 'b'.repeat(64)
+  const masterUri = `bunker://${masterPubkey}?relay=wss://relay.example.com`
+  const socialUri = `bunker://${socialPubkey}?relay=wss://relay.example.com&secret=slot-secret`
+  const address = 'http://heartwood.local:3000'
+
+  const existingMaster = {
+    id: 'heartwood-aaaaaaaa',
+    name: 'heartwood',
+    address,
+    bunkerUri: masterUri,
+    npub: '',
+    heartwoodBaseName: 'heartwood',
+    heartwoodIdentityLabel: 'master',
+    heartwoodIdentityPubkey: masterPubkey,
+  }
+
+  function nextFrom(payload) {
+    return buildHeartwoodIdentityInstances(payload, {
+      address,
+      baseName: 'heartwood',
+      clientSecret: 'ff'.repeat(32),
+    })
+  }
+
+  it('flags every identity as added on a fresh pairing', () => {
+    const next = nextFrom({ identities: [{ label: 'master', pubkey: masterPubkey, uri: masterUri }] })
+    const result = classifyHeartwoodImport([], next)
+    expect(result.added).toHaveLength(1)
+    expect(result.changed).toHaveLength(0)
+    expect(result.requiresConfirmation).toBe(true)
+  })
+
+  it('treats identical identities as unchanged — no confirmation needed', () => {
+    const next = nextFrom({ identities: [{ label: 'master', pubkey: masterPubkey, uri: masterUri }] })
+    const result = classifyHeartwoodImport([existingMaster], next)
+    expect(result.unchanged).toHaveLength(1)
+    expect(result.requiresConfirmation).toBe(false)
+  })
+
+  it('flags a URI swap for a known pubkey as changed', () => {
+    const swappedUri = `bunker://${masterPubkey}?relay=wss://evil.example.com`
+    const next = nextFrom({ identities: [{ label: 'master', pubkey: masterPubkey, uri: swappedUri }] })
+    const result = classifyHeartwoodImport([existingMaster], next)
+    expect(result.changed).toHaveLength(1)
+    expect(result.changed[0].previous.bunkerUri).toBe(masterUri)
+    expect(result.changed[0].next.bunkerUri).toBe(swappedUri)
+    expect(result.requiresConfirmation).toBe(true)
+  })
+
+  it('flags an injected identity with a new pubkey as added', () => {
+    const next = nextFrom({
+      identities: [
+        { label: 'master', pubkey: masterPubkey, uri: masterUri },
+        { label: 'attacker', pubkey: socialPubkey, uri: socialUri },
+      ],
+    })
+    const result = classifyHeartwoodImport([existingMaster], next)
+    expect(result.unchanged).toHaveLength(1)
+    expect(result.added).toHaveLength(1)
+    expect(result.added[0].heartwoodIdentityLabel).toBe('attacker')
+    expect(result.requiresConfirmation).toBe(true)
+  })
+
+  it('summarises with npubs encoded from pubkeys when none are stored', () => {
+    const next = nextFrom({
+      identities: [
+        { label: 'master', pubkey: masterPubkey, uri: masterUri },
+        { label: 'attacker', pubkey: socialPubkey, uri: socialUri },
+      ],
+    })
+    const summary = summariseHeartwoodImport(classifyHeartwoodImport([existingMaster], next))
+    expect(summary.added[0].name).toBe('heartwood:attacker')
+    expect(summary.added[0].npub).toMatch(/^npub1/)
+    expect(summary.changed).toHaveLength(0)
+  })
+
+  it('summarises changed identities with previous and next npubs', () => {
+    const swappedUri = `bunker://${masterPubkey}?relay=wss://evil.example.com`
+    const next = nextFrom({ identities: [{ label: 'master', pubkey: masterPubkey, uri: swappedUri }] })
+    const summary = summariseHeartwoodImport(classifyHeartwoodImport([existingMaster], next))
+    expect(summary.changed).toHaveLength(1)
+    expect(summary.changed[0].previousNpub).toMatch(/^npub1/)
+    expect(summary.changed[0].nextNpub).toMatch(/^npub1/)
+  })
+
+  it('resolveImportedActiveId prefers an explicit user activation', () => {
+    const merged = [existingMaster, { ...existingMaster, id: 'heartwood:social-bbbbbbbb' }]
+    expect(resolveImportedActiveId({
+      mergedInstances: merged,
+      activeInstanceId: 'heartwood-aaaaaaaa',
+      suggestedActiveId: 'heartwood:social-bbbbbbbb',
+      nextInstances: [],
+    })).toBe('heartwood:social-bbbbbbbb')
+  })
+
+  it('resolveImportedActiveId keeps the current active instance', () => {
+    const merged = [existingMaster, { ...existingMaster, id: 'heartwood:social-bbbbbbbb' }]
+    expect(resolveImportedActiveId({
+      mergedInstances: merged,
+      activeInstanceId: 'heartwood:social-bbbbbbbb',
+      suggestedActiveId: null,
+      nextInstances: merged,
+    })).toBe('heartwood:social-bbbbbbbb')
+  })
+
+  it('resolveImportedActiveId falls back to master only when nothing is active', () => {
+    const next = nextFrom({
+      identities: [
+        { label: 'social', pubkey: socialPubkey, uri: socialUri },
+        { label: 'master', pubkey: masterPubkey, uri: masterUri },
+      ],
+    })
+    expect(resolveImportedActiveId({
+      mergedInstances: next,
+      activeInstanceId: null,
+      suggestedActiveId: null,
+      nextInstances: next,
+    })).toBe('heartwood-aaaaaaaa')
+  })
+
+  it('importHeartwoodIdentities never auto-activates and never mutates stored instances', async () => {
+    const fetchImpl = async () => ({
+      ok: true,
+      json: async () => ({
+        identities: [
+          { label: 'master', pubkey: masterPubkey, uri: masterUri },
+          { label: 'social', pubkey: socialPubkey, uri: socialUri },
+        ],
+      }),
+    })
+    const stored = [existingMaster]
+    const result = await importHeartwoodIdentities({
+      address,
+      instances: stored,
+      activeInstanceId: 'heartwood-aaaaaaaa',
+      baseName: 'heartwood',
+      clientSecret: 'ff'.repeat(32),
+      fetchImpl,
+    })
+
+    expect(result.imported).toBe(2)
+    // No explicit activation request → no suggestion, even though master exists.
+    expect(result.suggestedActiveId).toBeNull()
+    // The injected social identity requires confirmation.
+    expect(result.classification.requiresConfirmation).toBe(true)
+    expect(result.classification.added).toHaveLength(1)
+    // Stored array untouched: the merged result lives on a copy.
+    expect(stored).toHaveLength(1)
+    expect(result.instances).toHaveLength(2)
+  })
+
+  it('importHeartwoodIdentities honours an explicit activation request', async () => {
+    const fetchImpl = async () => ({
+      ok: true,
+      json: async () => ({
+        identities: [
+          { label: 'master', pubkey: masterPubkey, uri: masterUri },
+          { label: 'social', pubkey: socialPubkey, uri: socialUri },
+        ],
+      }),
+    })
+    const result = await importHeartwoodIdentities({
+      address,
+      instances: [existingMaster],
+      activeInstanceId: 'heartwood-aaaaaaaa',
+      baseName: 'heartwood',
+      clientSecret: 'ff'.repeat(32),
+      activatePubkey: socialPubkey,
+      fetchImpl,
+    })
+    expect(result.suggestedActiveId).toBe('heartwood:social-bbbbbbbb')
+  })
+})
+
 describe('migrateStorage', () => {
   it('converts legacy single-connection fields to instances array', () => {
     const legacy = {
@@ -671,6 +847,7 @@ describe('isSenderAllowedForMessage', () => {
       'bark-status', 'bark-request', 'bark-reset', 'bark-pair', 'bark-switch',
       'bark-remove', 'bark-site-enable', 'bark-site-disable', 'bark-prime-signer',
       'bark-approval-query', 'bark-approval-response', 'bark-nostrconnect-start',
+      'bark-heartwood-import-confirm',
     ]) {
       expect(isSenderAllowedForMessage(popup, type, base)).toBe(true)
     }
@@ -689,7 +866,7 @@ describe('isSenderAllowedForMessage', () => {
       'bark-remove', 'bark-reset', 'bark-site-enable', 'bark-site-disable',
       'bark-prime-signer', 'bark-status', 'bark-nostrconnect-start',
       'bark-nostrconnect-status', 'bark-nostrconnect-cancel',
-      'bark-refresh-heartwood-identities',
+      'bark-refresh-heartwood-identities', 'bark-heartwood-import-confirm',
     ]) {
       expect(isSenderAllowedForMessage(contentScript, type, base)).toBe(false)
     }
