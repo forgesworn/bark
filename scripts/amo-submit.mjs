@@ -19,8 +19,9 @@ const arg = (flag) => (args.indexOf(flag) === -1 ? null : args[args.indexOf(flag
 const zipPath = arg('--zip')
 const sourcePath = arg('--source')
 const versionInput = arg('--version')
+const changelogPath = arg('--changelog') || 'CHANGELOG.md'
 if (!zipPath || !sourcePath || !versionInput) {
-  console.error('Usage: node scripts/amo-submit.mjs --zip <file> --source <file> --version vX.Y.Z')
+  console.error('Usage: node scripts/amo-submit.mjs --zip <file> --source <file> --version vX.Y.Z [--changelog <file>]')
   process.exit(2)
 }
 const { version } = normaliseVersion(versionInput)
@@ -38,9 +39,9 @@ async function fail(step, response) {
   process.exit(1)
 }
 
-const releaseNotes = changelogSection(readFileSync('CHANGELOG.md', 'utf8'), version)
+const releaseNotes = changelogSection(readFileSync(changelogPath, 'utf8'), version)
 if (!releaseNotes) {
-  console.error(`CHANGELOG.md has no section for ${version} - release notes are not optional here.`)
+  console.error(`${changelogPath} has no section for ${version} - release notes are not optional here.`)
   process.exit(1)
 }
 

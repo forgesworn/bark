@@ -20,6 +20,7 @@
     "e2e:live": "npm run build:chromium && playwright test e2e/live-relay-signer.spec.js",
     "audit:prod": "npm audit --omit=dev",
     "verify": "npm test && npm run build:all && npm audit",
+    "store:submit": "node scripts/store-submit.mjs",
     "verify:full": "npm run verify && npm run e2e:chromium",
     "package": "node esbuild.config.js --package",
     "package:chromium": "node esbuild.config.js --target=chromium --package",
