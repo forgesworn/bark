@@ -1,27 +1,34 @@
 # Automated store submission
 
-Two routes over the same scripts; both are manual triggers, because a store
-submission is a deliberate act. Review queues at both stores still apply —
-this removes the dashboard clicking, not the review wait.
+**Firefox (AMO) is automated; Chrome is a dashboard job by choice.** The CWS
+API's only auth path is a Google Cloud OAuth app consented by the developer
+account, which we deliberately do not maintain. The scripts support Chrome
+regardless, so wiring it later is only the credential mint away. Every route
+is a manual trigger, because a store submission is a deliberate act; review
+queues at both stores still apply.
 
 **Primary — Actions**: Actions → **Store submit** → Run workflow → enter the
-release tag. The repo is public, so hosted minutes are free. Needs the six
-values below as repo secrets (`gh secret set NAME --repo forgesworn/bark`).
+release tag (Firefox on, Chrome off by default). The repo is public, so
+hosted minutes are free. Needs the AMO values below as repo secrets
+(`gh secret set NAME --repo forgesworn/bark`).
 
 **Fallback — local**, from any machine with `git`, `gh` and Node:
 
 ```bash
-npm run store:submit -- v1.3.7                # both stores
-npm run store:submit -- v1.3.7 --no-firefox   # CWS only
-npm run store:submit -- v1.3.7 --no-chrome    # AMO only
+npm run store:submit -- v1.3.7 --no-chrome    # AMO, as the workflow does
+npm run store:submit -- v1.3.7                # both stores (needs CWS creds)
 npm run store:submit -- v1.3.7 --no-publish   # CWS: upload without submitting
 ```
 
-Either route downloads the release's own CI-built zips, cuts the AMO source
-zip and the release-notes changelog **from the tag** (so a moved-on working
-tree cannot leak into the submission), then submits: package to the Chrome
-Web Store, package + source + changelog-derived release notes to AMO. The AMO
-step fails loudly if the version has no changelog section.
+**Chrome, per release**: dashboard → the bark item → Package → upload
+`bark-vX.Y.Z.zip` from the GitHub release → Submit for review, pasting
+anything the listing needs from `docs/store-listing.md`.
+
+The automated route downloads the release's own CI-built zips, cuts the AMO
+source zip and the release-notes changelog **from the tag** (so a moved-on
+working tree cannot leak into the submission), then submits package + source
++ changelog-derived release notes to AMO. The AMO step fails loudly if the
+version has no changelog section.
 
 Neither store API can **create** a listing — only update one — so the very
 first submission of a new extension is always a dashboard job. Bark's listings

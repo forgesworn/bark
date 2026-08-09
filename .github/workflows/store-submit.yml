@@ -21,9 +21,9 @@ on:
         description: "Release tag to submit (e.g. v1.3.7)"
         required: true
       chrome:
-        description: "Submit to the Chrome Web Store"
+        description: "Submit to the Chrome Web Store (needs the CWS OAuth secrets; Chrome is a manual dashboard job by choice)"
         type: boolean
-        default: true
+        default: false
       firefox:
         description: "Submit to AMO (Firefox)"
         type: boolean
