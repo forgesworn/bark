@@ -2,6 +2,13 @@
 # purpose: a store submission is a deliberate act, like a deploy. The release
 # workflow (tag push) builds and attaches the zips this job submits.
 #
+# One code path with the local route: this just runs scripts/store-submit.mjs,
+# which downloads the release assets and cuts the AMO source zip and the
+# release-notes changelog from the tag itself - so the scripts run from main
+# while the submitted content is exactly the tagged release's. (Checking out
+# the tag here instead was the first version's bug: the submit scripts do not
+# exist in older tags' trees.)
+#
 # Needs repo secrets (docs/store-submit.md explains minting each):
 #   CWS_EXTENSION_ID, CWS_CLIENT_ID, CWS_CLIENT_SECRET, CWS_REFRESH_TOKEN
 #   AMO_JWT_ISSUER, AMO_JWT_SECRET
@@ -31,42 +38,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The tag's own tree: its CHANGELOG section becomes the AMO release
-          # notes, and the source zip must match the submitted build.
-          ref: ${{ inputs.version }}
+          # The orchestrator reads CHANGELOG.md and the source tree out of the
+          # tag with `git show`/`git archive`, so tags must be fetched.
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Download the release assets
+      - name: Submit
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release download "${{ inputs.version }}" \
-            --repo "${{ github.repository }}" \
-            --pattern "bark-${{ inputs.version }}.zip" \
-            --pattern "bark-firefox-${{ inputs.version }}.zip"
-
-      - name: Build the AMO source zip from the tag
-        run: git archive --format=zip -o "bark-${{ inputs.version }}-source.zip" "${{ inputs.version }}"
-
-      - name: Submit to the Chrome Web Store
-        if: ${{ inputs.chrome }}
-        env:
           CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
           CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
           CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
           CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
-        run: node scripts/cws-submit.mjs --zip "bark-${{ inputs.version }}.zip"
-
-      - name: Submit to AMO
-        if: ${{ inputs.firefox }}
-        env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
-          node scripts/amo-submit.mjs \
-            --zip "bark-firefox-${{ inputs.version }}.zip" \
-            --source "bark-${{ inputs.version }}-source.zip" \
-            --version "${{ inputs.version }}"
+          node scripts/store-submit.mjs "${{ inputs.version }}" \
+            ${{ inputs.chrome != true && '--no-chrome' || '' }} \
+            ${{ inputs.firefox != true && '--no-firefox' || '' }}
