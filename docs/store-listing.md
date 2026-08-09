@@ -34,8 +34,11 @@ Bark never generates, stores, or touches private key material. There is no key i
 WORKS WITH ANY NIP-46 BUNKER
 Bark is a standard NIP-07 provider backed by standard NIP-46. It works with Heartwood, heartwoodd, nsecBunker, Amber, nsec.app, and any other compliant signer. Three ways to pair:
 • Paste a bunker:// URI from any signer.
-• Pair by QR: Bark generates a nostrconnect:// URI and QR code with a fresh key and secret per attempt; scan it with your signer and it connects back over the relay. Signers that need a browser approval step (such as nsec.app) get an "Open approval page" button.
+• Pair by QR: Bark generates a nostrconnect:// URI and QR code with a fresh key and secret per attempt; scan it with your signer and it connects back over the relay. The QR carries the permissions Bark will need up front — read pubkey, encryption, and the common event kinds — so a permission-aware signer can show you the whole surface and you approve it once, at pairing. Signers that need a browser approval step (such as nsec.app) get an "Open approval page" button.
 • Enter a local Heartwood device address for HTTP pairing (Firefox; on Chrome, pair the device by bunker URI or QR).
+
+IDENTITIES ARE CONFIRMED, NOT ASSUMED
+Pairing and identity refresh answers from a local-network signer are treated as untrusted input. When they would add an identity or change a stored key, Bark stages the change and shows you the keys to compare against your signer device before anything is saved — and an import never silently switches which identity is active.
 
 NOTHING SIGNS WITHOUT YOUR SAY
 The first time a site asks for your identity, a signature, or encryption, Bark asks you. Allow the request once, trust the site for routine signing, or deny it. Sensitive event kinds (your profile, contact list, and relay list) keep asking even on trusted sites unless you explicitly override them. If the browser opens the approval window out of sight, an unmistakable in-page Bark notice tells you approval is waiting and its "Review in Bark" button brings the window forward. Concurrent requests queue in order with a toolbar badge instead of failing.
@@ -227,6 +230,35 @@ Both former gaps are closed as of v1.2.0:
       artwork centred on a transparent 128×128 canvas per Google's image
       guidelines; the raw `src/icons/bark-128.png` is full-bleed and will
       be rejected
+
+## AMO release notes (per version)
+
+AMO shows release notes per uploaded version; CWS has no per-version field
+(the long description above is all it shows). Paste the block for the
+version being uploaded. Derived from CHANGELOG.md — keep them in step.
+
+### v1.3.7
+
+```
+Pairing by QR now requests the permissions Bark will need up front — read
+pubkey, NIP-04/NIP-44 encryption, and the common Nostr event kinds — so a
+permission-aware signer (such as Heartwood with Sapwood) shows the whole
+surface at pairing and you approve it once, instead of discovering an
+unlisted event kind later and granting it by hand on the signer. The popup
+explains the requested bundle before the QR is generated. Bark's own
+per-site policies still gate every request in the browser.
+```
+
+### v1.3.6
+
+```
+Identity imports from a Heartwood signer now require your explicit
+confirmation. Pairing and refresh answers travel over the local network,
+so when they would add an identity or change a stored key, Bark stages the
+change and shows the keys to compare against your signer device before
+anything is saved. Discarding saves nothing, and an import never silently
+switches your active identity.
+```
 
 ## Submission checklist
 
