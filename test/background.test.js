@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod, classifyHeartwoodImport, summariseHeartwoodImport, resolveImportedActiveId, importHeartwoodIdentities } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, nostrConnectRequestedPerms, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod, classifyHeartwoodImport, summariseHeartwoodImport, resolveImportedActiveId, importHeartwoodIdentities } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -459,6 +459,36 @@ describe('buildNostrConnectRequest', () => {
     expect(() => buildNostrConnectRequest('http://nope')).toThrow(/Invalid relay address/)
     expect(sanitiseError(new Error('Invalid relay address. Use wss:// relay URLs.')))
       .toBe('Invalid relay address. Use wss:// relay URLs.')
+  })
+
+  it('carries the requested permission bundle in the URI', () => {
+    const { uri, perms } = buildNostrConnectRequest('wss://relay.nsec.app')
+    const parsed = new URL(uri)
+    const uriPerms = (parsed.searchParams.get('perms') || '').split(',')
+    expect(uriPerms).toEqual(perms)
+    // The V4V gated kinds ride along at pairing so the signer grant never
+    // needs a manual kind added later.
+    expect(uriPerms).toContain('sign_event:27117')
+    expect(uriPerms).toContain('sign_event:30808')
+    expect(uriPerms).toContain('get_public_key')
+  })
+
+  it('keeps the bundle inside the signer-side permission grammar', () => {
+    const perms = nostrConnectRequestedPerms()
+    // Sapwood blocks pairing on any method outside its supported set, and
+    // caps the list at 64 entries - stay inside both.
+    const supported = new Set(['get_public_key', 'nip04_encrypt', 'nip04_decrypt', 'nip44_encrypt', 'nip44_decrypt'])
+    for (const perm of perms) {
+      expect(perm).toMatch(/^(get_public_key|nip04_(en|de)crypt|nip44_(en|de)crypt|sign_event:\d+)$/)
+      if (!perm.startsWith('sign_event:')) expect(supported.has(perm)).toBe(true)
+    }
+    expect(perms.length).toBeLessThanOrEqual(64)
+    expect(new Set(perms).size).toBe(perms.length)
+  })
+
+  it('lets a caller override the bundle', () => {
+    const { uri } = buildNostrConnectRequest('wss://relay.nsec.app', { perms: ['get_public_key'] })
+    expect(new URL(uri).searchParams.get('perms')).toBe('get_public_key')
   })
 })
 

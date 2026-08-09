@@ -14,6 +14,7 @@
   "copyUri": { "message": "Copy URI" },
   "cancel": { "message": "Cancel" },
   "scanWithSigner": { "message": "Scan with your signer, or paste the URI into it." },
+  "qrPermsNote": { "message": "The QR asks your signer for the standard Bark surface up front — read pubkey, encryption, and the common event kinds including V4V gated content — so you approve once at pairing instead of adding kinds by hand later.", "description": "Explains the permission bundle carried in the nostrconnect pairing QR." },
   "waitingEllipsis": { "message": "Waiting...", "description": "Button label while the QR pairing waits for the signer." },
   "couldNotStartPairing": { "message": "Could not start pairing." },
   "pairingExpired": { "message": "Pairing expired. Generate a new QR." },

@@ -390,12 +390,48 @@ export function normaliseNostrConnectRelays(input) {
 }
 
 /**
+ * Permissions Bark requests at nostrconnect pairing time.
+ *
+ * The kind list mirrors Sapwood's COMMON_KINDS registry (forgesworn/sapwood,
+ * src/lib/kinds.ts) so the signer-side approval card can show every requested
+ * kind with its label and risk - including the V4V gated kinds 27117/30808 -
+ * and the human approves the whole surface once at pairing, instead of
+ * discovering an unlisted kind mid-flow and adding a manual grant in Sapwood.
+ *
+ * The methods are exactly the set Sapwood's permission grammar supports: an
+ * unrecognised method there is a blocking issue that disables Approve, so
+ * nothing outside that grammar may ever be added here without landing
+ * Sapwood support first. Bark's own per-site policy engine still gates every
+ * request browser-side; this bundle is the signer-side ceiling.
+ */
+export const NOSTR_CONNECT_REQUESTED_METHODS = [
+  'get_public_key',
+  'nip04_encrypt',
+  'nip04_decrypt',
+  'nip44_encrypt',
+  'nip44_decrypt',
+]
+export const NOSTR_CONNECT_REQUESTED_KINDS = [
+  0, 1, 3, 4, 5, 6, 7, 1059, 9734, 9735, 10002,
+  22242, 24133, 27117, 27235, 30023, 30078, 30808,
+]
+
+export function nostrConnectRequestedPerms() {
+  return [
+    ...NOSTR_CONNECT_REQUESTED_METHODS,
+    ...NOSTR_CONNECT_REQUESTED_KINDS.map(kind => `sign_event:${kind}`),
+  ]
+}
+
+/**
  * Build a nostrconnect:// pairing request: fresh client keypair, random
- * secret, and the URI the signer scans or receives.
+ * secret, the requested permission bundle, and the URI the signer scans or
+ * receives.
  */
 export function buildNostrConnectRequest(relayInput, {
   name = 'Bark',
   url = 'https://github.com/forgesworn/bark',
+  perms = nostrConnectRequestedPerms(),
 } = {}) {
   const relays = normaliseNostrConnectRelays(relayInput)
   if (relays.length === 0) {
@@ -411,8 +447,9 @@ export function buildNostrConnectRequest(relayInput, {
     secret,
     name,
     url,
+    perms,
   })
-  return { uri, clientSecret: bytesToHex(clientSk), relays, secret }
+  return { uri, clientSecret: bytesToHex(clientSk), relays, secret, perms }
 }
 
 /** @type {{ uri: string, status: 'waiting'|'connected'|'error', error: string|null, abort: AbortController }|null} */
