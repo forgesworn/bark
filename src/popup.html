@@ -463,6 +463,13 @@
     }
     #nostrconnect-section input:focus { outline: none; border-color: #555; }
 
+    .qr-perms-note {
+      font-size: 0.72rem;
+      color: #888;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
     #qr-code { text-align: center; margin: 10px 0; }
     #qr-code svg {
       width: 190px;
@@ -724,6 +731,7 @@
         <button class="btn btn-secondary" id="qr-show-btn" data-i18n="pairByQrBtn">Pair by QR (nostrconnect)</button>
         <div id="qr-flow" style="display:none">
           <input id="qr-relay-input" type="text" value="wss://relay.nsec.app" spellcheck="false" autocomplete="off" title="Relay(s) for the pairing handshake" data-i18n-title="qrRelayTitle">
+          <div class="qr-perms-note" data-i18n="qrPermsNote">The QR asks your signer for the standard Bark surface up front — read pubkey, encryption, and the common event kinds including V4V gated content — so you approve once at pairing instead of adding kinds by hand later.</div>
           <button class="btn btn-primary" id="qr-start-btn" data-i18n="generateQr">Generate QR</button>
           <div id="qr-code"></div>
           <div id="qr-uri" class="qr-uri" style="display:none"></div>

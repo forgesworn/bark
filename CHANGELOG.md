@@ -4,6 +4,16 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- The nostrconnect pairing QR now carries a requested-permission bundle:
+  read pubkey, NIP-04/NIP-44 encryption, and the common event kinds —
+  including the V4V gated kinds 27117 and 30808 — mirroring Sapwood's kind
+  registry. The signer shows the whole surface at pairing and the human
+  approves once, instead of discovering an unlisted kind mid-flow and adding
+  a manual grant later. The popup explains the bundle before the QR is
+  generated.
+
 ## [1.3.6] — 2026-08-08
 
 ### Added
