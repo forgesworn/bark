@@ -4,6 +4,8 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.7] — 2026-08-09
+
 ### Added
 
 - The nostrconnect pairing QR now carries a requested-permission bundle:
