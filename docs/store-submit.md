@@ -1,7 +1,14 @@
-# Automated store submission (local)
+# Automated store submission
 
-One command submits a released version to both stores from any machine with
-`git`, `gh` and Node:
+Two routes over the same scripts; both are manual triggers, because a store
+submission is a deliberate act. Review queues at both stores still apply —
+this removes the dashboard clicking, not the review wait.
+
+**Primary — Actions**: Actions → **Store submit** → Run workflow → enter the
+release tag. The repo is public, so hosted minutes are free. Needs the six
+values below as repo secrets (`gh secret set NAME --repo forgesworn/bark`).
+
+**Fallback — local**, from any machine with `git`, `gh` and Node:
 
 ```bash
 npm run store:submit -- v1.3.7                # both stores
@@ -10,15 +17,11 @@ npm run store:submit -- v1.3.7 --no-chrome    # AMO only
 npm run store:submit -- v1.3.7 --no-publish   # CWS: upload without submitting
 ```
 
-It downloads the release's own CI-built zips, cuts the AMO source zip and the
-release-notes changelog **from the tag** (so a moved-on working tree cannot
-leak into the submission), then submits: package to the Chrome Web Store,
-package + source + changelog-derived release notes to AMO. The AMO step fails
-loudly if the version has no changelog section. Review queues at both stores
-still apply — this removes the dashboard clicking, not the review wait.
-
-Deliberately not a CI job: submission stays a local, human-triggered act and
-the store credentials never live in repo settings.
+Either route downloads the release's own CI-built zips, cuts the AMO source
+zip and the release-notes changelog **from the tag** (so a moved-on working
+tree cannot leak into the submission), then submits: package to the Chrome
+Web Store, package + source + changelog-derived release notes to AMO. The AMO
+step fails loudly if the version has no changelog section.
 
 Neither store API can **create** a listing — only update one — so the very
 first submission of a new extension is always a dashboard job. Bark's listings
@@ -26,9 +29,10 @@ already exist on both stores.
 
 ## Credentials
 
-The scripts read the environment first, then `~/ops/bark-store.env`
-(override the path with `BARK_STORE_ENV`). Keep that file outside the repo,
-`chmod 600`, plain `KEY=VALUE` lines:
+Six values, minted once (below). For Actions, store each as a repo secret;
+for the local route, the scripts read the environment first, then
+`~/ops/bark-store.env` (override the path with `BARK_STORE_ENV`). Keep that
+file outside the repo, `chmod 600`, plain `KEY=VALUE` lines:
 
 ```
 CWS_EXTENSION_ID=...
@@ -73,7 +77,8 @@ The add-on is addressed by its gecko ID (`bark@forgesworn.local`, set in
 ## Per release
 
 1. Tag pushed, release workflow green, release published (the existing flow).
-2. `npm run store:submit -- vX.Y.Z`
+2. Actions → **Store submit** → run with the tag — or locally,
+   `npm run store:submit -- vX.Y.Z`.
 3. AMO release notes come from the version's changelog section automatically.
    CWS has no per-version notes; keep the long description in
    `docs/store-listing.md` current instead.

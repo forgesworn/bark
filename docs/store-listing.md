@@ -266,9 +266,10 @@ switches your active identity.
 - [ ] Version bumped in `package.json` + `src/manifest.json`
 - [ ] CHANGELOG entry dated (it becomes the AMO release notes)
 - [ ] Tag `vX.Y.Z` pushed (release workflow attaches zips)
-- [ ] `npm run store:submit -- vX.Y.Z` (uploads to CWS, and zip + source +
+- [ ] Actions → **Store submit** with the tag, or locally
+      `npm run store:submit -- vX.Y.Z` (uploads to CWS, and zip + source +
       release notes to AMO — see `docs/store-submit.md`; the manual dashboard
-      route below remains the fallback)
+      route below remains the last-resort fallback)
 - [ ] Fallback CWS: upload `bark-vX.Y.Z.zip`, fill permissions justification from above
 - [ ] Fallback AMO: upload `bark-firefox-vX.Y.Z.zip` + source zip, reviewer notes from above
 - [ ] Safari: convert `dist-safari/` via Xcode when targeting the App Store
