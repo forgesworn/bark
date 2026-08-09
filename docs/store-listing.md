@@ -264,8 +264,11 @@ switches your active identity.
 
 - [ ] `npm run verify && npm run e2e:chromium` green
 - [ ] Version bumped in `package.json` + `src/manifest.json`
-- [ ] CHANGELOG entry dated
+- [ ] CHANGELOG entry dated (it becomes the AMO release notes)
 - [ ] Tag `vX.Y.Z` pushed (release workflow attaches zips)
-- [ ] CWS: upload `bark-vX.Y.Z.zip`, fill permissions justification from above
-- [ ] AMO: upload `bark-firefox-vX.Y.Z.zip` + source zip, reviewer notes from above
+- [ ] Actions → **Store submit** → run with the tag (uploads to CWS, and
+      zip + source + release notes to AMO — see `docs/store-submit.md`;
+      manual dashboard route below remains the fallback)
+- [ ] Fallback CWS: upload `bark-vX.Y.Z.zip`, fill permissions justification from above
+- [ ] Fallback AMO: upload `bark-firefox-vX.Y.Z.zip` + source zip, reviewer notes from above
 - [ ] Safari: convert `dist-safari/` via Xcode when targeting the App Store
