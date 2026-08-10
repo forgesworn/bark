@@ -47,7 +47,7 @@
     "@playwright/test": "^1.62.1",
     "esbuild": "^0.28.1",
     "vitest": "^4.1.10",
-    "ws": "^8.21.1"
+    "ws": "^8.21.2"
   },
   "dependencies": {
     "nostr-tools": "^2.24.1",
