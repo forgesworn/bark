@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, normaliseNostrConnectRelays, buildNostrConnectRequest, nostrConnectRequestedPerms, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod, classifyHeartwoodImport, summariseHeartwoodImport, resolveImportedActiveId, importHeartwoodIdentities } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, approvalSurfaceKind, normaliseNostrConnectRelays, buildNostrConnectRequest, nostrConnectRequestedPerms, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod, classifyHeartwoodImport, summariseHeartwoodImport, resolveImportedActiveId, importHeartwoodIdentities } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -489,6 +489,27 @@ describe('buildNostrConnectRequest', () => {
   it('lets a caller override the bundle', () => {
     const { uri } = buildNostrConnectRequest('wss://relay.nsec.app', { perms: ['get_public_key'] })
     expect(new URL(uri).searchParams.get('perms')).toBe('get_public_key')
+  })
+})
+
+describe('approvalSurfaceKind', () => {
+  it('prefers a popup window when the windows API exists', () => {
+    expect(approvalSurfaceKind({ windows: { create: () => {} }, tabs: { create: () => {} } })).toBe('window')
+  })
+
+  // Firefox for Android implements no windows API at all.
+  it('falls back to a tab when only the tabs API exists', () => {
+    expect(approvalSurfaceKind({ tabs: { create: () => {} } })).toBe('tab')
+  })
+
+  it('ignores a windows object that cannot create windows', () => {
+    expect(approvalSurfaceKind({ windows: {}, tabs: { create: () => {} } })).toBe('tab')
+  })
+
+  it('reports none when neither surface is available', () => {
+    expect(approvalSurfaceKind({})).toBe('none')
+    expect(approvalSurfaceKind(undefined)).toBe('none')
+    expect(approvalSurfaceKind(null)).toBe('none')
   })
 })
 

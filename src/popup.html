@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Firefox for Android renders the action popup in a mobile viewport;
+       without this the panel lays out at 980px and renders unreadably small. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bark</title>
   <style>
     * {
@@ -12,6 +15,8 @@
 
     body {
       width: 320px;
+      /* No effect on desktop, where the popup sizes to the body. */
+      max-width: 100%;
       min-height: 200px;
       background: #1a1a2e;
       color: #e0e0e0;

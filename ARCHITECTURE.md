@@ -166,10 +166,15 @@ The source tree builds one extension codebase into browser-specific outputs:
 | Target | Output | Notes |
 |--------|--------|-------|
 | Chromium, Chrome, Brave, Edge | `dist/` | Manifest V3 service worker |
-| Firefox | `dist-firefox/` | Manifest V3 background scripts/event page |
+| Firefox (desktop and Android) | `dist-firefox/` | Manifest V3 background scripts/event page |
 | Safari | `dist-safari/` | Manifest V3 service worker output for Safari Web Extension conversion |
 
 `npm run build:all` and `npm run package:all` produce all variants.
+
+The Firefox build declares `gecko_android`, so the same package installs on
+Firefox for Android. Android has no `windows` API, so the approval surface falls
+back to a tab there — see [docs/mobile.md](docs/mobile.md). Chromium on Android
+runs no extensions at all, which rules out Vanadium on GrapheneOS.
 
 ## Auto-reconnect
 

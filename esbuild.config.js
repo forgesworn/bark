@@ -61,6 +61,17 @@ function manifestForTarget() {
           required: ['none'],
         },
       },
+      // Opt in to Firefox for Android. Without this key AMO lists Bark as
+      // desktop-only and Android users cannot install it. This is the only
+      // supported extension route on GrapheneOS — Vanadium runs no
+      // extensions at all. Android has no windows API, so the approval
+      // surface falls back to a tab (see approvalSurfaceKind in
+      // background.js). 142 rather than the desktop floor of 140:
+      // data_collection_permissions above only reached Android in 142, and
+      // web-ext lint flags the mismatch.
+      gecko_android: {
+        strict_min_version: '142.0',
+      },
     }
   }
 

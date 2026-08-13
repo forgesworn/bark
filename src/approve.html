@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Mobile browsers show the approval as a tab rather than a popup window
+       (Firefox for Android has no windows API), so the page must lay out
+       against the device width instead of the 980px default viewport. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bark — Approve</title>
   <style>
     * {
@@ -12,6 +16,8 @@
 
     body {
       width: 400px;
+      /* No effect in the 420px popup window; shrinks to fit a phone tab. */
+      max-width: 100%;
       min-height: 300px;
       background: #1a1a2e;
       color: #e0e0e0;

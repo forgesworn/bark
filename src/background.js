@@ -801,15 +801,37 @@ function enqueueApproval(requestId, details) {
   void openNextApproval()
 }
 
-/** Foreground the active approval window for a request from the same tab. */
+/**
+ * Which surface this browser can show an approval on. Firefox for Android
+ * implements no `windows` API at all (windows.create/update/onRemoved are all
+ * unsupported there), so mobile falls back to a foreground tab. Exported for
+ * testing.
+ *
+ * @param {object|undefined} api  a `chrome`-shaped extension API object
+ * @returns {'window'|'tab'|'none'}
+ */
+export function approvalSurfaceKind(api) {
+  if (api?.windows?.create) return 'window'
+  if (api?.tabs?.create) return 'tab'
+  return 'none'
+}
+
+/** Foreground the active approval surface for a request from the same tab. */
 async function focusActiveApprovalForTab(tabId) {
   if (!Number.isInteger(tabId) || !activeApprovalId) return false
   const entry = pendingApprovals.get(activeApprovalId)
-  if (!entry || entry.tabId !== tabId || !Number.isInteger(entry.windowId)) return false
+  if (!entry || entry.tabId !== tabId) return false
 
   try {
-    await chrome.windows.update(entry.windowId, { focused: true })
-    return true
+    if (Number.isInteger(entry.windowId)) {
+      await chrome.windows.update(entry.windowId, { focused: true })
+      return true
+    }
+    if (Number.isInteger(entry.approvalTabId)) {
+      await chrome.tabs.update(entry.approvalTabId, { active: true })
+      return true
+    }
+    return false
   } catch {
     return false
   }
@@ -832,9 +854,16 @@ async function openNextApproval() {
     denyApproval(requestId, 'Approval timed out.')
   }, APPROVAL_TIMEOUT_MS)
 
+  const url = chrome.runtime.getURL(`approve.html?requestId=${requestId}`)
   try {
+    if (approvalSurfaceKind(globalThis.chrome) === 'tab') {
+      const tab = await chrome.tabs.create({ url, active: true })
+      const stored = pendingApprovals.get(requestId)
+      if (stored) stored.approvalTabId = tab.id
+      return
+    }
     const win = await chrome.windows.create({
-      url: chrome.runtime.getURL(`approve.html?requestId=${requestId}`),
+      url,
       type: 'popup',
       width: 420,
       height: 520,
@@ -847,12 +876,31 @@ async function openNextApproval() {
   }
 }
 
+/**
+ * Close a settled request's fallback approval tab. The popup-window surface
+ * closes itself from approve.js, but a browser tab may refuse `window.close()`
+ * for a page it did not open via script, so the background closes it instead.
+ * Called only after the request has left `pendingApprovals`, so the
+ * `tabs.onRemoved` listener below cannot re-deny an already settled request.
+ */
+function closeApprovalTab(entry) {
+  if (!Number.isInteger(entry?.approvalTabId)) return
+  if (typeof chrome === 'undefined' || !chrome.tabs?.remove) return
+  try {
+    const result = chrome.tabs.remove(entry.approvalTabId)
+    if (result && typeof result.catch === 'function') result.catch(() => {})
+  } catch {
+    // The tab was already closed.
+  }
+}
+
 /** Remove a request from the pending map and queue; advance the queue. */
 function settleApproval(requestId) {
   const entry = pendingApprovals.get(requestId)
   if (!entry) return null
   clearTimeout(entry.timeoutId)
   pendingApprovals.delete(requestId)
+  closeApprovalTab(entry)
   const queued = approvalQueue.indexOf(requestId)
   if (queued !== -1) approvalQueue.splice(queued, 1)
   if (activeApprovalId === requestId) {
@@ -2318,6 +2366,20 @@ if (typeof chrome !== 'undefined' && chrome.windows?.onRemoved) {
   chrome.windows.onRemoved.addListener((windowId) => {
     for (const [requestId, entry] of pendingApprovals) {
       if (entry.windowId === windowId) {
+        denyApproval(requestId, 'Request denied by user.')
+        break
+      }
+    }
+  })
+}
+
+// Mobile fallback: dismissing the approval tab denies, mirroring the
+// close-the-popup-window behaviour above. Only entries opened on the tab
+// surface carry approvalTabId, so this never matches a requesting page's tab.
+if (typeof chrome !== 'undefined' && chrome.tabs?.onRemoved) {
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    for (const [requestId, entry] of pendingApprovals) {
+      if (entry.approvalTabId === tabId) {
         denyApproval(requestId, 'Request denied by user.')
         break
       }

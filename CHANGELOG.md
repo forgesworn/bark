@@ -4,6 +4,31 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Firefox for Android support. The Firefox build now declares
+  `browser_specific_settings.gecko_android` (minimum 142, two releases above the
+  desktop floor because `data_collection_permissions` reached Android later), so
+  the AMO listing installs on Android instead of being treated as desktop-only.
+  This is the only mobile route for Bark: Chromium on Android compiles out the
+  extensions subsystem, so Vanadium on GrapheneOS and every other
+  Chromium-derived Android browser cannot run it. See [docs/mobile.md](docs/mobile.md)
+  for the Cambium and direct-NIP-46 alternatives.
+
+### Fixed
+
+- Approvals no longer fail outright on mobile. Firefox for Android implements no
+  `windows` API at all, so every ask-policy request would have been denied with
+  "Could not open approval window". The approval surface now falls back to a
+  foreground tab: dismissing it denies, "Review in Bark" foregrounds it, and the
+  background closes it once the request settles. Desktop keeps the popup window.
+- The popup and approval pages lay out against the device width rather than the
+  980px default mobile viewport. No change to desktop rendering.
+
+Verified on a Pixel 10 Pro XL running GrapheneOS with Firefox for Android
+153.0.4: provider injection, the approval tab (allow once, trust site, deny,
+dismiss-to-deny, queued approvals), and signing after the event page suspends.
+
 ## [1.3.8] - 2026-08-13
 
 ### Fixed

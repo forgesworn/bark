@@ -18,6 +18,7 @@
     "e2e:deterministic": "npm run build:chromium && playwright test e2e/nip46-relay-signer.spec.js",
     "e2e:approval": "npm run build:chromium && playwright test e2e/approval-popup.spec.js",
     "e2e:live": "npm run build:chromium && playwright test e2e/live-relay-signer.spec.js",
+    "dev:android": "npm run build:firefox && web-ext run --target=firefox-android --source-dir=dist-firefox --firefox-apk=org.mozilla.firefox",
     "audit:prod": "npm audit --omit=dev",
     "verify": "npm test && npm run build:all && npm audit",
     "store:submit": "node scripts/store-submit.mjs",

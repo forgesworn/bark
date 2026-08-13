@@ -77,6 +77,15 @@ real `signEvent` through the connected signer.
 Set `BARK_LIVE_CLIENT_SECRET=<64-hex-secret>` as well if you want the signer to
 remember the same Bark test client across runs.
 
+### Android and GrapheneOS
+
+Bark runs on Firefox for Android. Vanadium and stock Chromium on Android have no
+extension support at all, though Vanadium forks that re-enable it (Titanium,
+Palladium) can load the Chromium build. For native Android apps use
+[Cambium](https://github.com/forgesworn/cambium) instead, and prefer web apps
+that accept a `bunker://` URI directly where they offer it. See
+[docs/mobile.md](docs/mobile.md) for the full comparison.
+
 ### Full setup guide
 
 For a complete walkthrough (firmware, bridge, provisioning, and Bark together), see the [Heartwood + Bark setup guide](docs/setup-guide.md).

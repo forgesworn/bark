@@ -181,6 +181,15 @@ npm run build:firefox   # output in dist-firefox/
 warnings are innerHTML assignments whose dynamic values all pass through
 the local `escapeHtml` helper first.
 
+The build declares `browser_specific_settings.gecko_android`
+(`strict_min_version` 142.0 — Android got `data_collection_permissions`
+two releases after desktop), so the listing covers Firefox for Android.
+Android implements no `windows` API, so the approval surface opens as a
+foreground tab there instead of a popup window, and `popup.html` /
+`approve.html` carry `width=device-width` viewport meta tags. See
+[mobile.md](mobile.md). Chromium on Android has no extension support, so
+there is no Android equivalent of the Chrome Web Store listing.
+
 ## Positioning
 
 The nearest competitor is Bunker46 (same NIP-07 → NIP-46 bridge; Vue/WXT;
