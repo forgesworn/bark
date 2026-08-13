@@ -4,6 +4,8 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.9] - 2026-08-13
+
 ### Added
 
 - Firefox for Android support. The Firefox build now declares
