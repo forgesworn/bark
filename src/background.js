@@ -1599,10 +1599,17 @@ export function rebuildCompactSignedEvent(template, resultJson, verify = verifyE
 /**
  * Which signing dialect each bunker speaks, keyed by its pubkey.
  *
- * `sign_event_compact` is a Heartwood extension, so an ordinary bunker answers
- * it with an error. That costs one wasted round trip, which is fine once and
- * wasteful for every signature after, hence remembering the answer. Cleared
- * with the signer, since a firmware update can change it.
+ * `sign_event_compact` is a Heartwood extension whose params carry the event
+ * as an object rather than a string. A lenient bunker answers it with an
+ * unknown-method error, but a strictly typed one (nak, and anything built on
+ * rust-nostr: both parse params as an array of strings) cannot parse the
+ * request envelope at all and never replies. That leaves no error to fall
+ * back on, only a timeout, and a timeout deliberately does not fall back
+ * (see below), so a blind probe hangs every signature against such signers.
+ * The probe is therefore sent only to signers that answered the Heartwood
+ * identity probe (see finaliseConnection); everyone else goes straight to
+ * standard `sign_event`. The remembered answer is cleared with the signer,
+ * since a firmware update can change it.
  *
  * @type {Map<string, 'compact'|'standard'>}
  */
@@ -1624,7 +1631,8 @@ export function resetSigningDialect() {
  */
 async function signViaBestDialect(bunker, event, label) {
   const key = bunker?.bp?.pubkey ?? 'unknown'
-  if (signingDialect.get(key) !== 'standard') {
+  const dialect = signingDialect.get(key)
+  if (dialect === 'compact' || (dialect === undefined && connectionState.isHeartwood)) {
     try {
       const result = await withBunkerRequestTimeout(
         bunker.sendRequest('sign_event_compact', [event]),

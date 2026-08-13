@@ -8,6 +8,68 @@ import {
   withTestPage,
 } from './nip46-test-helpers.js'
 
+// A strictly typed signer (nak, rust-nostr) cannot parse a request whose
+// params carry an object, and drops it without any reply. Bark must never
+// send one such a request: the compact-dialect probe is reserved for signers
+// that answered the Heartwood identity probe. Regression test for the live
+// smoke hanging against nak.
+test('signs through a strict-parser NIP-46 signer without hanging', async ({ context, extensionId }) => {
+  test.setTimeout(90_000)
+
+  await withDeterministicNip46Signer(async (signer) => {
+    await withTestPage(async (url) => {
+      let page
+      try {
+        const origin = new URL(url).origin
+        await seedDeterministicSigner({
+          context,
+          extensionId,
+          origin,
+          bunkerUri: signer.bunkerUri,
+        })
+
+        const primeResult = await runtimeMessage(context, extensionId, {
+          type: 'bark-prime-signer',
+        }, 35_000)
+        expect(primeResult).toMatchObject({ ok: true, pubkey: signer.pubkey })
+
+        page = await context.newPage()
+        await page.goto(url)
+        await expect.poll(async () => {
+          return await page.evaluate(() => typeof window.nostr?.getPublicKey)
+        }).toBe('function')
+
+        const template = {
+          kind: 1,
+          created_at: Math.floor(Date.now() / 1000),
+          tags: [['client', 'bark-strict-parser-e2e']],
+          content: 'bark strict parser signer smoke',
+        }
+        const signed = await callNostr(page, 'signEvent', template)
+        expect(verifyEvent(signed)).toBe(true)
+
+        expect(signer.methods).toContain('sign_event')
+        expect(signer.methods).not.toContain('sign_event_compact')
+        expect(signer.droppedMethods).toEqual([])
+      } finally {
+        if (page) {
+          await Promise.race([
+            page.close(),
+            new Promise((resolve) => setTimeout(resolve, 5_000)),
+          ])
+        }
+        await Promise.race([
+          runtimeMessage(context, extensionId, { type: 'bark-reset' }, 5_000),
+          new Promise((resolve) => setTimeout(resolve, 7_000)),
+        ]).catch(() => {})
+      }
+    }, {
+      title: 'Bark Strict Parser NIP-46 E2E',
+      body: 'Bark strict parser NIP-46 E2E host page',
+    })
+  }, { strictParams: true })
+})
+
 test('signs through a deterministic local NIP-46 relay signer', async ({ context, extensionId }) => {
   test.setTimeout(90_000)
 

@@ -241,10 +241,20 @@ function sendJson(ws, message) {
 }
 
 export class DeterministicNip46Signer {
-  constructor() {
+  /**
+   * `strictParams` models signers whose request parser types params as an
+   * array of strings (nak, rust-nostr): a request carrying a non-string
+   * param fails envelope parsing before the method is even dispatched, so
+   * the signer cannot reply at all, not even with an error. Dropped
+   * requests are recorded in `droppedMethods` so a test can assert the
+   * client never sent one.
+   */
+  constructor({ strictParams = false } = {}) {
     this.secretKey = hexToBytes(SIGNER_SECRET_HEX)
     this.pubkey = getPublicKey(this.secretKey)
+    this.strictParams = strictParams
     this.methods = []
+    this.droppedMethods = []
     this.requests = []
     this.connections = new Set()
     this.wss = null
@@ -327,6 +337,10 @@ export class DeterministicNip46Signer {
 
     const conversationKey = getConversationKey(this.secretKey, event.pubkey)
     const request = JSON.parse(decrypt(event.content, conversationKey))
+    if (this.strictParams && (request.params || []).some((param) => typeof param !== 'string')) {
+      this.droppedMethods.push(request.method)
+      return
+    }
     this.methods.push(request.method)
     this.requests.push(request)
 
@@ -419,8 +433,8 @@ export class DeterministicNip46Signer {
   }
 }
 
-export async function withDeterministicNip46Signer(fn) {
-  const signer = await new DeterministicNip46Signer().start()
+export async function withDeterministicNip46Signer(fn, options = {}) {
+  const signer = await new DeterministicNip46Signer(options).start()
   try {
     return await fn(signer)
   } finally {
