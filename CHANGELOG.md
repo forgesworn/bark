@@ -4,6 +4,16 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.8] - 2026-08-13
+
+### Fixed
+
+- Signing no longer hangs against strictly-typed NIP-46 signers (nak, and bunkers
+  built on rust-nostr). The Heartwood compact-dialect probe sends the event as an
+  object, which such signers cannot parse and silently drop; the probe is now sent
+  only to signers that identified as Heartwood, and everyone else gets standard
+  `sign_event` from the first signature.
+
 ## [1.3.7] — 2026-08-09
 
 ### Added
