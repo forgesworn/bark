@@ -92,6 +92,8 @@ For a complete walkthrough (firmware, bridge, provisioning, and Bark together), 
 
 For the release hardening test matrix, see [E2E hardening](docs/e2e-hardening.md).
 
+To cut a release and get it into both stores, see [Releasing](docs/releasing.md).
+
 ## Works with any NIP-46 bunker
 
 Bark works as a standard NIP-07 provider with any NIP-46 bunker. The signing flow (`getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt`) works identically regardless of the backend. Three ways to pair:

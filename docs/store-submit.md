@@ -83,15 +83,25 @@ The add-on is addressed by its gecko ID (`bark@forgesworn.local`, set in
 
 ## Per release
 
-1. Tag pushed, release workflow green, release published (the existing flow).
-2. Actions → **Store submit** → run with the tag — or locally,
+Full step-by-step, including the version bump, is in
+[releasing.md](releasing.md). The submission half is:
+
+1. Tag pushed and the release workflow green.
+2. **Publish the draft release.** `release.yml` sets `draft: true`, so the tag
+   build lands as a draft and nothing consumes a draft — submitting before this
+   fails with `release not found` (see below). Either
+   `gh release edit vX.Y.Z --draft=false` or the Releases page.
+3. Actions → **Store submit** → run with the tag — or locally,
    `npm run store:submit -- vX.Y.Z`.
-3. AMO release notes come from the version's changelog section automatically.
+4. AMO release notes come from the version's changelog section automatically.
    CWS has no per-version notes; keep the long description in
    `docs/store-listing.md` current instead.
 
 ## Failure notes
 
+- `download release assets failed` with `release not found` means the GitHub
+  release is still a draft, not that the tag or credentials are wrong. Publish
+  it (step 2 above) and re-run; nothing needs rebuilding.
 - CWS `publish` returns the review state, not instant publication;
   ITEM_PENDING_REVIEW is success.
 - AMO validation is polled for up to 2½ minutes; a validation failure prints
