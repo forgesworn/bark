@@ -1,4 +1,4 @@
-+# Store listing pack
+# Store listing pack
 
 Everything needed to submit Bark to the Chrome Web Store and Firefox
 Add-ons (AMO). Keep this in sync with the manifest and README.
