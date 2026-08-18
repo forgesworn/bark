@@ -9,15 +9,41 @@
   <meta property="og:title" content="Bark: sign Nostr events without keys in your browser">
   <meta property="og:description" content="A small extension that hands signing to a device you control. Web apps get signatures. They never get your keys.">
   <meta property="og:image" content="https://bark.forgesworn.dev/assets/01-connected.png">
+  <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="canonical" href="https://bark.forgesworn.dev/">
   <style>
+    /* Served from this domain, nothing third-party. Both SIL OFL 1.1.
+       Fraunces is the family's display face (heartwood and cambium use it too);
+       Inter carries the body, because a display serif at reading size on a
+       near-black ground loses its hairlines. */
+    @font-face {
+      font-family: "Fraunces";
+      src: url("fonts/fraunces-latin.woff2") format("woff2");
+      font-weight: 300 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: "Inter";
+      src: url("fonts/inter-latin.woff2") format("woff2");
+      font-weight: 400 600; font-style: normal; font-display: swap;
+    }
     :root {
       --bg: #0a0a12;
       --panel: #12121c;
       --line: #24242f;
       --ink: #eef4ee;
       --muted: #9db89d;
-      --dim: #6b7c6b;
+      /* was #6b7c6b at 4.43:1 on --bg, under AA, and it carries the hero note
+         and every card caption. 5.44:1 now. */
+      --dim: #7a8b79;
+
+      --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+      --sans: "Inter", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+
+      /* Lede introduces, text argues, detail supports. */
+      --text-lede: clamp(1.18rem, 1.5vw, 1.34rem);
+      --text: 1.0625rem;
+      --text-detail: 0.98rem;
       --accent: #339933;
       --accent-ink: #cfe3cf;
       --warn: #c05b4d;
@@ -27,9 +53,28 @@
     body {
       background: var(--bg);
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      line-height: 1.65;
+      font-family: var(--sans);
+      font-size: var(--text);
+      line-height: 1.7;
+      letter-spacing: -0.003em;
     }
+    /* Fraunces carries the voice; Inter carries the argument. */
+    h1, h2, h3, .v4v h2 {
+      font-family: var(--serif);
+      letter-spacing: -0.015em;
+    }
+    /* opsz must be set explicitly: the axis defaults to its 9 minimum, and the
+       caption cut at display size looks like a different, worse typeface. */
+    .hero h1 { font-weight: 500; font-variation-settings: "opsz" 144; }
+    h2, .v4v h2 { font-weight: 470; font-variation-settings: "opsz" 60; }
+    h3 { font-weight: 520; font-variation-settings: "opsz" 32; }
+    section .lede { font-size: var(--text-lede); line-height: 1.5; }
+    .card p, .step p, .dl .sub, .caption { font-size: var(--text-detail); }
+    /* Emphasis on the display face rather than a synthesised Inter oblique. */
+    .prose em, .card p em, .step p em {
+      font-family: var(--serif); font-style: italic; font-size: 1.06em; color: var(--ink);
+    }
+
     a { color: var(--accent-ink); }
     code { font-size: 0.92em; }
     .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
@@ -44,7 +89,27 @@
     nav a { color: var(--muted); text-decoration: none; margin-left: 22px; font-size: 15px; }
     nav a:hover { color: var(--ink); }
 
-    .hero h1 { font-size: clamp(38px, 6vw, 62px); font-weight: 800; line-height: 1.08; letter-spacing: -0.01em; max-width: 760px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+      gap: clamp(2rem, 5vw, 4.5rem);
+      align-items: center;
+    }
+    .hero-copy { min-width: 0; }
+    .hero-shot { margin: 0; min-width: 0; }
+    .hero-shot img {
+      display: block; width: 100%; height: auto;
+      border: 1px solid var(--line); border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+    /* Below this the two columns are too narrow to read; stack, and let the
+       popup follow the call to action rather than push it down the page. */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-shot img { max-width: 560px; margin: 0 auto; }
+    }
+
+    .hero h1 { font-size: clamp(38px, 6vw, 62px); line-height: 1.08; letter-spacing: -0.01em; max-width: 760px; }
     .hero p.tag { font-size: clamp(18px, 2.4vw, 22px); color: var(--muted); margin: 24px 0 36px; max-width: 640px; }
     .cta { display: flex; gap: 14px; flex-wrap: wrap; }
     .btn {
@@ -59,7 +124,7 @@
 
     section { padding: 76px 0; }
     section.alt { background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-    h2 { font-size: 34px; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.01em; }
+    h2 { font-size: 34px; margin-bottom: 14px; letter-spacing: -0.01em; }
     .lede { color: var(--muted); font-size: 18px; max-width: 680px; margin-bottom: 40px; }
     .prose { color: var(--muted); font-size: 17px; max-width: 680px; }
     .prose + .prose { margin-top: 18px; }
@@ -97,14 +162,25 @@
     .family a.more { font-size: 14px; text-decoration: none; }
     .family a.more:hover { text-decoration: underline; }
 
-    .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+    /* Four cards. auto-fit gave three across and stranded Android on a row of
+       its own; a fixed 2x2 keeps the block square and gives the Android card,
+       which carries the most text, room to sit level with its neighbour. */
+    .downloads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 720px) { .downloads { grid-template-columns: 1fr; } }
     .dl {
       background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
       display: flex; flex-direction: column; gap: 8px;
     }
     .dl h3 { font-size: 19px; color: var(--accent-ink); }
     .dl .sub { color: var(--muted); font-size: 14px; flex: 1; }
-    .dl .btn { text-align: center; margin-top: 14px; }
+    /* Every action in a card is the same height whatever its label does. The
+       group sits at the card foot, so cards with one button still line up with
+       cards that have two. */
+    .dl-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .dl .btn {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 48px; padding: 10px 18px; margin: 0; text-align: center;
+    }
     .badge { display: inline-block; font-size: 12px; color: #b8a24a; border: 1px solid #4a4224; border-radius: 999px; padding: 2px 10px; margin-left: 8px; vertical-align: 2px; }
     pre {
       background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
@@ -124,6 +200,49 @@
     footer .links { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
     footer a { color: var(--muted); text-decoration: none; }
     footer a:hover { color: var(--ink); }
+
+    /* ---------- scroll-driven entrance (no scripts) ---------- */
+    /*
+     * This page had no entrance motion at all. These rules fade each block
+     * up as it scrolls into view using the browser's own scroll-driven
+     * animation, so the page still ships zero JavaScript.
+     *
+     * No stagger is declared. Each row crosses the viewport edge at its own
+     * scroll position, so the cascade falls out of the geometry.
+     *
+     * Browsers without scroll-driven animations fail the @supports guard and
+     * render everything in place, exactly as this page behaved before. A
+     * block is never hidden without a working timeline to bring it back.
+     */
+
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+    @media (prefers-reduced-motion: no-preference) {
+      @supports (animation-timeline: view()) {
+        section h2,
+        section .lede,
+        section .prose,
+        section .note,
+        .card,
+        .step,
+        .dl,
+        .diagram,
+        .v4v,
+        .caption {
+          /* Longhand on purpose: animation-timeline is a reset-only part of
+             the `animation` shorthand, so a shorthand added above this later
+             would silently wipe the timeline and hide the block for good. */
+          animation-name: rise;
+          animation-duration: 1s;
+          animation-timing-function: cubic-bezier(0.2, 0.6, 0.2, 1);
+          animation-fill-mode: both;
+          animation-timeline: view();
+          /* A fixed distance rather than a share of the element's own height,
+             so a tall paragraph and a short card fade up at the same rate. */
+          animation-range: cover 0% cover 340px;
+        }
+      }
+    }
   </style>
 </head>
 <body>
@@ -142,13 +261,19 @@
       <a href="https://github.com/forgesworn/bark">GitHub</a>
     </nav>
     <div class="hero">
-      <h1>Your Nostr keys don't belong in a browser</h1>
-      <p class="tag">Bark is a small extension that hands signing to a device you control. Web apps get their signatures. They never get your keys.</p>
-      <div class="cta">
-        <a class="btn btn-primary" href="#download">Get Bark</a>
-        <a class="btn btn-ghost" href="#why">See why it matters</a>
+      <div class="hero-copy">
+        <h1>Your Nostr keys don't belong in a browser</h1>
+        <p class="tag">Bark is a small extension that hands signing to a device you control. Web apps get their signatures. They never get your keys.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="#download">Get Bark</a>
+          <a class="btn btn-ghost" href="#why">See why it matters</a>
+        </div>
+        <p class="note">Free. Open source. No analytics, no accounts, no wallet, no nonsense.</p>
       </div>
-      <p class="note">Free. Open source. No analytics, no accounts, no wallet, no nonsense.</p>
+      <figure class="hero-shot">
+        <img src="assets/hero-approval.webp" width="600" height="480" loading="eager" decoding="async"
+             alt="Bark's approval dialog: a site asking to sign a Kind 1 event, with Deny, Allow Once and Trust Site">
+      </figure>
     </div>
   </div>
 </header>
@@ -397,27 +522,38 @@
 <section class="alt" id="download">
   <div class="wrap">
     <h2>Get Bark</h2>
-    <p class="lede">Version 1.3.7. Chrome and Firefox store listings are in review; direct downloads work today.</p>
+    <p class="lede">Version 1.3.9, on Mozilla Add-ons and the Chrome Web Store. Direct downloads and the Safari build are here too.</p>
     <div class="downloads">
       <div class="dl">
-        <h3>Chrome, Brave, Edge <span class="badge">store review pending</span></h3>
-        <p class="sub">Until the Chrome Web Store listing is live: download the zip, extract it, enable Developer mode at <code>chrome://extensions</code>, and Load unpacked.</p>
-        <a class="btn btn-primary" href="https://github.com/forgesworn/bark/releases/download/v1.3.7/bark-v1.3.7.zip">Download for Chromium</a>
+        <h3>Chrome, Brave, Edge <span class="badge">on the Web Store</span></h3>
+        <p class="sub">Listed on the Chrome Web Store, so it installs and updates itself. Brave and Edge take it from the same listing. The zip is there if you would rather load it unpacked.</p>
+        <div class="dl-actions">
+          <a class="btn btn-primary" href="https://chromewebstore.google.com/detail/bark/gdpcaoemjjglcebpjjljmhndbpeckpln">Chrome Web Store</a>
+          <a class="btn btn-ghost" href="https://github.com/forgesworn/bark/releases/download/v1.3.9/bark-v1.3.9.zip">Download the zip</a>
+        </div>
       </div>
       <div class="dl">
-        <h3>Firefox <span class="badge">store review pending</span></h3>
-        <p class="sub">Until the Firefox Add-ons listing is live: download the zip and load it temporarily via <code>about:debugging</code>, or wait for the signed listing.</p>
-        <a class="btn btn-primary" href="https://github.com/forgesworn/bark/releases/download/v1.3.7/bark-firefox-v1.3.7.zip">Download for Firefox</a>
+        <h3>Firefox <span class="badge">on Add-ons</span></h3>
+        <p class="sub">Signed and listed on Mozilla Add-ons, so it installs and updates itself. Also works on Firefox for Android. The zip is there if you would rather load it yourself.</p>
+        <div class="dl-actions">
+          <a class="btn btn-primary" href="https://addons.mozilla.org/en-GB/firefox/addon/bark-nostr/">Firefox Add-ons</a>
+          <a class="btn btn-ghost" href="https://github.com/forgesworn/bark/releases/download/v1.3.9/bark-firefox-v1.3.9.zip">Download the zip</a>
+        </div>
       </div>
       <div class="dl">
         <h3>Safari</h3>
         <p class="sub">The Safari build converts with Apple's Safari Web Extension tooling. An App Store listing is planned.</p>
-        <a class="btn btn-ghost" href="https://github.com/forgesworn/bark/releases/download/v1.3.7/bark-safari-v1.3.7.zip">Download for Safari</a>
+        <div class="dl-actions">
+          <a class="btn btn-ghost" href="https://github.com/forgesworn/bark/releases/download/v1.3.9/bark-safari-v1.3.9.zip">Download the zip</a>
+        </div>
       </div>
       <div class="dl">
         <h3>Android</h3>
-        <p class="sub">On your phone the same job is done by Cambium: it registers as a NIP-55 signer for Amethyst, Primal and friends, holds no keys, and proxies to your Heartwood.</p>
-        <a class="btn btn-primary" href="https://github.com/forgesworn/cambium/releases/download/v0.3.2/cambium-0.3.2.apk">Download Cambium APK</a>
+        <p class="sub">Bark itself runs in Firefox for Android, from the same Add-ons listing above. For native apps like Amethyst and Primal, which speak NIP&#8209;55 rather than NIP&#8209;07, use <a href="https://cambium.forgesworn.dev">Cambium</a>: it registers as a signer, holds no keys, and proxies to your Heartwood.</p>
+        <div class="dl-actions">
+          <a class="btn btn-primary" href="https://zapstore.dev/apps/naddr1qqtxgetk9enx7un8v4ehwmmjdchxxctdvf5h2mgprpmhxue69uhhyetvv9uju7npwpehgmmjv5hxgetkqgsd5x03e56tajjyhe6d5jesdkw3mkrtvdpua72vugkyn3h4nqtwt0grqsqqqlstem32ln">Zapstore</a>
+          <a class="btn btn-ghost" href="https://github.com/forgesworn/cambium/releases/download/v0.4.3/cambium-0.4.3.apk">Download the APK</a>
+        </div>
       </div>
     </div>
     <pre><code># or build it yourself and check our work
