@@ -23,6 +23,14 @@
       font-weight: 300 700; font-style: normal; font-display: swap;
     }
     @font-face {
+      /* The emphasis rule below asks for Fraunces italic. Without this the
+         browser synthesises an oblique from the roman, which is exactly what
+         the display face was brought in to avoid. */
+      font-family: "Fraunces";
+      src: url("fonts/fraunces-italic-latin.woff2") format("woff2");
+      font-weight: 300 700; font-style: italic; font-display: swap;
+    }
+    @font-face {
       font-family: "Inter";
       src: url("fonts/inter-latin.woff2") format("woff2");
       font-weight: 400 600; font-style: normal; font-display: swap;
