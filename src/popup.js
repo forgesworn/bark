@@ -113,6 +113,26 @@ const confirmDialog = document.getElementById('confirm-dialog')
 const confirmDialogMsg = document.getElementById('confirm-dialog-msg')
 const confirmDialogYes = document.getElementById('confirm-dialog-yes')
 const confirmDialogNo = document.getElementById('confirm-dialog-no')
+const sapwoodUnlock = document.getElementById('sapwood-unlock')
+const sapwoodUnlockBtn = document.getElementById('sapwood-unlock-btn')
+const reconnectSapwoodBtn = document.getElementById('reconnect-sapwood-btn')
+
+/**
+ * Bark never unlocks a signer: it only speaks NIP-46, and a locked Heartwood
+ * does not answer. Unlock is Sapwood's job (USB or relay delivery), so a
+ * Heartwood instance that stops answering gets a handoff to it.
+ */
+const SAPWOOD_URL = 'https://sapwood.forgesworn.dev/'
+
+/** Whether the active instance is a Heartwood signer, from storage — the
+ * worker's status only learns this after a successful connect, and the
+ * handoff matters most when the connect never succeeds. */
+let activeInstanceIsHeartwood = false
+
+function openSapwood() {
+  if (callbackApi?.tabs?.create) callbackApi.tabs.create({ url: SAPWOOD_URL })
+  else if (promiseApi?.tabs?.create) promiseApi.tabs.create({ url: SAPWOOD_URL })
+}
 
 // nostrconnect QR pairing refs
 const nostrconnectSection = document.getElementById('nostrconnect-section')
@@ -362,6 +382,7 @@ async function renderInstances() {
     return false
   }
 
+  activeInstanceIsHeartwood = Boolean(instances.find((inst) => inst.id === activeInstanceId)?.isHeartwood)
   showScreen(mainScreen)
   instanceListEl.innerHTML = instances.map(inst => {
     const isActive = inst.id === activeInstanceId
@@ -678,11 +699,13 @@ function showReconnecting(msg, autoRetrying, authUrl = null) {
   const safeUrl = safeAuthUrl(authUrl)
   authUrlBtn.style.display = safeUrl ? '' : 'none'
   authUrlBtn.dataset.url = safeUrl || ''
+  reconnectSapwoodBtn.style.display = 'none'
 }
 
-async function scheduleRetry() {
+async function scheduleRetry(isHeartwood = false) {
   if (retryCount >= MAX_AUTO_RETRIES) {
     showReconnecting(t('connectionLost'), false)
+    reconnectSapwoodBtn.style.display = isHeartwood ? '' : 'none'
     return
   }
   const delay = RETRY_DELAYS[Math.min(retryCount, RETRY_DELAYS.length - 1)]
@@ -741,6 +764,7 @@ function renderSigningStatus(status) {
   const state = status.signingStatus || 'untested'
   signStatusDot.className = `sign-status-dot ${state}`
   signTestBtn.disabled = state === 'pending'
+  sapwoodUnlock.style.display = state === 'error' && (status.isHeartwood || activeInstanceIsHeartwood) ? '' : 'none'
 
   if (state === 'ready') {
     signStatusText.textContent = t('signingReady')
@@ -833,7 +857,7 @@ async function refreshState() {
     // Connection failed — show reconnection UI
     showScreen(mainScreen)
     renderRelays(status.relays)
-    await scheduleRetry()
+    await scheduleRetry(Boolean(status.isHeartwood) || activeInstanceIsHeartwood)
     return
   }
 
@@ -1405,6 +1429,9 @@ authUrlBtn.addEventListener('click', () => {
   if (callbackApi?.tabs?.create) callbackApi.tabs.create({ url })
   else if (promiseApi?.tabs?.create) promiseApi.tabs.create({ url })
 })
+
+sapwoodUnlockBtn.addEventListener('click', openSapwood)
+reconnectSapwoodBtn.addEventListener('click', openSapwood)
 
 // Toggle relay details
 relaySummary.addEventListener('click', () => {

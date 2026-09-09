@@ -82,6 +82,8 @@
   "waitingBtn": { "message": "Waiting", "description": "Disabled button label while a sign test waits for the signer." },
   "signingFailed": { "message": "Signing failed" },
   "runSignTestAgain": { "message": "Run the sign test again." },
+  "signerMaybeLocked": { "message": "If the signer is locked, unlock it in Sapwood first.", "description": "Hint under a failed sign test on a Heartwood instance. Bark cannot unlock a signer; Sapwood can." },
+  "unlockInSapwood": { "message": "Unlock in Sapwood", "description": "Button that opens the Sapwood web app, where a locked Heartwood signer is unlocked." },
 
   "zeroRelays": { "message": "0 relays", "description": "Initial relay summary before any status is known." },
   "relaysConnected": {

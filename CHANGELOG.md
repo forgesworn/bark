@@ -4,6 +4,14 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Heartwood instances hand off to Sapwood when the signer stops answering. A
+  failed sign test, or a connection that stays lost, now shows "Unlock in
+  Sapwood": Bark only speaks NIP-46 and a locked signer never answers it, so
+  the unlock has to happen in Sapwood (USB or relay delivery) before Bark can
+  sign again.
+
 ## [1.3.10] - 2026-09-09
 
 ### Fixed
