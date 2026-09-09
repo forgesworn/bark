@@ -4,6 +4,15 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- The popup no longer calls `window.confirm()` when removing a signer or
+  resetting policies. Chromium shows those dialogs app-modal, so a popup that
+  closed while one was up (any focus loss closes a toolbar popup on macOS)
+  left an orphaned modal that froze every extension's toolbar popup until it
+  was found and dismissed. Both confirmations now use an inline `<dialog>`
+  that lives and dies with the popup.
+
 ## [1.3.9] - 2026-08-13
 
 ### Added

@@ -133,6 +133,30 @@
       color: #ff8888;
     }
 
+    /* Non-blocking confirmation. window.confirm() is app-modal in Chromium:
+       a popup that closes while the dialog is up leaves an orphaned modal
+       that freezes every toolbar popup until it is found and dismissed. */
+    #confirm-dialog {
+      background: #2a1a1a;
+      border: 1px solid #6a3a2a;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 14px;
+      margin: auto;
+      width: 280px;
+      max-width: calc(100% - 24px);
+    }
+
+    #confirm-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    #confirm-dialog p {
+      margin: 0 0 12px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
     /* ---- Main screen ---- */
     .section-label {
       font-size: 12px;
@@ -718,6 +742,15 @@
       <button id="import-confirm-no" class="btn btn-secondary" style="flex:1;" data-i18n="cancel">Cancel</button>
     </div>
   </div>
+
+  <!-- Confirmation dialog: replaces window.confirm(), which is app-modal -->
+  <dialog id="confirm-dialog">
+    <p id="confirm-dialog-msg"></p>
+    <div style="display:flex; gap:8px;">
+      <button id="confirm-dialog-yes" class="btn btn-danger" style="flex:1;" data-i18n="confirmImportYes">Confirm</button>
+      <button id="confirm-dialog-no" class="btn btn-secondary" style="flex:1;" data-i18n="cancel">Cancel</button>
+    </div>
+  </dialog>
 
   <!-- Setup screen: shown when no instances are paired -->
   <div id="setup-screen" class="screen active">

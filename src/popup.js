@@ -109,6 +109,10 @@ const standardBunkerCard = document.getElementById('standard-bunker-card')
 const disconnectBtn = document.getElementById('disconnect-btn')
 const errorMsg = document.getElementById('error-msg')
 const connectStatus = document.getElementById('connect-status')
+const confirmDialog = document.getElementById('confirm-dialog')
+const confirmDialogMsg = document.getElementById('confirm-dialog-msg')
+const confirmDialogYes = document.getElementById('confirm-dialog-yes')
+const confirmDialogNo = document.getElementById('confirm-dialog-no')
 
 // nostrconnect QR pairing refs
 const nostrconnectSection = document.getElementById('nostrconnect-section')
@@ -262,6 +266,34 @@ async function queryStatus() {
       isHeartwood: false,
     }
   }
+}
+
+/**
+ * Ask the user to confirm an action without blocking. window.confirm() is
+ * app-modal in Chromium and pauses the extension process; if the popup
+ * closes while it is up (focus loss closes popups on macOS) the dialog is
+ * orphaned and every toolbar popup hangs until it is dismissed.
+ */
+function confirmAction(message) {
+  if (!confirmDialog?.showModal) return Promise.resolve(confirm(message))
+  confirmDialogMsg.textContent = message
+  return new Promise((resolve) => {
+    const done = (accepted) => {
+      confirmDialogYes.removeEventListener('click', onYes)
+      confirmDialogNo.removeEventListener('click', onNo)
+      confirmDialog.removeEventListener('close', onClose)
+      if (confirmDialog.open) confirmDialog.close()
+      resolve(accepted)
+    }
+    const onYes = () => done(true)
+    const onNo = () => done(false)
+    const onClose = () => done(false) // Escape key
+    confirmDialogYes.addEventListener('click', onYes)
+    confirmDialogNo.addEventListener('click', onNo)
+    confirmDialog.addEventListener('close', onClose)
+    confirmDialog.showModal()
+    confirmDialogNo.focus()
+  })
 }
 
 /** Truncate a hex pubkey for display: first 8 + "..." + last 8 chars. */
@@ -486,7 +518,7 @@ async function switchInstance(instanceId) {
 }
 
 async function removeInstance(instanceId) {
-  if (!confirm(t('removeSignerConfirm'))) return
+  if (!(await confirmAction(t('removeSignerConfirm')))) return
 
   let result
   try {
@@ -1485,7 +1517,7 @@ addSiteInput.addEventListener('keydown', (e) => {
 
 // Reset policies
 resetPoliciesBtn.addEventListener('click', async () => {
-  if (!confirm('Reset all policy rules to defaults?')) return
+  if (!(await confirmAction(t('resetPoliciesConfirm')))) return
   await storageRemove('policies')
   await renderPolicies()
 })

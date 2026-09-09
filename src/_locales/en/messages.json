@@ -106,6 +106,7 @@
   "noKindOverrides": { "message": "No kind overrides for this site" },
   "clickToChange": { "message": "Click to change: allow → ask → deny", "description": "Tooltip on the cycling policy action badge." },
   "resetToDefaults": { "message": "Reset to defaults" },
+  "resetPoliciesConfirm": { "message": "Reset all policy rules to defaults?", "description": "Confirmation shown before clearing every custom policy rule." },
   "optionAllow": { "message": "Allow", "description": "Policy action in the add-site dropdown." },
   "optionAsk": { "message": "Ask", "description": "Policy action in the add-site dropdown." },
   "optionDeny": { "message": "Deny", "description": "Policy action in the add-site dropdown." },
