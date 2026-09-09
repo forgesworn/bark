@@ -4,6 +4,8 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.10] - 2026-09-09
+
 ### Fixed
 
 - The popup no longer calls `window.confirm()` when removing a signer or
