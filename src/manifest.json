@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bark",
-  "version": "1.3.11",
+  "version": "1.3.12",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "permissions": [
@@ -43,6 +43,7 @@
         "https://www.nostter.app/*",
         "https://satellite.earth/*",
         "https://www.satellite.earth/*",
+        "https://kithmoot.forgesworn.dev/*",
         "http://localhost/*",
         "http://127.0.0.1/*"
       ],
@@ -78,6 +79,7 @@
         "https://www.nostter.app/*",
         "https://satellite.earth/*",
         "https://www.satellite.earth/*",
+        "https://kithmoot.forgesworn.dev/*",
         "http://localhost/*",
         "http://127.0.0.1/*"
       ],

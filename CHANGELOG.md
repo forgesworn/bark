@@ -4,6 +4,15 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.12] - 2026-09-09
+
+### Fixed
+
+- KithMoot (kithmoot.forgesworn.dev) is on the list of sites Bark joins at
+  page load. Before, on that site Bark only arrived in the one tab the popup
+  was opened from, so every fresh load found no `window.nostr` and the door
+  asked for a reconnect until the toolbar icon was clicked.
+
 ## [1.3.11] - 2026-09-09
 
 ### Added
