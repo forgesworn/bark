@@ -4,6 +4,8 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.11] - 2026-09-09
+
 ### Added
 
 - Heartwood instances hand off to Sapwood when the signer stops answering. A
