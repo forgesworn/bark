@@ -984,7 +984,7 @@ async function refreshState() {
     }
   } else if (status.heartwoodProbePending) {
     // Still waiting on a one-time on-device approval for the Heartwood
-    // capability probe — not yet known whether this is a Heartwood signer.
+    // capability probe: not yet known whether this is a Heartwood signer.
     personaSection.style.display = 'none'
     standardBunkerCard.style.display = 'none'
     heartwoodProbePendingCard.style.display = ''

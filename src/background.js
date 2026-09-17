@@ -2104,7 +2104,7 @@ async function awaitHeartwoodProbe(active, instances, bunkerUri) {
     try {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) heartwoodIdentityList = parsed
-    } catch { /* malformed payload — still treat the response as success */ }
+    } catch { /* malformed payload: still treat the response as success */ }
     connectionState.isHeartwood = true
     connectionState.heartwoodProbePending = false
     await applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList)

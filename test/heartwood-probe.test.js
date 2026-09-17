@@ -19,7 +19,7 @@ function makeActive() {
   return { name: 'bunker', signingVerifiedAt: Date.now() }
 }
 
-/** A signer whose sendRequest() never settles — used to force the internal
+/** A signer whose sendRequest() never settles: used to force the internal
  * probe timeout race to win. */
 function neverResolves() {
   return new Promise(() => {})
@@ -85,7 +85,7 @@ describe('Heartwood probe timeout handling', () => {
     await vi.advanceTimersByTimeAsync(45_000) // extended probe also times out
     expect(connectionState.isHeartwood).toBe(false)
     expect(connectionState.heartwoodProbePending).toBe(false)
-    // The negative result is not persisted — a later retry probes again
+    // The negative result is not persisted: a later retry probes again
     // rather than being blocked by a cached verdict.
     expect(storageSet).not.toHaveBeenCalledWith({ isHeartwood: false })
 
