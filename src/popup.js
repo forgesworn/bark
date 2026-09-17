@@ -106,6 +106,7 @@ const personaList = document.getElementById('persona-list')
 const deriveInput = document.getElementById('derive-input')
 const deriveBtn = document.getElementById('derive-btn')
 const standardBunkerCard = document.getElementById('standard-bunker-card')
+const heartwoodProbePendingCard = document.getElementById('heartwood-probe-pending-card')
 const disconnectBtn = document.getElementById('disconnect-btn')
 const errorMsg = document.getElementById('error-msg')
 const connectStatus = document.getElementById('connect-status')
@@ -893,6 +894,7 @@ async function refreshState() {
     // Heartwood mode — show full persona UI
     personaSection.style.display = ''
     standardBunkerCard.style.display = 'none'
+    heartwoodProbePendingCard.style.display = 'none'
 
     const { instances = [], activeInstanceId } = await storageGet([
       'instances',
@@ -980,10 +982,18 @@ async function refreshState() {
       })
       personaList.appendChild(item)
     }
+  } else if (status.heartwoodProbePending) {
+    // Still waiting on a one-time on-device approval for the Heartwood
+    // capability probe — not yet known whether this is a Heartwood signer.
+    personaSection.style.display = 'none'
+    standardBunkerCard.style.display = 'none'
+    heartwoodProbePendingCard.style.display = ''
+    activeName.textContent = t('defaultName')
   } else {
     // Standard bunker mode — show greyed persona card
     personaSection.style.display = 'none'
     standardBunkerCard.style.display = ''
+    heartwoodProbePendingCard.style.display = 'none'
     activeName.textContent = t('defaultName')
   }
 }
