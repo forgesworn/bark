@@ -4,6 +4,21 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.13] - 2026-09-17
+
+### Fixed
+
+- A Heartwood that does not answer the connect-time capability probe within
+  five seconds is no longer written off as "not a Heartwood". New signer
+  firmware (v0.18.0-beta.9) asks the owner to approve identity listing once, on
+  the device, and that press can take longer than the probe waits. Bark now
+  keeps listening in the background for up to 45 seconds, shows "Approve on
+  your Heartwood to show personas" where the persona section goes, and enables
+  Heartwood mode as soon as the answer arrives. A probe that finally times out
+  is no longer remembered as a negative verdict, so the next popup or
+  reconnect tries again. An explicit refusal still falls back immediately, as
+  before.
+
 ## [1.3.12] - 2026-09-09
 
 ### Fixed
