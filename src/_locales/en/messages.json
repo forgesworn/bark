@@ -17,6 +17,7 @@
   "qrPermsNote": { "message": "The QR asks your signer for the standard Bark surface up front — read pubkey, encryption, and the common event kinds including V4V gated content — so you approve once at pairing instead of adding kinds by hand later.", "description": "Explains the permission bundle carried in the nostrconnect pairing QR." },
   "waitingEllipsis": { "message": "Waiting...", "description": "Button label while the QR pairing waits for the signer." },
   "couldNotStartPairing": { "message": "Could not start pairing." },
+  "heartwoodAwaitingProbeApproval": { "message": "Approve on your Heartwood to show personas", "description": "Shown in place of the persona section while a connect-time Heartwood capability probe is still waiting for a one-time on-device approval." },
   "pairingExpired": { "message": "Pairing expired. Generate a new QR." },
   "connectedStatus": { "message": "Connected.", "description": "Status line after successful QR pairing." },
   "pairingFailedDot": { "message": "Pairing failed." },

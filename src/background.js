@@ -31,6 +31,15 @@ const BUNKER_REQUEST_TIMEOUT_MS = 45_000
 /** Timeout for optional Heartwood capability probing (ms). */
 const HEARTWOOD_PROBE_TIMEOUT_MS = 5_000
 
+/**
+ * Extra wait budget for a legacy Heartwood pairing's one-time on-device
+ * approval card, which can take longer than HEARTWOOD_PROBE_TIMEOUT_MS to
+ * action. Matches the persona picker's own request timeout (popup.js), so a
+ * probe that is still awaiting approval when the picker asks again has the
+ * same chance to succeed.
+ */
+const HEARTWOOD_PROBE_AWAIT_MS = BUNKER_REQUEST_TIMEOUT_MS
+
 /** Timeout for best-effort relay health probes (ms). */
 const RELAY_PROBE_TIMEOUT_MS = 6_000
 
@@ -1384,6 +1393,11 @@ function patchSignerPublishFailures(bunkerSigner) {
 /** @type {BunkerSigner|null} */
 let signer = null
 
+/** Exported for testing: inject a fake signer without going through doConnect(). */
+export function __setSignerForTest(fakeSigner) {
+  signer = fakeSigner
+}
+
 /** @type {Promise<BunkerSigner>|null} Mutex to prevent concurrent connect attempts. */
 let connectPromise = null
 
@@ -1489,13 +1503,14 @@ function cancelReconnect() {
 // Connection state — queried by popup via bark-status
 // ---------------------------------------------------------------------------
 
-/** @type {{ status: string, lastError: string|null, relays: Array<{url: string, connected: boolean}>, isHeartwood: boolean, signingStatus: string, signingLastOkAt: number|null, signingLastError: string|null, signingPubkey: string|null, signingProbeReason: string|null }} */
-let connectionState = {
+/** @type {{ status: string, lastError: string|null, relays: Array<{url: string, connected: boolean}>, isHeartwood: boolean, heartwoodProbePending: boolean, signingStatus: string, signingLastOkAt: number|null, signingLastError: string|null, signingPubkey: string|null, signingProbeReason: string|null }} */
+export let connectionState = {
   status: 'disconnected',
   lastError: null,
   authUrl: null,
   relays: [],
   isHeartwood: false,
+  heartwoodProbePending: false,
   signingStatus: 'untested',
   signingLastOkAt: null,
   signingLastError: null,
@@ -1991,8 +2006,9 @@ async function doConnect(originHint) {
  * Shared post-connect steps for both the bunker:// path (doConnect) and the
  * client-initiated nostrconnect path: mark connected, probe relay health,
  * detect Heartwood capabilities, and schedule the signing health check.
+ * Exported for testing.
  */
-async function finaliseConnection(active, instances, bunkerUri, relays) {
+export async function finaliseConnection(active, instances, bunkerUri, relays) {
   cancelReconnect()
   connectionState.status = 'connected'
   connectionState.lastError = null
@@ -2005,6 +2021,7 @@ async function finaliseConnection(active, instances, bunkerUri, relays) {
   await probeRelays(relays)
 
   // Detect Heartwood mode and approval status.
+  connectionState.heartwoodProbePending = false
   let heartwoodIdentityList = []
   try {
     const raw = await withTimeout(
@@ -2024,6 +2041,14 @@ async function finaliseConnection(active, instances, bunkerUri, relays) {
       connectionState.isHeartwood = true
       connectionState.status = 'awaiting-approval'
       connectionState.lastError = 'Approve this client on your Heartwood device.'
+    } else if (isHeartwoodProbeTimeoutError(msg)) {
+      // A timeout is not an explicit rejection: the device may just be
+      // waiting on a one-time on-device approval card (legacy pairings).
+      // Don't mark as non-Heartwood yet: keep listening in the background,
+      // without blocking the connect flow for standard NIP-07 use.
+      connectionState.isHeartwood = false
+      connectionState.heartwoodProbePending = true
+      awaitHeartwoodProbe(active, instances, bunkerUri)
     } else {
       // Only mark as non-Heartwood if the bunker explicitly rejects the method
       connectionState.isHeartwood = !isUnsupportedHeartwoodProbeError(msg)
@@ -2031,21 +2056,62 @@ async function finaliseConnection(active, instances, bunkerUri, relays) {
   }
 
   if (connectionState.isHeartwood) {
-    const targetPubkey = bunkerPubkey(bunkerUri)
-    const matchedIdentity = heartwoodIdentityList.find(identity => identity?.pubkey === targetPubkey)
-    const label = matchedIdentity ? identityLabel(matchedIdentity, 'master') : (active.heartwoodIdentityLabel || 'master')
-
-    active.isHeartwood = true
-    active.heartwoodBaseName = active.heartwoodBaseName || safeInstanceName(active.name || 'heartwood', 'heartwood')
-    active.heartwoodIdentityLabel = label
-    active.heartwoodIdentityPubkey = targetPubkey || active.heartwoodIdentityPubkey
-    if (active.name === 'bunker' && label && label !== 'master') active.name = label
-    await chrome.storage.local.set({ instances, isHeartwood: true })
-  } else {
+    await applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList)
+  } else if (!connectionState.heartwoodProbePending) {
     await chrome.storage.local.set({ isHeartwood: false })
   }
 
   if (!active.signingVerifiedAt) scheduleSignerPrime('initial')
+}
+
+/**
+ * Apply the effects of a confirmed Heartwood detection to the active
+ * instance and persisted storage. Shared by the initial probe and the
+ * delayed continuation in awaitHeartwoodProbe().
+ */
+async function applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList) {
+  const targetPubkey = bunkerPubkey(bunkerUri)
+  const matchedIdentity = heartwoodIdentityList.find(identity => identity?.pubkey === targetPubkey)
+  const label = matchedIdentity ? identityLabel(matchedIdentity, 'master') : (active.heartwoodIdentityLabel || 'master')
+
+  active.isHeartwood = true
+  active.heartwoodBaseName = active.heartwoodBaseName || safeInstanceName(active.name || 'heartwood', 'heartwood')
+  active.heartwoodIdentityLabel = label
+  active.heartwoodIdentityPubkey = targetPubkey || active.heartwoodIdentityPubkey
+  if (active.name === 'bunker' && label && label !== 'master') active.name = label
+  await chrome.storage.local.set({ instances, isHeartwood: true })
+}
+
+/**
+ * Continue waiting for a Heartwood identity-probe response after the
+ * initial short HEARTWOOD_PROBE_TIMEOUT_MS window, up to
+ * HEARTWOOD_PROBE_AWAIT_MS, without blocking the connect flow. If the probe
+ * finally succeeds, enable Heartwood mode as a normal success would. If it
+ * times out again, fall back to "not Heartwood" for this connection, but
+ * leave isHeartwood unpersisted so a later retry (the next popup open or
+ * reconnect) probes again instead of caching this verdict permanently.
+ */
+async function awaitHeartwoodProbe(active, instances, bunkerUri) {
+  const probeSigner = signer
+  try {
+    const raw = await withTimeout(
+      probeSigner.sendRequest('heartwood_list_identities', []),
+      HEARTWOOD_PROBE_AWAIT_MS,
+      'Heartwood identity probe',
+    )
+    if (signer !== probeSigner) return // connection changed underneath us
+    let heartwoodIdentityList = []
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) heartwoodIdentityList = parsed
+    } catch { /* malformed payload: still treat the response as success */ }
+    connectionState.isHeartwood = true
+    connectionState.heartwoodProbePending = false
+    await applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList)
+  } catch {
+    if (signer !== probeSigner) return
+    connectionState.heartwoodProbePending = false
+  }
 }
 
 /**
@@ -2068,6 +2134,7 @@ async function resetConnection({ clearSigning = true } = {}) {
   connectionState.authUrl = null
   connectionState.relays = []
   connectionState.isHeartwood = false
+  connectionState.heartwoodProbePending = false
   if (clearSigning) {
     setSigningState('untested', {
       signingLastOkAt: null,
@@ -2346,6 +2413,10 @@ export function sanitiseError(err) {
   // Block anything that looks like a file path or stack trace.
   if (msg.length <= 120 && !msg.includes('/') && !msg.includes('\\')) return msg
   return 'Request failed.'
+}
+
+export function isHeartwoodProbeTimeoutError(message) {
+  return String(message || '').includes('Heartwood identity probe timed out')
 }
 
 export function isUnsupportedHeartwoodProbeError(message) {
