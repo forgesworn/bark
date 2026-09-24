@@ -1,8 +1,8 @@
 # Bark — Complete Reference
 
-> Bark is a Chrome browser extension that implements NIP-07 (window.nostr) and
-> delegates all signing to a remote NIP-46 bunker. No private keys ever exist
-> in the browser.
+> Bark is a browser extension (Chromium, Firefox, and Safari) that implements
+> NIP-07 (window.nostr) and delegates all signing to a remote NIP-46 bunker.
+> No private keys ever exist in the browser.
 
 ---
 
@@ -36,19 +36,20 @@ relay connection to a hardware or software signer and returns the result.
 
 ### Source files
 
-Bark has eight source files in `src/`. Five implement the core message pipeline;
-three add the approval and policy systems.
+Bark has eight core source files in `src/`, plus `i18n.js` (loads the 53
+`_locales/*/messages.json` UI translations) and `diagnostic.html` (an
+extension-internal page used by e2e for storage seeding).
 
 | File | Role |
 |------|------|
-| `provider.js` | Injected into every page. Implements `window.nostr`. Posts `bark-request` messages to the content script and resolves pending promises on `bark-response`. Includes a 60-second timeout and a stale-extension banner. |
-| `content-script.js` | Bridge between the page and the extension. Relays `postMessage` ↔ `chrome.runtime.sendMessage`, validates message origin and structure, retries MV3 service-worker wakeups, and shows the temporary in-page approval notice without reading page content. |
+| `provider.js` | MAIN-world content script (Chromium/Firefox; Safari falls back to script-tag injection). Implements `window.nostr`. Posts `bark-request` messages to the content script and resolves pending promises on `bark-response`. `signEvent` gets a 180-second timeout (it can traverse an approval window, a cold NIP-46 reconnect, and a hardware button press); other methods get 120 seconds. Shows a stale-extension banner on a version-mismatch response. |
+| `content-script.js` | Bridge between the page and the extension. Relays `postMessage` to `chrome.runtime.sendMessage`, validates message origin and structure, retries MV3 service-worker wakeups, and shows the temporary in-page approval notice without reading page content. |
 | `background.js` | Service worker. Holds the NIP-46 connection via `nostr-tools` `BunkerSigner`. Routes requests, validates methods, applies policies, manages multi-instance storage, and sanitises errors before returning them to the page. |
 | `popup.js` | Popup UI. Two-tier rendering: standard bunker mode and Heartwood mode. Shows relay health, active persona, and connection controls. |
 | `popup.html` | Popup markup and styles. Dark theme, 320 px wide. |
-| `policy.js` | Stateless policy evaluation engine. Evaluates allow/ask/deny for each signing request against a layered rule set (site-specific kind rules > site defaults > global kind rules > global defaults). |
+| `policy.js` | Stateless policy evaluation engine. Evaluates allow/ask/deny for each signing request against a layered rule set: site-specific kind rule, site-specific method deny, global kind rule, site-specific method default, global method default, fallback deny. |
 | `approve.js` | Approval popup logic. Queries the background for pending request details, renders them, and sends the user's allow/deny decision back. |
-| `approve.html` | Approval popup markup. 420 × 520 px. |
+| `approve.html` | Approval popup markup. 420 x 520 px on desktop; a foreground tab on Firefox for Android, which has no `windows` API. |
 
 ### Message flow
 
@@ -66,13 +67,16 @@ Web page
 
 | Type | Direction | Purpose |
 |------|-----------|---------|
-| `bark-request` | Page → background | NIP-07, NIP-44, or Heartwood RPC call |
-| `bark-response` | Background → page | Result or error for a `bark-request` |
-| `bark-reset` | Popup → background | Tear down connection (disconnect or URI change) |
-| `bark-status` | Popup → background | Query connection state, relay health, Heartwood mode |
-| `bark-get-approval` | Approve popup → background | Fetch pending approval details |
-| `bark-approve` | Approve popup → background | User approved a request |
-| `bark-deny` | Approve popup → background | User denied a request |
+| `bark-request` | Page to background | NIP-07, NIP-04, NIP-44, or Heartwood RPC call |
+| `bark-response` | Background to page | Result or error for a `bark-request` |
+| `bark-reset` | Popup to background | Tear down connection (disconnect or URI change) |
+| `bark-status` | Popup to background | Query connection state, relay health, Heartwood mode, auth_url |
+| `bark-pair` / `bark-switch` / `bark-remove` | Popup to background | Instance management |
+| `bark-nostrconnect-start` / `-status` / `-cancel` | Popup to background | QR (nostrconnect) pairing flow |
+| `bark-approval-query` | Approve popup to background | Fetch pending approval details |
+| `bark-approval-response` | Approve popup to background | User's allow/trust/deny decision |
+| `bark-heartwood-import-confirm` | Popup to background | Confirm or discard a staged identity import |
+| `bark-prime-signer` | Popup to background | Signer health check (signs a kind 22242 probe) |
 
 ### Storage layout
 
@@ -105,33 +109,35 @@ Legacy single-connection storage is automatically migrated on first load.
 
 ### Install from release
 
-1. Download `bark-v1.0.0.zip` from the
+1. Download the package for your browser from the
    [latest GitHub release](https://github.com/forgesworn/bark/releases/latest).
 2. Extract the zip.
 3. Open `chrome://extensions/`, enable Developer mode.
 4. Click "Load unpacked", select the extracted directory.
-5. Click the Bark icon and paste your `bunker://` URI.
+5. Click the Bark icon, enter a Heartwood/bridge address or paste your
+   `bunker://` URI.
 
 ### Build from source
 
 ```bash
 git clone https://github.com/forgesworn/bark.git
-cd bark
-npm install
-npm run build        # esbuild → dist/
+cd bark && npm install && npm run build:all
 ```
 
-Load the `dist/` directory as an unpacked extension.
+Load the relevant output as an unpacked extension: `dist/` for Chromium,
+Chrome, Brave and Edge; `dist-firefox/` for Firefox; `dist-safari/` for
+Safari, through Apple's Safari Web Extension conversion flow.
 
 **Scripts:**
 
 | Command | Effect |
 |---------|--------|
-| `npm run build` | One-shot build via esbuild |
+| `npm run build` | One-shot Chromium build via esbuild |
+| `npm run build:firefox` / `build:safari` / `build:all` | Build the other targets |
 | `npm run watch` | Incremental build on file change |
 | `npm test` | Run vitest unit tests |
-| `npm run test:watch` | Vitest in watch mode |
-| `npm run package` | Build + zip for release |
+| `npm run e2e:chromium` | Playwright e2e (builds first) |
+| `npm run package:all` | Build and zip all three browser targets |
 
 ---
 
@@ -146,56 +152,72 @@ an `Error` on failure or timeout.
 // Returns the active signing pubkey as a 64-char lowercase hex string.
 const pubkey = await window.nostr.getPublicKey()
 
+// Returns the active signer's relay list.
+const relays = await window.nostr.getRelays()
+
 // Signs a Nostr event. Returns the event with .sig and .id populated.
 const signed = await window.nostr.signEvent(event)
+
+// NIP-04 encryption/decryption (legacy; requires bunker support).
+const legacyCiphertext = await window.nostr.nip04.encrypt(recipientPubkey, plaintext)
+const legacyPlaintext  = await window.nostr.nip04.decrypt(senderPubkey, legacyCiphertext)
 
 // NIP-44 encryption/decryption (requires bunker support).
 const ciphertext = await window.nostr.nip44.encrypt(recipientPubkey, plaintext)
 const plaintext  = await window.nostr.nip44.decrypt(senderPubkey, ciphertext)
 ```
 
-Request timeout: 60 seconds (accommodates hardware button approval on Heartwood).
+Request timeout: 180 seconds for `signEvent` (it can traverse an approval
+window, a cold NIP-46 reconnect, and a hardware button press), 120 seconds for
+other methods.
 
 ### Heartwood RPC extensions
 
-Available only when connected to a Heartwood signer (`isHeartwood: true`). Sent
-as standard NIP-46 requests via `BunkerSigner.sendRequest()`.
+Available under `window.nostr.heartwood` only when connected to a Heartwood
+signer (`isHeartwood: true`). Each call is sent as a standard NIP-46 request
+via `BunkerSigner.sendRequest()`.
 
-**`heartwood_list_identities`**
+**`window.nostr.heartwood.listIdentities()`** calls `heartwood_list_identities`.
 Returns all derived identities on the device.
 - Params: none
 - Returns: `Array<{ pubkey: string, name?: string, purpose?: string }>`
 
-**`heartwood_derive(purpose, index)`**
-Derives a new identity from the device mnemonic.
-- `purpose` — alphanumeric label, 1–64 chars (e.g. `"nostr"`, `"twitter"`)
-- `index` — derivation index as string, `"0"` to `"1000"`
+**`window.nostr.heartwood.derivePersona(name, index = 0)`** calls
+`heartwood_derive_persona`. Derives a new identity from the device mnemonic.
+- `name`: alphanumeric/hyphens/dots label, 1 to 64 chars (e.g. `"nostr"`, `"twitter"`)
+- `index`: integer, `0` to `1000`
 - Returns: `{ pubkey: string, purpose: string, index: number }`
 
-**`heartwood_switch(pubkey)`**
-Switches the active signing identity.
-- `pubkey` — 64-char lowercase hex public key
-- Returns: `{ ok: true }`
+**`window.nostr.heartwood.switch(target)`** calls `heartwood_switch`.
+Switches the active signing identity. Current Heartwood signers select
+identity per bunker connection instead, so this call is kept for older
+Heartwood builds and third-party callers.
+- `target`: npub, persona name, purpose, or `"master"`
+- Returns: Heartwood-specific status for the current connection
 
 ### Policy system
 
 Background enforces a layered allow/ask/deny policy before forwarding requests:
 
 1. Site-specific kind rule (highest priority)
-2. Site-specific method default
+2. Site-specific method deny (a blocked site stays blocked)
 3. Global kind rule
-4. Global method default
-5. Fallback: ask
+4. Site-specific method default
+5. Global method default
+6. Fallback: deny
 
-Default policy: `getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt`
-are all `ask`. Event kinds 0 (profile), 3 (contact list), and 10002 (relay
-list) remain protected on trusted sites unless explicitly overridden.
+Default policy: `getPublicKey`, `getRelays`, `signEvent`, `nip04.encrypt`,
+`nip04.decrypt`, `nip44.encrypt`, `nip44.decrypt`, and every `heartwood_*`
+method are all `ask`. Event kinds 0 (profile), 3 (contact list), and 10002
+(relay list) remain protected on trusted sites unless explicitly overridden.
+Heartwood identity operations are deliberately excluded from the set a
+trusted site is granted: trusting a site for signing must not also grant
+identity management.
 
-When a request is `ask`, Bark opens a 420 × 520 popup for the user to allow
+When a request is `ask`, Bark opens an approval popup for the user to allow
 once, trust the site, or deny. The requesting page also receives a temporary
-Bark notice whose action foregrounds the approval popup. The notice clears when
-the request settles; the request times out after 60 seconds if the popup is not
-acted on.
+Bark notice whose action foregrounds the approval popup. The notice clears
+when the request settles.
 
 ---
 
@@ -214,6 +236,9 @@ acted on.
   only; it is not the user's signing key.
 - **Policy enforcement.** Sensitive event kinds require explicit user approval
   before being forwarded to the signer.
+- **Privacy mode.** Optionally hides `window.nostr` from every site except an
+  explicit allowlist, so pages that do not have a site rule cannot detect the
+  extension.
 - **No data collection.** No analytics, no third-party services, no telemetry.
   See PRIVACY.md.
 
@@ -223,9 +248,10 @@ acted on.
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `nostr-tools` | `^2.23.0` | `BunkerSigner`, `parseBunkerInput`, `SimplePool`, crypto utilities |
-| `esbuild` (dev) | `^0.25.0` | Bundler |
-| `vitest` (dev) | `^3.0.0` | Unit test runner |
+| `nostr-tools` | `^2.24.1` | `BunkerSigner`, `parseBunkerInput`, `SimplePool`, crypto utilities |
+| `esbuild` (dev) | `^0.28.2` | Bundler |
+| `vitest` (dev) | `^5.0.1` | Unit test runner |
+| `@playwright/test` (dev) | `^1.63.0` | End-to-end test runner |
 
 ---
 
@@ -234,6 +260,8 @@ acted on.
 | Project | URL | Relationship |
 |---------|-----|-------------|
 | Heartwood | https://github.com/forgesworn/heartwood | Hardware NIP-46 signing appliance; enables persona features |
+| Sapwood | https://github.com/forgesworn/sapwood | Provisions and manages Heartwood signers, bunker slots, and policies |
+| Cambium | https://github.com/forgesworn/cambium | NIP-55 signer for Android that proxies to Heartwood; Bark's counterpart for native apps |
 | nsec-tree | https://github.com/forgesworn/nsec-tree | Sub-identity derivation library used by Heartwood |
 | ForgeSworn | https://github.com/forgesworn | Parent ecosystem |
 | NIP-07 spec | https://github.com/nostr-protocol/nips/blob/master/07.md | Browser signer interface |

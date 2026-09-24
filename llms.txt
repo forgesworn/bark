@@ -1,73 +1,84 @@
-# Bark — NIP-07 Nostr Signer with NIP-46 Remote Signing
+# Bark: NIP-07 Nostr Signer with NIP-46 Remote Signing
 
-> Bark is a Chrome browser extension that implements NIP-07 (window.nostr) and
-> bridges all signing to a remote NIP-46 signer. No keys in the browser.
+> Bark is a browser extension (Chromium, Firefox, and Safari) that implements
+> NIP-07 (`window.nostr`) and bridges all signing to a remote NIP-46 signer.
+> No keys in the browser.
 
 ## What Bark does
 
 Bark provides the standard `window.nostr` interface that Nostr web apps expect:
-- `window.nostr.getPublicKey()` — returns the active public key
-- `window.nostr.signEvent(event)` — signs a Nostr event
-- `window.nostr.nip44.encrypt(pubkey, plaintext)` — NIP-44 encryption
-- `window.nostr.nip44.decrypt(pubkey, ciphertext)` — NIP-44 decryption
+- `window.nostr.getPublicKey()`: returns the active public key
+- `window.nostr.getRelays()`: returns the active signer's relay list
+- `window.nostr.signEvent(event)`: signs a Nostr event
+- `window.nostr.nip04.encrypt(pubkey, plaintext)` / `.decrypt(pubkey, ciphertext)`: legacy NIP-04 encryption
+- `window.nostr.nip44.encrypt(pubkey, plaintext)` / `.decrypt(pubkey, ciphertext)`: NIP-44 encryption
 
 All signing is delegated to a remote NIP-46 bunker. Bark itself stores zero key
 material.
 
 ## Works with any NIP-46 bunker
 
-Paste a `bunker://` URI from nsecBunker, Amber, or any NIP-46-compliant signer.
-Standard signing works out of the box.
+Paste a `bunker://` URI from nsecBunker, Amber, nsec.app, or any NIP-46-compliant
+signer, or pair by scanning a `nostrconnect://` QR code. Standard signing works
+out of the box.
 
 ## Heartwood persona extensions
 
-When connected to a Heartwood signer, Bark enables persona management via custom
-NIP-46 RPC methods:
+When connected to a Heartwood signer, Bark exposes persona management under
+`window.nostr.heartwood`, which forwards to Heartwood-specific NIP-46 RPC
+methods via `BunkerSigner.sendRequest()`:
 
-- `heartwood_list_identities` — list all derived identities
-- `heartwood_derive(purpose, index)` — derive a new identity from mnemonic
-- `heartwood_switch(pubkey)` — switch the active signing identity
-
-These methods are sent as standard NIP-46 requests via `BunkerSigner.sendRequest()`.
+- `window.nostr.heartwood.listIdentities()`: calls `heartwood_list_identities`,
+  returns all derived identities on the device
+- `window.nostr.heartwood.derivePersona(name, index)`: calls
+  `heartwood_derive_persona`, derives a new identity from the device mnemonic
+- `window.nostr.heartwood.switch(target)`: calls `heartwood_switch` with a
+  target (npub, persona name, purpose, or `"master"`); current Heartwood
+  signers select identity per bunker connection instead, so this is kept for
+  older Heartwood builds and third-party callers
 
 ## Architecture
 
-Five source files, one dependency (nostr-tools):
+Eight source files in `src/`, one runtime dependency (nostr-tools):
 
-- `provider.js` — injects `window.nostr` into pages
-- `content-script.js` — bridges page ↔ extension messaging
-- `background.js` — NIP-46 connection, request routing, validation
-- `popup.js` — UI for connection, personas, relay health
-- `popup.html` — markup and styles
+- `provider.js`: injects `window.nostr` into pages
+- `content-script.js`: bridges page and extension messaging
+- `background.js`: NIP-46 connection, request routing, policy checks
+- `policy.js`: pure allow/ask/deny policy engine
+- `popup.js` / `popup.html`: UI for connections, personas, relay health, policy
+- `approve.js` / `approve.html`: the approval surface for ask-policy requests
 
 ## How Bark differs from other NIP-07 signers
 
-- **No local keys** — unlike nos2x or Alby, keys never exist in the browser
-- **NIP-46 remote signing** — like Remote NIP-07, but works with any bunker
-- **Persona derivation** — unique to Bark+Heartwood, no other extension does this
-- **Focused** — one job: expose standard NIP-07 while signing through NIP-46
+- No local keys: unlike nos2x or Alby, keys never exist in the browser
+- Any NIP-46 bunker: unlike Remote NIP-07 (Amber only), works with any bunker
+- Persona derivation: unique to Bark and Heartwood, no other extension does this
+- Privacy mode: can hide `window.nostr` from every site except an explicit allowlist
+- Focused: one job, expose standard NIP-07 while signing through NIP-46
 
 ## Policy system
 
-Bark evaluates a layered allow/ask/deny policy before forwarding each request. Rules
-are checked in priority order; first match wins:
+Bark evaluates a layered allow/ask/deny policy before forwarding each request.
+Rules are checked in priority order, first match wins:
 
-1. Site-specific kind rule (e.g. kind 0 at snort.social)
-2. Site-specific method default
+1. Site-specific kind rule (e.g. kind 0 at a trusted site)
+2. Site-specific method deny (a blocked site stays blocked)
 3. Global kind rule
-4. Global method default
-5. Fallback: ask
+4. Site-specific method default
+5. Global method default
+6. Fallback: deny
 
-Default policy: `getPublicKey`, `signEvent`, `nip44.encrypt`, `nip44.decrypt` are
-`ask`. Event kinds 0 (profile metadata), 3 (contact list), and 10002 (relay list)
-remain protected even after a site is trusted unless explicitly overridden.
+Default policy: `getPublicKey`, `getRelays`, `signEvent`, `nip04.encrypt`,
+`nip04.decrypt`, `nip44.encrypt`, `nip44.decrypt`, and every `heartwood_*`
+method are `ask`. Event kinds 0 (profile metadata), 3 (contact list), and
+10002 (relay list) remain protected even after a site is trusted unless
+explicitly overridden.
 
-When a request triggers `ask`, Bark opens a 420 × 520 approval popup. The user
-can allow once, trust the site, or deny. Bark also shows a temporary notice in
+When a request triggers `ask`, Bark opens an approval popup. The user can
+allow once, trust the site, or deny. Bark also shows a temporary notice in
 the requesting page; its Review in Bark action foregrounds an approval window
-that the browser opened out of sight. The request times out after 60 seconds if
-the popup is not acted on. The policy is configurable per method, per event kind,
-and per origin.
+that the browser opened out of sight. The policy is configurable per method,
+per event kind, and per origin.
 
 ## Multi-instance support
 
@@ -79,16 +90,9 @@ Bark supports multiple simultaneous bunker connections. Each instance stores:
   persona switching is in use)
 - Whether the connected signer is a Heartwood device
 
-Users switch between instances in the popup. All data lives in `chrome.storage.local`.
-Legacy single-connection storage is automatically migrated on first load.
-
-## How Bark differs from other NIP-07 signers
-
-- **No local keys** — unlike nos2x or Alby, keys never exist in the browser
-- **Any NIP-46 bunker** — unlike Remote NIP-07 (Amber-only), works with any bunker
-- **Persona derivation** — unique to Bark+Heartwood; no other extension has this
-- **Policy engine** — configurable allow/ask/deny per site and per event kind
-- **Minimal** — 8 source files, ~1500 lines, 1 runtime dependency (nostr-tools)
+Users switch between instances in the popup. All data lives in
+`chrome.storage.local`. Legacy single-connection storage is automatically
+migrated on first load.
 
 ## Links
 
