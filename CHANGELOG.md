@@ -4,8 +4,12 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.14] - 2026-10-08
+
 ### Fixed
 
+- Serialise concurrent signer handshakes and reject superseded connections.
+- Preserve live connections while a hardware request awaits approval.
 - Keep late connect replies eligible, stop retrying signer refusals, and show
   the connection error in the popup instead of only a reconnect countdown.
 - Close owned relay sockets and outstanding requests when a connection is
