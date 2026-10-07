@@ -1784,11 +1784,12 @@ async function probeRelays(relayUrls) {
     connectionState.relays = relayUrls.map((url) => ({ url, connected: false }))
     return
   }
-  connectionState.relays = await Promise.all(
+  const probeSigner = signer
+  const relays = await Promise.all(
     relayUrls.map(async (url) => {
       try {
         await withTimeout(
-          signer.pool.ensureRelay(url, { connectionTimeout: 5000 }),
+          probeSigner.pool.ensureRelay(url, { connectionTimeout: 5000 }),
           RELAY_PROBE_TIMEOUT_MS,
           'Relay probe',
         )
@@ -1798,6 +1799,7 @@ async function probeRelays(relayUrls) {
       }
     }),
   )
+  if (signer === probeSigner) connectionState.relays = relays
 }
 
 /**
@@ -1840,7 +1842,10 @@ function isPoolAlive() {
  *   Only used on the first connect for a given instance; ignored on reconnects
  *   (the stored connectLabel is used instead).
  */
-async function ensureConnected(originHint) {
+export async function ensureConnected(originHint) {
+  // A candidate is published while doConnect awaits relay replies. It is not
+  // usable yet, and checking its idle/dead pool here can destroy the handshake.
+  if (connectPromise) return connectPromise
   // If we have a signer but the relay pool is dead, tear it down so
   // doConnect() creates a fresh one with live WebSocket connections.
   // MV3 kills WebSockets silently — readyState stays OPEN even after
@@ -1858,29 +1863,36 @@ async function ensureConnected(originHint) {
     }
   }
   if (signer) return signer
-  if (connectPromise) return connectPromise
-  connectPromise = doConnect(originHint)
+  const attempt = doConnect(originHint, () => connectPromise === attempt)
+  connectPromise = attempt
   try {
-    return await connectPromise
+    return await attempt
   } finally {
-    connectPromise = null
+    // A reset/retry may already own a newer attempt.
+    if (connectPromise === attempt) connectPromise = null
   }
 }
 
-async function doConnect(originHint) {
+async function doConnect(originHint, isCurrent) {
+  const current = () => {
+    if (!isCurrent()) throw new Error('Signer connection changed; retry the request.')
+  }
 
   connectionState.status = 'connecting'
   connectionState.lastError = null
 
   // Migrate legacy single-connection storage on first run
   const stored = await chrome.storage.local.get(null)
+  current()
   const migration = migrateStorage(stored)
   if (migration) {
     await chrome.storage.local.set({
       instances: migration.instances,
       activeInstanceId: migration.activeInstanceId,
     })
+    current()
     await chrome.storage.local.remove(migration.removeKeys)
+    current()
     debug('[bark] Migrated legacy storage to multi-instance format')
   }
 
@@ -1889,6 +1901,7 @@ async function doConnect(originHint) {
     'instances',
     'activeInstanceId',
   ])
+  current()
   const active = instances.find(i => i.id === activeInstanceId)
   if (!active) {
     connectionState.status = 'disconnected'
@@ -1914,6 +1927,7 @@ async function doConnect(originHint) {
     throw new Error('Invalid bunker URI in storage.')
   }
 
+  current()
   if (!bp || !bp.relays || bp.relays.length === 0) {
     connectionState.status = 'disconnected'
     throw new Error('Bunker URI must include at least one relay.')
@@ -1930,6 +1944,7 @@ async function doConnect(originHint) {
     clientSk = generateSecretKey()
     active.clientSecret = bytesToHex(clientSk)
     await chrome.storage.local.set({ instances })
+    current()
   }
 
   // Determine the connect metadata to include in the NIP-46 handshake.
@@ -1943,16 +1958,19 @@ async function doConnect(originHint) {
   if (!active.connectOrigin && connectOrigin) {
     active.connectOrigin = connectOrigin
     await chrome.storage.local.set({ instances })
+    current()
   }
 
-  signer = BunkerSigner.fromBunker(clientSk, bp, {
+  const candidate = BunkerSigner.fromBunker(clientSk, bp, {
     onauth(authUrl) {
+      if (signer !== candidate) return
       connectionState.status = 'awaiting-approval'
       connectionState.lastError = 'Approve this connection on your signer.'
       connectionState.authUrl = authUrl || null
     },
   })
-  patchSignerPublishFailures(signer)
+  signer = candidate
+  patchSignerPublishFailures(candidate)
 
   try {
     // Send the connect request directly so we can include app metadata as the
@@ -1973,14 +1991,16 @@ async function doConnect(originHint) {
     let lastConnectErr = null
     for (let attempt = 1; attempt <= maxConnectAttempts && !connectOk; attempt++) {
       try {
-        await Promise.race([
-          signer.sendRequest('connect', buildConnectParams(bp, connectMeta)),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('connect attempt timed out')), CONNECT_ATTEMPT_TIMEOUT_MS),
-          ),
-        ])
+        current()
+        await withTimeout(
+          candidate.sendRequest('connect', buildConnectParams(bp, connectMeta)),
+          CONNECT_ATTEMPT_TIMEOUT_MS,
+          'Signer connect attempt',
+        )
+        current()
         connectOk = true
       } catch (err) {
+        current()
         lastConnectErr = err
         if (attempt < maxConnectAttempts) {
           debug(`[bark:bg] connect attempt ${attempt}/${maxConnectAttempts} timed out; re-publishing…`)
@@ -1989,6 +2009,8 @@ async function doConnect(originHint) {
     }
     if (!connectOk) throw lastConnectErr || new Error('Connection timed out.')
   } catch (err) {
+    try { candidate.close() } catch { /* ignore */ }
+    current()
     signer = null
     connectionState.status = 'disconnected'
     connectionState.lastError = sanitiseError(err)
@@ -1997,9 +2019,10 @@ async function doConnect(originHint) {
     throw err
   }
 
-  await finaliseConnection(active, instances, bunkerUri, bp.relays)
-
-  return signer
+  current()
+  await finaliseConnection(active, instances, bunkerUri, bp.relays, current)
+  current()
+  return candidate
 }
 
 /**
@@ -2008,7 +2031,9 @@ async function doConnect(originHint) {
  * detect Heartwood capabilities, and schedule the signing health check.
  * Exported for testing.
  */
-export async function finaliseConnection(active, instances, bunkerUri, relays) {
+export async function finaliseConnection(active, instances, bunkerUri, relays, current = () => {}) {
+  const connectedSigner = signer
+  current()
   cancelReconnect()
   connectionState.status = 'connected'
   connectionState.lastError = null
@@ -2019,20 +2044,23 @@ export async function finaliseConnection(active, instances, bunkerUri, relays) {
 
   // Probe relay health
   await probeRelays(relays)
+  current()
 
   // Detect Heartwood mode and approval status.
   connectionState.heartwoodProbePending = false
   let heartwoodIdentityList = []
   try {
     const raw = await withTimeout(
-      signer.sendRequest('heartwood_list_identities', []),
+      connectedSigner.sendRequest('heartwood_list_identities', []),
       HEARTWOOD_PROBE_TIMEOUT_MS,
       'Heartwood identity probe',
     )
+    current()
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) heartwoodIdentityList = parsed
     connectionState.isHeartwood = true
   } catch (err) {
+    current()
     const msg = String(err?.message || err || '')
     // heartwood-esp32 firmware answers "unauthorised" for unbound clients;
     // older signers said "not approved".
@@ -2061,6 +2089,7 @@ export async function finaliseConnection(active, instances, bunkerUri, relays) {
     await chrome.storage.local.set({ isHeartwood: false })
   }
 
+  current()
   if (!active.signingVerifiedAt) scheduleSignerPrime('initial')
 }
 
@@ -2117,7 +2146,7 @@ async function awaitHeartwoodProbe(active, instances, bunkerUri) {
 /**
  * Tear down the current connection (used by bark-reset).
  */
-async function resetConnection({ clearSigning = true } = {}) {
+export async function resetConnection({ clearSigning = true } = {}) {
   cancelReconnect()
   cancelKeepAlive()
   if (autoPrimeTimer) {
