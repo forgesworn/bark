@@ -173,3 +173,18 @@ it('cleans up a failed publication and clears pending signing health without ret
   expect(connectionState.signingStatus).toBe('error')
   expect(connectionState.signingLastError).toContain('configured signer relay')
 })
+
+
+it('does not idle-close a live connection while a hardware request awaits approval', async () => {
+  const candidate = fakeSigner(deferred())
+  candidate.pool.relays.set('wss://relay.example', { connected: true })
+  __setSignerForTest(candidate)
+  const reply = deferred()
+  const pending = withBunkerRequestTimeout(reply.promise, 'signEvent', candidate)
+  await vi.advanceTimersByTimeAsync(25_000)
+  expect(await ensureConnected()).toBe(candidate)
+  expect(candidate.close).not.toHaveBeenCalled()
+  expect(fromBunker).not.toHaveBeenCalled()
+  reply.resolve('signed')
+  expect(await pending).toBe('signed')
+})

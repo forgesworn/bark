@@ -142,6 +142,8 @@ The following defects were reproduced independently in Bark tests:
 - `BunkerSigner.close()` unsubscribes but does not destroy its owned relay pool
   or reject outstanding RPCs. Bark now does all three, including abandoned QR
   pairing pools. Completed RPC listener/auth entries are also removed.
+- A live connection could be idle-closed while a hardware request awaited
+  approval. Requests now hold the live connection until their bounded deadline.
 - An old request timeout could reset a newly selected connection. Completion
   and timeout handling now check the connection that owns the request.
 - Extension reload could leave a page promise permanently pending after the

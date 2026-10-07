@@ -1405,6 +1405,7 @@ export function __setSignerForTest(fakeSigner) {
 
 /** @type {Promise<BunkerSigner>|null} Mutex to prevent concurrent connect attempts. */
 let connectPromise = null
+const activeRequests = new WeakMap()
 
 /**
  * Staged Heartwood identity import awaiting user confirmation. Pairing and
@@ -1863,7 +1864,7 @@ export async function ensureConnected(originHint) {
   // the underlying connection is gone. Use idle time as a second check.
   if (signer) {
     const idleMs = Date.now() - lastSocketActivityTime
-    if (idleMs > MAX_IDLE_MS) {
+    if (idleMs > MAX_IDLE_MS && !activeRequests.get(signer)) {
       debug(`[bark:bg] idle ${Math.round(idleMs / 1000)}s > ${MAX_IDLE_MS / 1000}s — forcing reconnect`)
       disposeSigner(signer)
       signer = null
@@ -2173,6 +2174,7 @@ export async function resetConnection({ clearSigning = true } = {}) {
 }
 
 export async function withBunkerRequestTimeout(promise, label, requestSigner = signer) {
+  if (requestSigner) activeRequests.set(requestSigner, (activeRequests.get(requestSigner) || 0) + 1)
   try {
     const result = await withTimeout(promise, BUNKER_REQUEST_TIMEOUT_MS, label)
     if (signer !== requestSigner) throw new Error('Signer connection changed; retry the request.')
@@ -2185,6 +2187,12 @@ export async function withBunkerRequestTimeout(promise, label, requestSigner = s
       await resetConnection({ clearSigning: false })
     }
     throw err
+  } finally {
+    if (requestSigner) {
+      const remaining = (activeRequests.get(requestSigner) || 1) - 1
+      if (remaining) activeRequests.set(requestSigner, remaining)
+      else activeRequests.delete(requestSigner)
+    }
   }
 }
 
