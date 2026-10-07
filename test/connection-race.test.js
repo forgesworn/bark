@@ -13,7 +13,7 @@ vi.mock('nostr-tools/nip46', async (original) => ({
 vi.stubGlobal('chrome', { storage: { local: {
   get: vi.fn(async () => structuredClone(stored)), set: vi.fn(async () => {}),
 } } })
-const { ensureConnected, resetConnection, connectionState } = await import('../src/background.js')
+const { ensureConnected, resetConnection, connectionState, __setSignerForTest, withBunkerRequestTimeout } = await import('../src/background.js')
 function deferred() {
   let resolve, reject
   const promise = new Promise((yes, no) => { resolve = yes; reject = no })
@@ -22,7 +22,7 @@ function deferred() {
 function fakeSigner(handshake) {
   return {
     close: vi.fn(),
-    pool: { relays: new Map(), ensureRelay: vi.fn(async () => {}) },
+    pool: { relays: new Map(), ensureRelay: vi.fn(async () => {}), destroy: vi.fn() },
     sendRequest: vi.fn(async (method) => method === 'connect' ? handshake.promise : '[]'),
   }
 }
@@ -79,4 +79,112 @@ describe('connection ownership', () => {
     expect(connectionState.status).toBe('connected')
     expect(fromBunker).toHaveBeenCalledTimes(2)
   })
+})
+
+
+describe('handshake recovery', () => {
+  it('accepts a late first reply after the six-second retry boundary', async () => {
+    const firstReply = deferred(), candidate = fakeSigner(firstReply)
+    candidate.sendRequest.mockImplementation((method) => {
+      if (method !== 'connect') return Promise.resolve('[]')
+      return candidate.sendRequest.mock.calls.filter(([m]) => m === 'connect').length === 1
+        ? firstReply.promise : new Promise(() => {})
+    })
+    fromBunker.mockReturnValue(candidate)
+    let result
+    const connecting = ensureConnected().then(value => { result = value })
+    await vi.advanceTimersByTimeAsync(7_000)
+    firstReply.resolve('ack')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(result).toBe(candidate)
+    await connecting
+  })
+
+  it('surfaces a signer refusal once without retrying or reconnecting in the background', async () => {
+    const candidate = fakeSigner(deferred())
+    candidate.sendRequest.mockRejectedValue(new Error('unauthorised'))
+    fromBunker.mockReturnValue(candidate)
+    const rejected = expect(ensureConnected()).rejects.toThrow('unauthorised')
+    await vi.advanceTimersByTimeAsync(0)
+    await rejected
+    expect(candidate.sendRequest).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(65_000)
+    expect(fromBunker).toHaveBeenCalledOnce()
+  })
+
+  it('releases relay sockets as well as the subscription on reset', async () => {
+    const handshake = deferred(), candidate = fakeSigner(handshake)
+    fromBunker.mockReturnValue(candidate)
+    const connecting = ensureConnected()
+    await vi.advanceTimersByTimeAsync(0)
+    handshake.resolve('ack')
+    await connecting
+    await resetConnection()
+    expect(candidate.close).toHaveBeenCalled()
+    expect(candidate.pool.destroy).toHaveBeenCalledOnce()
+  })
+})
+
+
+describe('requests on superseded connections', () => {
+  it('does not let an old timeout reset a replacement connection', async () => {
+    const oldSigner = fakeSigner(deferred()), newSigner = fakeSigner(deferred())
+    __setSignerForTest(oldSigner)
+    const rejected = expect(withBunkerRequestTimeout(new Promise(() => {}), 'old request')).rejects.toThrow('timed out')
+    await resetConnection()
+    __setSignerForTest(newSigner)
+    connectionState.status = 'connected'
+    await vi.advanceTimersByTimeAsync(45_000)
+    await rejected
+    expect(newSigner.close).not.toHaveBeenCalled()
+    expect(connectionState.status).toBe('connected')
+  })
+
+  it('rejects a stale successful response after changing signer', async () => {
+    const reply = deferred()
+    __setSignerForTest(fakeSigner(deferred()))
+    const rejected = expect(withBunkerRequestTimeout(reply.promise, 'old request')).rejects.toThrow('connection changed')
+    await resetConnection()
+    __setSignerForTest(fakeSigner(deferred()))
+    reply.resolve('old identity')
+    await rejected
+  })
+
+  it('bounds an unanswered handshake and closes its sockets', async () => {
+    const candidate = fakeSigner(deferred())
+    fromBunker.mockReturnValue(candidate)
+    const rejected = expect(ensureConnected()).rejects.toThrow('timed out')
+    await vi.advanceTimersByTimeAsync(30_000)
+    await rejected
+    expect(candidate.sendRequest).toHaveBeenCalledTimes(5)
+    expect(candidate.pool.destroy).toHaveBeenCalledOnce()
+    expect(connectionState.status).toBe('disconnected')
+  })
+})
+
+
+it('cleans up a failed publication and clears pending signing health without retrying the operation', async () => {
+  const candidate = fakeSigner(deferred())
+  __setSignerForTest(candidate)
+  connectionState.signingStatus = 'pending'
+  await expect(withBunkerRequestTimeout(Promise.reject(new AggregateError([])), 'signEvent'))
+    .rejects.toBeInstanceOf(AggregateError)
+  expect(candidate.pool.destroy).toHaveBeenCalledOnce()
+  expect(connectionState.signingStatus).toBe('error')
+  expect(connectionState.signingLastError).toContain('configured signer relay')
+})
+
+
+it('does not idle-close a live connection while a hardware request awaits approval', async () => {
+  const candidate = fakeSigner(deferred())
+  candidate.pool.relays.set('wss://relay.example', { connected: true })
+  __setSignerForTest(candidate)
+  const reply = deferred()
+  const pending = withBunkerRequestTimeout(reply.promise, 'signEvent', candidate)
+  await vi.advanceTimersByTimeAsync(25_000)
+  expect(await ensureConnected()).toBe(candidate)
+  expect(candidate.close).not.toHaveBeenCalled()
+  expect(fromBunker).not.toHaveBeenCalled()
+  reply.resolve('signed')
+  expect(await pending).toBe('signed')
 })

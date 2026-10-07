@@ -249,7 +249,11 @@ export class DeterministicNip46Signer {
    * requests are recorded in `droppedMethods` so a test can assert the
    * client never sent one.
    */
-  constructor({ strictParams = false } = {}) {
+  constructor({ strictParams = false, firstConnectDelayMs = 0, ignoreLaterConnects = false, connectError = null } = {}) {
+    this.firstConnectDelayMs = firstConnectDelayMs
+    this.ignoreLaterConnects = ignoreLaterConnects
+    this.connectError = connectError
+    this.replyEnabled = true
     this.secretKey = hexToBytes(SIGNER_SECRET_HEX)
     this.pubkey = getPublicKey(this.secretKey)
     this.strictParams = strictParams
@@ -344,6 +348,15 @@ export class DeterministicNip46Signer {
     this.methods.push(request.method)
     this.requests.push(request)
 
+    if (!this.replyEnabled) return
+    if (request.method === 'connect') {
+      const count = this.methods.filter(method => method === 'connect').length
+      if (count > 1 && this.ignoreLaterConnects) return
+      if (count === 1 && this.firstConnectDelayMs) {
+        await new Promise(resolve => setTimeout(resolve, this.firstConnectDelayMs))
+      }
+      if (!this.wss) return
+    }
     const response = this.handleRequest(request)
     const content = encrypt(JSON.stringify({
       id: request.id,
@@ -384,6 +397,7 @@ export class DeterministicNip46Signer {
 
   handleRequest(request) {
     if (request.method === 'connect') {
+      if (this.connectError) return { error: this.connectError }
       const [remotePubkey, secret] = request.params || []
       if (remotePubkey !== this.pubkey) return { error: 'wrong remote signer pubkey' }
       if (secret !== BUNKER_SECRET) return { error: 'bad bunker secret' }

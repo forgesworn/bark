@@ -81,7 +81,6 @@ Next release-blocking scenarios:
 
 - Popup pairs to a fake Heartwood HTTP host and imports two identities.
 - Clicking a Heartwood identity switches the active Bark instance.
-- A request after service worker idle reconnects instead of hanging.
 - Direct Sapwood/bridge `bunker://` URI pairing does not request HTTP host
   permission.
 
@@ -126,3 +125,41 @@ Sapwood:
   setup UX.
 - Firmware: button approval, policy enforcement, key storage, and serial
   transport.
+
+
+## Reconnect investigation (8 October 2026)
+
+The Wildbloom live restore test exposed a stuck Bark connection. USB access to
+Heartwood and a browser relay probe did not establish device-side NIP-46 health.
+The existing pairing was preserved; no signer reset or re-pair was performed.
+The following defects were reproduced independently in Bark tests:
+
+- A first connect reply arriving after six seconds was ignored while a newer
+  retry waited. Earlier replies now remain eligible throughout the bounded
+  handshake, without repeating signing operations.
+- Explicit handshake refusals were retried five times immediately and again
+  in the background. Refusals now stop and remain visible for manual action.
+- `BunkerSigner.close()` unsubscribes but does not destroy its owned relay pool
+  or reject outstanding RPCs. Bark now does all three, including abandoned QR
+  pairing pools. Completed RPC listener/auth entries are also removed.
+- A live connection could be idle-closed while a hardware request awaited
+  approval. Requests now hold the live connection until their bounded deadline.
+- An old request timeout could reset a newly selected connection. Completion
+  and timeout handling now check the connection that owns the request.
+- Extension reload could leave a page promise permanently pending after the
+  refresh banner appeared. The page now receives an error as well as the banner.
+- Approval metadata calls and popup-to-worker messages had unbounded waits.
+  They now have deadlines; timing out never repeats a signing request.
+
+`src/signer-lifecycle.js` adapts the locked nostr-tools implementation's
+`listeners`, `waitingForAuth`, `serial` and `idPrefix` fields. The loopback
+contract test uses the real dependency and verifies that repeated connections
+leave no sockets or request entries. Review this adapter when updating
+nostr-tools; do not remove that contract test in favour of mocks alone.
+
+`e2e/reconnect-lifecycle.spec.js` covers concurrent callers, a seven-second
+first reply, a refused connection, forced socket loss, pairing preservation,
+and human-paced idle/reconnect signing. These tests use disposable profiles
+and synthetic loopback keys only. The physical Bark/Heartwood pairing and
+Wildbloom post-restore audit remain a separate acceptance gate until this
+candidate is loaded and exercised on the actual device.

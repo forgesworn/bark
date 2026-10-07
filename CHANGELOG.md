@@ -4,6 +4,17 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- Keep late connect replies eligible, stop retrying signer refusals, and show
+  the connection error in the popup instead of only a reconnect countdown.
+- Close owned relay sockets and outstanding requests when a connection is
+  reset or replaced. Remove completed RPC bookkeeping and guard replacement
+  connections against stale request timeouts and signing-health updates.
+- Bound approval metadata and popup worker waits. Reject page requests when
+  an extension reload invalidates their bridge, alongside the refresh banner.
+- Add loopback resource-lifecycle and packaged-browser reconnect regressions.
+
 ## [1.3.13] - 2026-09-17
 
 ### Fixed

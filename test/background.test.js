@@ -264,6 +264,9 @@ describe('isRelayPublishFailure', () => {
 })
 
 describe('sanitiseError', () => {
+  it('explains relay publication failure without exposing underlying events or URLs', () => {
+    expect(sanitiseError(new AggregateError([new Error('private relay detail')]))).toBe('Could not publish the request to any configured signer relay.')
+  })
   it('passes through known safe error prefixes', () => {
     expect(sanitiseError(new Error('No bunker URI configured. Open the Bark popup to connect.'))).toBe(
       'No bunker URI configured. Open the Bark popup to connect.',

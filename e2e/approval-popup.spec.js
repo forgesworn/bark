@@ -54,12 +54,13 @@ async function submitSignRequestAndWaitForApproval(context, page, event) {
 
 async function clickDecision(approvalPage, name) {
   await expect(approvalPage.getByRole('button', { name })).toBeVisible()
+  const closed = approvalPage.waitForEvent('close', { timeout: 10_000 })
   await approvalPage.getByRole('button', { name }).click()
-  await approvalPage.waitForEvent('close', { timeout: 10_000 }).catch(() => {})
+  await closed
 }
 
 async function expectSignedResult(result, signer, template) {
-  expect(result.ok).toBe(true)
+  expect(result.ok, result.error).toBe(true)
   expect(result.result).toMatchObject({
     kind: template.kind,
     content: template.content,
