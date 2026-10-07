@@ -1,7 +1,19 @@
 // Pure helpers for the store submission scripts. Kept dependency-free and
 // separate so the decision logic is unit-testable without touching a store.
 
-import { createHmac, randomUUID } from 'node:crypto'
+import { createHash, createHmac, randomUUID } from 'node:crypto'
+
+/** Require the exact bytes attached to a published stable GitHub release. */
+export function verifyReleaseAsset(release, filename, bytes) {
+  if (release.isDraft !== false || release.isPrerelease !== false) {
+    throw new Error('Store submission requires a published stable release')
+  }
+  const matches = release.assets?.filter(asset => asset.name === filename) ?? []
+  const digest = `sha256:${createHash('sha256').update(bytes).digest('hex')}`
+  if (matches.length !== 1 || matches[0].digest !== digest) {
+    throw new Error('Release asset digest missing or mismatched; nothing submitted')
+  }
+}
 
 /**
  * Extract one version's section from CHANGELOG.md ("## [1.3.7] — date" up to

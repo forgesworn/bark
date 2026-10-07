@@ -13,9 +13,9 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { normaliseVersion } from './store-lib.mjs'
+import { normaliseVersion, verifyReleaseAsset } from './store-lib.mjs'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const args = process.argv.slice(2)
@@ -27,6 +27,7 @@ if (!versionInput) {
 const { tag } = normaliseVersion(versionInput)
 const chrome = !args.includes('--no-chrome')
 const firefox = !args.includes('--no-firefox')
+if (!chrome && !firefox) throw new Error('Select at least one store')
 
 // Env file: KEY=VALUE lines, no quoting cleverness. Real env always wins.
 const envFile = process.env.BARK_STORE_ENV || join(homedir(), 'ops', 'bark-store.env')
@@ -53,27 +54,41 @@ const amoZip = join(work, `bark-firefox-${tag}.zip`)
 const sourceZip = join(work, `bark-${tag}-source.zip`)
 const changelogAtTag = join(work, 'CHANGELOG.md')
 
+// Reject drafts/prereleases and verify downloaded bytes against GitHub's digest.
+const releaseInfo = spawnSync('gh', ['release', 'view', tag, '--json', 'isDraft,isPrerelease,assets'], { cwd: ROOT, encoding: 'utf8' })
+if (releaseInfo.status !== 0) throw new Error('Could not read the published GitHub release')
+const release = JSON.parse(releaseInfo.stdout)
+if (release.isDraft || release.isPrerelease) throw new Error('Store submission requires a published stable release')
+const assets = [...(chrome ? [cwsZip] : []), ...(firefox ? [amoZip] : [])]
+
 run('download release assets', 'gh', [
   'release', 'download', tag,
-  '--pattern', `bark-${tag}.zip`,
-  '--pattern', `bark-firefox-${tag}.zip`,
+  ...assets.flatMap(path => ['--pattern', basename(path)]),
   '--dir', work,
 ])
-run('cut the source zip from the tag', 'git', ['archive', '--format=zip', '-o', sourceZip, tag])
-
-// Release notes must describe the tagged version even when the working tree
-// has moved on, so read the changelog out of the tag itself.
-const show = spawnSync('git', ['show', `${tag}:CHANGELOG.md`], { cwd: ROOT, encoding: 'utf8' })
-if (show.status !== 0) {
-  console.error(`could not read CHANGELOG.md from ${tag}`)
-  process.exit(1)
+for (const path of assets) {
+  verifyReleaseAsset(release, basename(path), readFileSync(path))
 }
-writeFileSync(changelogAtTag, show.stdout)
+// The release tag must come from the reviewed main history.
+run('verify release ancestry', 'git', ['merge-base', '--is-ancestor', tag, 'origin/main'])
+if (firefox) {
+  run('cut the source zip from the tag', 'git', ['archive', '--format=zip', '-o', sourceZip, tag])
+
+  // Release notes must describe the tagged version even when the working tree
+  // has moved on, so read the changelog out of the tag itself.
+  const show = spawnSync('git', ['show', `${tag}:CHANGELOG.md`], { cwd: ROOT, encoding: 'utf8' })
+  if (show.status !== 0) {
+    console.error(`could not read CHANGELOG.md from ${tag}`)
+    process.exit(1)
+  }
+  writeFileSync(changelogAtTag, show.stdout)
+}
 
 if (chrome) {
   run('submit to the Chrome Web Store', process.execPath, [
     join(ROOT, 'scripts/cws-submit.mjs'),
     '--zip', cwsZip,
+    '--version', tag,
     ...(args.includes('--no-publish') ? ['--no-publish'] : []),
   ])
 }
@@ -87,4 +102,4 @@ if (firefox) {
   ])
 }
 
-console.log(`\n${tag} submitted${chrome && firefox ? ' to both stores' : chrome ? ' to CWS' : ' to AMO'}. Review queues still apply.`)
+console.log(`\n${tag}: selected store steps completed. Review queues still apply; upload-only does not submit for review.`)

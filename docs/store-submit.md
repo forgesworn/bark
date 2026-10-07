@@ -1,110 +1,127 @@
 # Automated store submission
 
-**Firefox (AMO) is automated; Chrome is a dashboard job by choice.** The CWS
-API's only auth path is a Google Cloud OAuth app consented by the developer
-account, which we deliberately do not maintain. The scripts support Chrome
-regardless, so wiring it later is only the credential mint away. Every route
-is a manual trigger, because a store submission is a deliberate act; review
-queues at both stores still apply.
+Chrome uses the [Chrome Web Store v2 API](https://developer.chrome.com/docs/webstore/api)
+with a [service account](https://developer.chrome.com/docs/webstore/service-accounts).
+GitHub obtains a short-lived token through Workload Identity Federation; no
+Google private key, client secret or refresh token is stored in the repository.
+Firefox uses the existing AMO credentials. Store review remains separate from
+successful upload and submission.
 
-**Primary — Actions**: Actions → **Store submit** → Run workflow → enter the
-release tag (Firefox on, Chrome off by default). The repo is public, so
-hosted minutes are free. Needs the AMO values below as repo secrets
-(`gh secret set NAME --repo forgesworn/bark`).
+## Run a submission
 
-**Fallback — local**, from any machine with `git`, `gh` and Node:
+Actions → **Store submit** → Run workflow on **main** → enter a published
+release tag and select the stores. For the first Chrome run of `v1.3.14`, turn
+Chrome **on** and Firefox **off**: Firefox has already been submitted.
 
 ```bash
-npm run store:submit -- v1.3.7 --no-chrome    # AMO, as the workflow does
-npm run store:submit -- v1.3.7                # both stores (needs CWS creds)
-npm run store:submit -- v1.3.7 --no-publish   # CWS: upload without submitting
+gh workflow run store-submit.yml --ref main \
+  -f version=v1.3.14 -f chrome=true -f firefox=false
 ```
 
-**Chrome, per release**: dashboard → the bark item → Package → upload
-`bark-vX.Y.Z.zip` from the GitHub release → Submit for review, pasting
-anything the listing needs from `docs/store-listing.md`.
+For setup diagnostics before linking the publisher, add
+`-f chrome_auth_only=true`. This obtains a Google token without accessing the
+store or submitting to either browser store. It does not prove store permissions.
 
-The automated route downloads the release's own CI-built zips, cuts the AMO
-source zip and the release-notes changelog **from the tag** (so a moved-on
-working tree cannot leak into the submission), then submits package + source
-+ changelog-derived release notes to AMO. The AMO step fails loudly if the
-version has no changelog section.
+After a successful live Chrome submission, set repository variable
+`CWS_AUTO_SUBMIT=true`. Publishing a stable GitHub release then automatically
+submits its Chrome package. Drafts and prereleases do not trigger submission.
+Release publication must be done by a user or an appropriately authorised app:
+[GitHub events produced using a workflow's `GITHUB_TOKEN`](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)
+generally do not start another workflow. Manual dispatch remains available for retries and old tags.
+Firefox remains an explicit selection to avoid duplicate AMO submissions.
 
-Neither store API can **create** a listing — only update one — so the very
-first submission of a new extension is always a dashboard job. Bark's listings
-already exist on both stores.
+All store runs are serialised. The submit code comes from `main`; packages come
+from the release assets. Their SHA-256 digests must match GitHub's metadata, the
+tag must be in `origin/main` history, and Chrome's ZIP manifest must match the
+requested version. AMO source and changelog are read from that tag. Local runs
+need a recent `git fetch origin --tags`, `gh`, Node 22–24 and `unzip`.
 
-## Credentials
+Chrome checks existing store status first. An already submitted or published
+matching version is a no-op. A different pending revision blocks the upload.
+Asynchronous uploads are polled before publishing; failed, unknown or timed-out
+validation never submits for review. HTTP requests have a 60-second timeout and
+mutations are not automatically replayed. Publishing requests normal review,
+blocks on validation warnings, and asks Google to release after approval.
 
-Six values, minted once (below). For Actions, store each as a repo secret;
-for the local route, the scripts read the environment first, then
-`~/ops/bark-store.env` (override the path with `BARK_STORE_ENV`). Keep that
-file outside the repo, `chmod 600`, plain `KEY=VALUE` lines:
+## One-time Chrome setup
 
+Provisioned for Bark on 2026-10-08:
+
+| Setting | Value |
+|---|---|
+| Google Cloud project | `forgesworn-bark-release` |
+| Project number | `379219302085` |
+| Service account | `bark-store@forgesworn-bark-release.iam.gserviceaccount.com` |
+| Workload identity pool / provider | `bark-github` / `bark-store` |
+| Chrome extension | `gdpcaoemjjglcebpjjljmhndbpeckpln` |
+
+The Chrome Web Store, IAM, IAM Credentials and Security Token Service APIs are
+enabled. No billing account is attached. The service account has no project-wide
+roles and no user-managed key. Its impersonation binding grants only
+`roles/iam.workloadIdentityUser` to repository ID `1198475421` through this pool.
+
+The provider condition checks repository ID `1198475421`, owner ID `269157051`,
+and the exact `forgesworn/bark/.github/workflows/store-submit.yml` workflow path.
+Only manual dispatch on `refs/heads/main` or `release` events on `refs/tags/v*`
+are accepted. Pull requests and other workflows cannot use this provider.
+
+Remaining publisher setup:
+
+1. In **Chrome Web Store Developer Dashboard → Account**, link the service-account
+   email above. This grants access to the publisher's items, not only Bark.
+   Google currently permits one linked service account per publisher; inspect
+   an existing link before replacing it.
+2. Copy the **Publisher ID** (not the extension ID) into repository variable
+   `CWS_PUBLISHER_ID`.
+3. The already configured repository variables are `CWS_SERVICE_ACCOUNT` and
+   `CWS_WORKLOAD_IDENTITY_PROVIDER` (full provider resource name). They are
+   identifiers, not secrets.
+4. Run Chrome-only submission, confirm `PENDING_REVIEW` or an accepted store
+   state, then enable `CWS_AUTO_SUBMIT`. A green mocked test does not prove the
+   publisher link or Google's live acceptance.
+
+The v2 service-account route replaces the former OAuth refresh-token helper.
+Do not create or upload a service-account JSON key.
+
+## Local fallback
+
+Use an authorised service-account impersonator to put a short-lived token in
+`CWS_ACCESS_TOKEN` without printing it, along with `CWS_PUBLISHER_ID` and
+`CWS_EXTENSION_ID`. Then:
+
+```bash
+npm run store:submit -- v1.3.14 --no-firefox
+# Upload and validate only (does not submit Chrome for review):
+npm run store:submit -- v1.3.14 --no-firefox --no-publish
 ```
-CWS_EXTENSION_ID=...
-CWS_CLIENT_ID=...
-CWS_CLIENT_SECRET=...
-CWS_REFRESH_TOKEN=...
-AMO_JWT_ISSUER=user:12345:67
-AMO_JWT_SECRET=...
-```
 
-### One-time: Chrome Web Store (a human job, ~15 minutes)
+The scripts read environment variables first, then `~/ops/bark-store.env`
+(override with `BARK_STORE_ENV`). Keep any credentials file outside the repo,
+mode `0600`, plain `KEY=VALUE` lines. Do not persist short-lived access tokens.
 
-The CWS API acts as the developer account behind an OAuth refresh token;
-service accounts are not supported.
+## Firefox credentials
 
-1. In [console.cloud.google.com](https://console.cloud.google.com), signed in
-   as the developer account: create a project (any name), then **Enabled APIs
-   & services → Enable → "Chrome Web Store API"**.
-2. **OAuth consent screen**: External, fill the two required fields, and —
-   this matters — set **Publishing status to "In production"**. In "Testing"
-   status Google expires every refresh token after seven days.
-3. **Credentials → Create credentials → OAuth client ID → Desktop app.** Note
-   the client ID and secret.
-4. Mint the refresh token on any machine with a browser logged into the
-   developer account:
-
-   ```bash
-   node scripts/cws-mint-token.mjs <client_id> <client_secret>
-   ```
-
-5. The extension ID is in the dashboard item URL
-   (`chrome.google.com/webstore/devconsole/…/<ID>/…`).
-
-### One-time: AMO (~2 minutes)
-
-[addons.mozilla.org/developers/addon/api/key/](https://addons.mozilla.org/developers/addon/api/key/)
-→ generate new credentials; the issuer looks like `user:12345:67`.
-
-The add-on is addressed by its gecko ID (`bark@forgesworn.local`, set in
-`esbuild.config.js`); override with `AMO_ADDON_ID` if that ever changes.
-
-## Per release
-
-Full step-by-step, including the version bump, is in
-[releasing.md](releasing.md). The submission half is:
-
-1. Tag pushed and the release workflow green.
-2. **Publish the draft release.** `release.yml` sets `draft: true`, so the tag
-   build lands as a draft and nothing consumes a draft — submitting before this
-   fails with `release not found` (see below). Either
-   `gh release edit vX.Y.Z --draft=false` or the Releases page.
-3. Actions → **Store submit** → run with the tag — or locally,
-   `npm run store:submit -- vX.Y.Z`.
-4. AMO release notes come from the version's changelog section automatically.
-   CWS has no per-version notes; keep the long description in
-   `docs/store-listing.md` current instead.
+[AMO API credentials](https://addons.mozilla.org/developers/addon/api/key/) are
+stored as repository secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`. The add-on is
+addressed by `bark@forgesworn.local`; `AMO_ADDON_ID` can override this locally.
+Source and changelog-derived release notes are submitted with the package.
 
 ## Failure notes
 
-- `download release assets failed` with `release not found` means the GitHub
-  release is still a draft, not that the tag or credentials are wrong. Publish
-  it (step 2 above) and re-run; nothing needs rebuilding.
-- CWS `publish` returns the review state, not instant publication;
-  ITEM_PENDING_REVIEW is success.
-- AMO validation is polled for up to 2½ minutes; a validation failure prints
-  the validator output and stops before any version is created.
-- A CWS 401 usually means the refresh token died — re-run the mint script
-  and update the env file; check the consent screen is still "In production".
+- Missing `CWS_PUBLISHER_ID`: finish the dashboard link and repository variable.
+- Google token exchange denied: check the provider condition, repository/workflow
+  ref, and service-account binding. New IAM settings can take minutes to propagate.
+- CWS 401/403: check token scope, enabled API and the publisher's linked account.
+- Upload validation failure or publish warning: inspect the developer dashboard.
+  The script deliberately does not dump provider response bodies into CI logs.
+- A timeout after an upload or publish may mean Google accepted it but the reply
+  was lost. Inspect status before retrying. A pending matching version is safe
+  to rerun; an uploaded draft may need completion through the dashboard.
+- `PENDING_REVIEW` is submission, not approval, public availability or a browser
+  update. Verify the listing and installed extension separately.
+- Missing release digest: reattach a verified CI asset through the release
+  process; do not bypass the digest check.
+
+See [releasing.md](releasing.md) for the full release process and Google's
+[GitHub authentication action](https://github.com/google-github-actions/auth)
+for the federation setup and supported token configuration.
