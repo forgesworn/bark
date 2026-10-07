@@ -1,6 +1,25 @@
 import { describe, it, expect } from 'vitest'
-import { createHmac } from 'node:crypto'
-import { amoJwt, changelogSection, normaliseVersion } from '../scripts/store-lib.mjs'
+import { createHash, createHmac } from 'node:crypto'
+import { amoJwt, changelogSection, normaliseVersion, verifyReleaseAsset } from '../scripts/store-lib.mjs'
+
+describe('verifyReleaseAsset', () => {
+  const bytes = Buffer.from('release bytes')
+  const filename = 'bark-v1.3.14.zip'
+  const asset = { name: filename, digest: `sha256:${createHash('sha256').update(bytes).digest('hex')}` }
+  const release = { isDraft: false, isPrerelease: false, assets: [asset] }
+  it('accepts an exact published release asset', () => {
+    expect(() => verifyReleaseAsset(release, filename, bytes)).not.toThrow()
+  })
+  it.each(['isDraft', 'isPrerelease'])('rejects %s releases', field => {
+    expect(() => verifyReleaseAsset({ ...release, [field]: true }, filename, bytes)).toThrow(/stable release/)
+  })
+  it('rejects changed bytes', () => {
+    expect(() => verifyReleaseAsset(release, filename, Buffer.from('other bytes'))).toThrow(/digest/)
+  })
+  it.each([[[]], [[{ name: filename }]], [[asset, asset]]])('rejects missing or ambiguous digests: %j', assets => {
+    expect(() => verifyReleaseAsset({ ...release, assets }, filename, bytes)).toThrow(/digest/)
+  })
+})
 
 const CHANGELOG = `# Changelog
 

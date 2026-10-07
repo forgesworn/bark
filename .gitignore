@@ -4,6 +4,7 @@ dist-firefox/
 dist-safari/
 test-results/
 *.zip
+gha-creds-*.json
 
 # Private session/planning docs
 docs/next-session-prompt.md

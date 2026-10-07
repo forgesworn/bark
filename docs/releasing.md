@@ -8,7 +8,7 @@ Two stages, deliberately decoupled:
 | Stage | Trigger | What it does |
 |---|---|---|
 | Build | pushing a `v*` tag | tests, audits, packages all three targets, opens a **draft** GitHub release |
-| Submit | manual dispatch | downloads the release assets, submits to AMO and/or CWS |
+| Submit | stable release publication (Chrome, once enabled) or manual dispatch | verifies release assets, submits to selected stores |
 
 Everything submitted is cut **from the tag**, never the working tree, so a
 moved-on checkout cannot leak into a submission. The submit workflow itself runs
@@ -117,24 +117,18 @@ missing, the build lacked `browser_specific_settings.gecko_android` and the
 listing is desktop-only regardless of what the code does — see
 [mobile.md](mobile.md).
 
-## 5. Submit to Chrome (CWS) — dashboard job
+## 5. Submit to Chrome (CWS) — automated
 
-Chrome is manual **by choice**: the CWS API's only auth path is a Google Cloud
-OAuth app consented by the developer account, which we deliberately do not
-maintain. The scripts support it if you ever mint those credentials
-(`--no-chrome` is what turns it off), but the standing process is:
+Once the publisher link is verified and `CWS_AUTO_SUBMIT=true`, publishing the
+stable GitHub release triggers Chrome submission. For the first submission or
+a retry, run **Store submit** on `main` with Chrome on and Firefox off. One-time
+keyless account setup is in [store-submit.md](store-submit.md).
 
-1. [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole)
-   → the Bark item → **Package** → **Upload new package**.
-2. Upload `bark-vX.Y.Z.zip` from the GitHub release — the plain one, not the
-   `-firefox` or `-safari` zip.
-3. Paste anything the listing needs from [store-listing.md](store-listing.md).
-   CWS has no per-version release notes, so keep the long description current
-   there instead.
-4. **Submit for review.**
-
-If you do wire up CWS credentials later, `ITEM_PENDING_REVIEW` is a success
-response, not an error — it means queued, not rejected.
+The workflow verifies the release digest and manifest version, waits for upload
+validation, then submits for normal review. `PENDING_REVIEW` means queued; it
+does not mean approved or installed. Confirm the store listing and installed
+version after approval. Keep the description in [store-listing.md](store-listing.md)
+current; the API does not upload per-version release notes.
 
 ## 6. Safari
 
@@ -151,5 +145,5 @@ Xcode job on a Mac. No store listing today.
 - [ ] `release.yml` green
 - [ ] Draft release **published**
 - [ ] Store submit run green; AMO reports "submitted for review"
-- [ ] CWS package uploaded and submitted from the dashboard
+- [ ] Chrome submission confirmed; store approval and installed version checked separately
 - [ ] AMO listing shows the new version once review clears

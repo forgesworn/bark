@@ -1,62 +1,106 @@
-# Submit a released version to the extension stores. Manually triggered on
-# purpose: a store submission is a deliberate act, like a deploy. The release
-# workflow (tag push) builds and attaches the zips this job submits.
-#
-# One code path with the local route: this just runs scripts/store-submit.mjs,
-# which downloads the release assets and cuts the AMO source zip and the
-# release-notes changelog from the tag itself - so the scripts run from main
-# while the submitted content is exactly the tagged release's. (Checking out
-# the tag here instead was the first version's bug: the submit scripts do not
-# exist in older tags' trees.)
-#
-# Needs repo secrets (docs/store-submit.md explains minting each):
-#   CWS_EXTENSION_ID, CWS_CLIENT_ID, CWS_CLIENT_SECRET, CWS_REFRESH_TOKEN
-#   AMO_JWT_ISSUER, AMO_JWT_SECRET
 name: Store submit
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
-        description: "Release tag to submit (e.g. v1.3.7)"
+        description: "Published release tag to submit (e.g. v1.3.14)"
         required: true
       chrome:
-        description: "Submit to the Chrome Web Store (needs the CWS OAuth secrets; Chrome is a manual dashboard job by choice)"
+        description: "Submit to Chrome Web Store"
         type: boolean
         default: false
       firefox:
         description: "Submit to AMO (Firefox)"
         type: boolean
         default: true
+      chrome_auth_only:
+        description: "Check Chrome token generation only; do not upload or submit"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
+# Serialise all store writes, including retries and different release tags.
+concurrency:
+  group: store-submit
+  cancel-in-progress: false
+
 jobs:
-  submit:
+  chrome:
+    if: >-
+      github.repository == 'forgesworn/bark' &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.chrome) ||
+       (github.event_name == 'release' && !github.event.release.prerelease && vars.CWS_AUTO_SUBMIT == 'true'))
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v7
+      # Trusted automation lives on main; package bytes always come from the release.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The orchestrator reads CHANGELOG.md and the source tree out of the
-          # tag with `git show`/`git archive`, so tags must be fetched.
+          ref: main
           fetch-depth: 0
-          fetch-tags: true
-
-      - uses: actions/setup-node@v7
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
-
-      - name: Submit
+          node-version: 24
+      - name: Check Chrome configuration
+        env:
+          CWS_SERVICE_ACCOUNT: ${{ vars.CWS_SERVICE_ACCOUNT }}
+          CWS_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.CWS_WORKLOAD_IDENTITY_PROVIDER }}
+        run: |
+          for name in CWS_SERVICE_ACCOUNT CWS_WORKLOAD_IDENTITY_PROVIDER; do
+            if [ -z "${!name}" ]; then
+              echo "Missing repository variable: $name. See docs/store-submit.md."
+              exit 1
+            fi
+          done
+      - name: Obtain short-lived Chrome token
+        id: google
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.CWS_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.CWS_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/chromewebstore
+          create_credentials_file: false
+          export_environment_variables: false
+      - name: Submit exact Chrome release
+        if: inputs.chrome_auth_only != true
         env:
           GH_TOKEN: ${{ github.token }}
-          CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
-          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
-          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
-          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+          RELEASE_VERSION: ${{ inputs.version || github.event.release.tag_name }}
+          CWS_EXTENSION_ID: gdpcaoemjjglcebpjjljmhndbpeckpln
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+        run: node scripts/store-submit.mjs "$RELEASE_VERSION" --no-firefox
+      - name: Report authentication check
+        if: inputs.chrome_auth_only == true
+        run: echo 'Google accepted the GitHub identity and minted a token. Store access, upload and submission were not tested.'
+
+  firefox:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.firefox && !inputs.chrome_auth_only
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Submit exact Firefox release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-        run: |
-          node scripts/store-submit.mjs "${{ inputs.version }}" \
-            ${{ inputs.chrome != true && '--no-chrome' || '' }} \
-            ${{ inputs.firefox != true && '--no-firefox' || '' }}
+        run: node scripts/store-submit.mjs "$RELEASE_VERSION" --no-chrome
