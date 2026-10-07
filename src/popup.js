@@ -1,5 +1,6 @@
 // Popup UI logic — persona management, Heartwood detection, relay display.
 
+import { sendRuntimeMessageWithDeadline, isSignerRefusal } from './runtime-message.js'
 import { nip19 } from 'nostr-tools'
 import { renderSVG } from 'uqr'
 import { DEFAULT_POLICIES, nextPolicyAction, normalisePolicies, TRUSTED_SITE_METHODS } from './policy.js'
@@ -20,17 +21,8 @@ function escapeHtml(str) {
 }
 
 function sendRuntimeMessage(message) {
-  if (callbackApi?.runtime?.sendMessage) {
-    return new Promise((resolve, reject) => {
-      callbackApi.runtime.sendMessage(message, (result) => {
-        const err = callbackApi.runtime.lastError
-        if (err) reject(new Error(err.message))
-        else resolve(result)
-      })
-    })
-  }
-  if (promiseApi?.runtime?.sendMessage) return promiseApi.runtime.sendMessage(message)
-  return Promise.reject(new Error('Extension runtime unavailable.'))
+  return sendRuntimeMessageWithDeadline(callbackApi, promiseApi, message,
+    message.type === 'bark-status' ? 5000 : 120_000)
 }
 
 function storageGet(keys) {
@@ -703,14 +695,14 @@ function showReconnecting(msg, autoRetrying, authUrl = null) {
   reconnectSapwoodBtn.style.display = 'none'
 }
 
-async function scheduleRetry(isHeartwood = false) {
+async function scheduleRetry(isHeartwood = false, reason = '') {
   if (retryCount >= MAX_AUTO_RETRIES) {
-    showReconnecting(t('connectionLost'), false)
+    showReconnecting(reason || t('connectionLost'), false)
     reconnectSapwoodBtn.style.display = isHeartwood ? '' : 'none'
     return
   }
   const delay = RETRY_DELAYS[Math.min(retryCount, RETRY_DELAYS.length - 1)]
-  showReconnecting(t('reconnectingIn', [String(delay / 1000)]), true)
+  showReconnecting([reason, t('reconnectingIn', [String(delay / 1000)])].filter(Boolean).join(' '), true)
   retryTimer = setTimeout(async () => {
     retryCount++
     await refreshState()
@@ -858,7 +850,14 @@ async function refreshState() {
     // Connection failed — show reconnection UI
     showScreen(mainScreen)
     renderRelays(status.relays)
-    await scheduleRetry(Boolean(status.isHeartwood) || activeInstanceIsHeartwood)
+    const reason = status.lastError || err.message
+    if (isSignerRefusal(reason)) {
+      clearRetryState()
+      showReconnecting(reason, false)
+      retryBtn.textContent = t('checkAgain')
+      return
+    }
+    await scheduleRetry(Boolean(status.isHeartwood) || activeInstanceIsHeartwood, reason)
     return
   }
 

@@ -1,7 +1,8 @@
 // Background service worker — handles NIP-46 relay communication with Heartwood.
 
 import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } from 'nostr-tools/nip46'
-import { nip19 } from 'nostr-tools'
+import { nip19, SimplePool } from 'nostr-tools'
+import { disposeSigner, trackSignerRequests } from './signer-lifecycle.js'
 import { generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
 import {
@@ -479,7 +480,9 @@ function startNostrConnectPairing(relayInput) {
   nostrConnectPending = pending
   const timeoutId = setTimeout(() => abort.abort(), NOSTRCONNECT_WAIT_MS)
 
+  const pairingPool = new SimplePool()
   BunkerSigner.fromURI(hexToBytes(request.clientSecret), request.uri, {
+    pool: pairingPool,
     onauth(authUrl) {
       connectionState.status = 'awaiting-approval'
       connectionState.lastError = 'Approve this connection on your signer.'
@@ -489,7 +492,7 @@ function startNostrConnectPairing(relayInput) {
     .then(async (newSigner) => {
       clearTimeout(timeoutId)
       if (nostrConnectPending !== pending) {
-        try { newSigner.close() } catch { /* ignore */ }
+        disposeSigner(newSigner)
         return
       }
       await adoptNostrConnectSigner(newSigner, request)
@@ -497,6 +500,7 @@ function startNostrConnectPairing(relayInput) {
     })
     .catch((err) => {
       clearTimeout(timeoutId)
+      pairingPool.destroy()
       if (nostrConnectPending !== pending) return
       pending.status = 'error'
       pending.error = pending.abort.signal.aborted
@@ -514,7 +518,7 @@ function startNostrConnectPairing(relayInput) {
 async function adoptNostrConnectSigner(newSigner, request) {
   cancelReconnect()
   if (signer) {
-    try { signer.close() } catch { /* ignore */ }
+    disposeSigner(signer)
   }
   signer = newSigner
   connectPromise = null
@@ -1371,6 +1375,7 @@ function makeChallenge() {
 }
 
 function patchSignerPublishFailures(bunkerSigner) {
+  trackSignerRequests(bunkerSigner)
   const pool = bunkerSigner?.pool
   if (!pool || pool.__barkPublishPatched || typeof pool.publish !== 'function') return
 
@@ -1452,10 +1457,13 @@ async function keepAliveTick() {
   keepAliveTimer = null
   if (!signer) return
   if (Date.now() - lastActivityTime > KEEP_ALIVE_WINDOW_MS) return
+  const pingSigner = signer
   try {
-    await withTimeout(signer.ping(), 5_000, 'Keep-alive ping')
+    await withTimeout(pingSigner.ping(), 5_000, 'Keep-alive ping')
+    if (signer !== pingSigner) return
     lastSocketActivityTime = Date.now()
   } catch (err) {
+    if (signer !== pingSigner) return
     // Any response — even "unknown method" from a bunker without ping —
     // proves the socket is alive. Only a timeout suggests it is dead, in
     // which case the next request's idle check forces a reconnect.
@@ -1534,13 +1542,14 @@ function setSigningState(status, updates = {}) {
   Object.assign(connectionState, updates)
 }
 
-async function updateActiveInstanceSigningState(updates) {
+async function updateActiveInstanceSigningState(updates, requestSigner) {
   if (typeof chrome === 'undefined' || !chrome.storage?.local) return
 
   const { instances = [], activeInstanceId } = await chrome.storage.local.get([
     'instances',
     'activeInstanceId',
   ])
+  if (signer !== requestSigner) return
   const active = instances.find(i => i.id === activeInstanceId)
   if (!active) return
 
@@ -1548,7 +1557,7 @@ async function updateActiveInstanceSigningState(updates) {
   await chrome.storage.local.set({ instances })
 }
 
-async function markSigningSucceeded(signed) {
+async function markSigningSucceeded(signed, requestSigner) {
   const now = Date.now()
   const signingPubkey = typeof signed?.pubkey === 'string' ? signed.pubkey : null
 
@@ -1563,10 +1572,10 @@ async function markSigningSucceeded(signed) {
     signingVerifiedAt: now,
     signingLastError: null,
     signingPubkey: signingPubkey || '',
-  })
+  }, requestSigner)
 }
 
-async function markSigningFailed(err) {
+async function markSigningFailed(err, requestSigner) {
   const error = sanitiseError(err)
   setSigningState('error', {
     signingLastError: error,
@@ -1574,7 +1583,7 @@ async function markSigningFailed(err) {
   })
   await updateActiveInstanceSigningState({
     signingLastError: error,
-  })
+  }, requestSigner)
 }
 
 /** Event content at or above which a signing timeout is more likely to be a
@@ -1732,14 +1741,15 @@ async function signWithHealthTracking(bunker, event, label, reason = 'request') 
 
   try {
     const signed = await signViaBestDialect(bunker, event, label)
-    await markSigningSucceeded(signed)
+    if (signer !== bunker) throw new Error('Signer connection changed; retry the request.')
+    await markSigningSucceeded(signed, bunker)
     return signed
   } catch (err) {
     // A timeout on a large event is almost always the signer's size limit
     // rather than the connection. Say so, with the actual number, instead of
     // sending the user to check their relays.
     const sized = explainOversizeSigningFailure(event, err)
-    await markSigningFailed(sized ?? err)
+    if (signer === bunker) await markSigningFailed(sized ?? err, bunker)
     throw sized ?? err
   }
 }
@@ -1747,7 +1757,7 @@ async function signWithHealthTracking(bunker, event, label, reason = 'request') 
 async function primeSigner(reason = 'manual') {
   if (primePromise) return primePromise
 
-  primePromise = (async () => {
+  const attempt = (async () => {
     const bunker = await ensureConnected()
     return await signWithHealthTracking(
       bunker,
@@ -1756,11 +1766,12 @@ async function primeSigner(reason = 'manual') {
       reason,
     )
   })()
+  primePromise = attempt
 
   try {
-    return await primePromise
+    return await attempt
   } finally {
-    primePromise = null
+    if (primePromise === attempt) primePromise = null
   }
 }
 
@@ -1854,11 +1865,11 @@ export async function ensureConnected(originHint) {
     const idleMs = Date.now() - lastSocketActivityTime
     if (idleMs > MAX_IDLE_MS) {
       debug(`[bark:bg] idle ${Math.round(idleMs / 1000)}s > ${MAX_IDLE_MS / 1000}s — forcing reconnect`)
-      try { signer.close() } catch { /* ignore */ }
+      disposeSigner(signer)
       signer = null
     } else if (!isPoolAlive()) {
       debug('[bark:bg] pool connections dead — forcing reconnect')
-      try { signer.close() } catch { /* ignore */ }
+      disposeSigner(signer)
       signer = null
     }
   }
@@ -1973,48 +1984,33 @@ async function doConnect(originHint, isCurrent) {
   patchSignerPublishFailures(candidate)
 
   try {
-    // Send the connect request directly so we can include app metadata as the
-    // optional fourth parameter. The third parameter is requested permissions;
-    // pass an empty string when no permission bundle is requested.
-    //
-    // The signer answers in well under a second, so a slow reply almost always
-    // means the relay subscription wasn't ready when the response arrived (MV3
-    // cold socket) — the response was missed, not refused. Rather than stall on
-    // one long CONNECT_TIMEOUT_MS wait, re-publish connect on a short per-attempt
-    // timeout: a missed first response recovers in a few seconds instead of ~30s.
-    // Total budget stays ~CONNECT_TIMEOUT_MS; on exhaustion we fall through to
-    // the existing backoff path. Re-sending connect is idempotent on Heartwood
-    // (exact-match secret → same slot re-acked).
-    const CONNECT_ATTEMPT_TIMEOUT_MS = 6000
-    const maxConnectAttempts = Math.max(1, Math.ceil(CONNECT_TIMEOUT_MS / CONNECT_ATTEMPT_TIMEOUT_MS))
-    let connectOk = false
-    let lastConnectErr = null
-    for (let attempt = 1; attempt <= maxConnectAttempts && !connectOk; attempt++) {
+    // Retry only unanswered handshakes. Keep earlier replies eligible for the
+    // whole 30-second budget: a slow reply must not be discarded at six seconds.
+    // Explicit refusals are final, not a reason to send five more requests.
+    const pendingReplies = []
+    const attemptMs = 6000
+    const attempts = Math.ceil(CONNECT_TIMEOUT_MS / attemptMs)
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      current()
+      pendingReplies.push(candidate.sendRequest('connect', buildConnectParams(bp, connectMeta)))
       try {
+        await withTimeout(Promise.race(pendingReplies), attemptMs, 'Signer connection')
         current()
-        await withTimeout(
-          candidate.sendRequest('connect', buildConnectParams(bp, connectMeta)),
-          CONNECT_ATTEMPT_TIMEOUT_MS,
-          'Signer connect attempt',
-        )
-        current()
-        connectOk = true
+        break
       } catch (err) {
         current()
-        lastConnectErr = err
-        if (attempt < maxConnectAttempts) {
-          debug(`[bark:bg] connect attempt ${attempt}/${maxConnectAttempts} timed out; re-publishing…`)
-        }
+        if (!(err instanceof RequestTimeoutError) || attempt === attempts - 1) throw err
       }
     }
-    if (!connectOk) throw lastConnectErr || new Error('Connection timed out.')
   } catch (err) {
-    try { candidate.close() } catch { /* ignore */ }
+    disposeSigner(candidate)
     current()
     signer = null
     connectionState.status = 'disconnected'
     connectionState.lastError = sanitiseError(err)
-    scheduleReconnect()
+    // A signer refusal needs user attention. Only silence or a failed relay
+    // publication warrants unattended reconnects.
+    if (err instanceof RequestTimeoutError || err instanceof AggregateError) scheduleReconnect()
     await probeRelays(bp.relays)
     throw err
   }
@@ -2149,12 +2145,14 @@ async function awaitHeartwoodProbe(active, instances, bunkerUri) {
 export async function resetConnection({ clearSigning = true } = {}) {
   cancelReconnect()
   cancelKeepAlive()
+  primePromise = null
+  resetSigningDialect()
   if (autoPrimeTimer) {
     clearTimeout(autoPrimeTimer)
     autoPrimeTimer = null
   }
   if (signer) {
-    try { signer.close() } catch { /* ignore */ }
+    disposeSigner(signer)
   }
   signer = null
   connectPromise = null
@@ -2174,25 +2172,23 @@ export async function resetConnection({ clearSigning = true } = {}) {
   }
 }
 
-async function withBunkerRequestTimeout(promise, label) {
-  let timer
+export async function withBunkerRequestTimeout(promise, label, requestSigner = signer) {
   try {
-    return await Promise.race([
-      promise,
-      new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`${label} timed out.`)), BUNKER_REQUEST_TIMEOUT_MS)
-      }),
-    ])
+    const result = await withTimeout(promise, BUNKER_REQUEST_TIMEOUT_MS, label)
+    if (signer !== requestSigner) throw new Error('Signer connection changed; retry the request.')
+    return result
   } catch (err) {
-    const msg = typeof err === 'string' ? err : (err?.message || '')
-    if (msg.endsWith(' timed out.')) {
-      void resetConnection({ clearSigning: false })
+    if ((err instanceof RequestTimeoutError || err instanceof AggregateError) && signer === requestSigner) {
+      if (connectionState.signingStatus === 'pending') {
+        setSigningState('error', { signingLastError: sanitiseError(err), signingProbeReason: null })
+      }
+      await resetConnection({ clearSigning: false })
     }
     throw err
-  } finally {
-    if (timer) clearTimeout(timer)
   }
 }
+
+class RequestTimeoutError extends Error {}
 
 async function withTimeout(promise, timeoutMs, label) {
   let timer
@@ -2200,7 +2196,7 @@ async function withTimeout(promise, timeoutMs, label) {
     return await Promise.race([
       promise,
       new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`${label} timed out.`)), timeoutMs)
+        timer = setTimeout(() => reject(new RequestTimeoutError(`${label} timed out.`)), timeoutMs)
       }),
     ])
   } finally {
@@ -2430,6 +2426,9 @@ const SAFE_ERROR_PREFIXES = [
 ]
 
 export function sanitiseError(err) {
+  if (err instanceof AggregateError) {
+    return 'Could not publish the request to any configured signer relay.'
+  }
   // Handle both Error objects and plain strings (nostr-tools rejects NIP-46
   // errors as bare strings, not Error instances).
   const msg = typeof err === 'string' ? err : (err?.message || '')
@@ -2615,6 +2614,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               instances: result.instances,
               activeInstanceId: result.activeInstanceId,
             })
+            disposeSigner(signer)
             signer = null
             connectPromise = null
             sendResponse({ ok: true, imported: result.imported })
@@ -2654,6 +2654,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
           await chrome.storage.local.set({ instances, activeInstanceId: id })
 
+          disposeSigner(signer)
           signer = null
           connectPromise = null
           sendResponse({ ok: true })
@@ -2753,7 +2754,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
           if (nextActiveId !== activeInstanceId) {
             if (signer) {
-              try { signer.close() } catch {}
+              disposeSigner(signer)
               signer = null
             }
             connectPromise = null
@@ -2791,7 +2792,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             activeInstanceId: pending.activeInstanceId,
           })
           if (signer) {
-            try { signer.close() } catch {}
+            disposeSigner(signer)
             signer = null
           }
           connectPromise = null
@@ -2814,7 +2815,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           if (!target) throw new Error('Instance not found.')
 
           if (signer) {
-            try { signer.close() } catch {}
+            disposeSigner(signer)
             signer = null
           }
           connectPromise = null
@@ -2844,7 +2845,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
           if (activeInstanceId === instanceId) {
             if (signer) {
-              try { signer.close() } catch {}
+              disposeSigner(signer)
               signer = null
             }
             connectPromise = null
@@ -2950,13 +2951,13 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
           try {
             const bunker = await ensureConnected(origin)
-            const pubkey = await bunker.getPublicKey()
+            const pubkey = await withBunkerRequestTimeout(bunker.getPublicKey(), 'getPublicKey', bunker)
 
             // For Heartwood, try to get the active persona name
             let personaName = 'default'
             if (connectionState.isHeartwood) {
               try {
-                const raw = await bunker.sendRequest('heartwood_list_identities', [])
+                const raw = await withTimeout(bunker.sendRequest('heartwood_list_identities', []), HEARTWOOD_PROBE_TIMEOUT_MS, 'Heartwood identity probe')
                 const identities = JSON.parse(raw)
                 if (Array.isArray(identities)) {
                   const match = identities.find((id) => (id.pubkey || id.npub) === pubkey)
@@ -2965,6 +2966,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
               } catch { /* use default */ }
             }
 
+            if (signer !== bunker) throw new Error('Signer connection changed; retry the request.')
             const { activeInstanceId: approvalInstanceId } = await chrome.storage.local.get('activeInstanceId')
 
             enqueueApproval(requestId, {
