@@ -65,20 +65,33 @@ and the exact `forgesworn/bark/.github/workflows/store-submit.yml` workflow path
 Only manual dispatch on `refs/heads/main` or `release` events on `refs/tags/v*`
 are accepted. Pull requests and other workflows cannot use this provider.
 
-Remaining publisher setup:
+Publisher setup (completed for Bark on 2026-10-08):
 
-1. In **Chrome Web Store Developer Dashboard → Account**, link the service-account
-   email above. This grants access to the publisher's items, not only Bark.
+1. In **Chrome Web Store Developer Dashboard**, use the **Publisher** selector
+   at the top right to choose the publisher whose **Items** list contains Bark.
+   Then open **Settings → Management → Service account**, link the email above
+   and save. **Account** is a sidebar section heading, not a navigation button.
+   This grants access to the publisher's items, not only Bark.
    Google currently permits one linked service account per publisher; inspect
    an existing link before replacing it.
-2. Copy the **Publisher ID** (not the extension ID) into repository variable
-   `CWS_PUBLISHER_ID`.
+2. Copy the **Publisher ID** from **Settings → Profile** (not the extension ID)
+   into repository variable `CWS_PUBLISHER_ID`. Bark's publisher ID is
+   `6821c2aa-841f-427c-b3de-9d4ff7b1a4e0`.
 3. The already configured repository variables are `CWS_SERVICE_ACCOUNT` and
    `CWS_WORKLOAD_IDENTITY_PROVIDER` (full provider resource name). They are
    identifiers, not secrets.
 4. Run Chrome-only submission, confirm `PENDING_REVIEW` or an accepted store
    state, then enable `CWS_AUTO_SUBMIT`. A green mocked test does not prove the
    publisher link or Google's live acceptance.
+
+Live evidence: [workflow 37706070508](https://github.com/forgesworn/bark/actions/runs/37706070508)
+authenticated through GitHub OIDC, verified the released `v1.3.14` Chrome ZIP,
+uploaded it and received `PENDING_REVIEW` on 2026-10-08 at 00:07:58 UTC.
+Firefox was disabled for this run. `CWS_AUTO_SUBMIT=true` was then enabled and
+read back from the repository configuration. Future stable release publication
+is configured to trigger Chrome submission; this first live acceptance used
+manual workflow dispatch. Google review approval, public availability and
+installation in the user's browser were not established by this run.
 
 The v2 service-account route replaces the former OAuth refresh-token helper.
 Do not create or upload a service-account JSON key.
