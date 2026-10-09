@@ -34,7 +34,8 @@ The five accessibility browser tests use built assets and controlled API/storage
 data in isolated Chromium. Axe checks cover setup, QR pairing, expanded policies,
 confirmation and approval. Keyboard checks cover Tab reachability, Enter/Space,
 focus restoration and safe denial. Text tests combine WCAG spacing overrides
-with 200% computed font sizes at a 320-pixel viewport. That viewport exercises
+with 200% computed font sizes and platform/user font overrides at a 320-pixel
+viewport. That viewport exercises
 reflow equivalent to a 1280-pixel window at 400% zoom; it does not exercise a
 browser's native zoom implementation.
 

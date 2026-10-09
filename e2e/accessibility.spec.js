@@ -7,7 +7,14 @@ async function keyboardActivate(page, locator, key = 'Enter') {
 }
 
 async function expectNoOverflow(page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  const layout = await page.evaluate(() => ({
+    width: innerWidth,
+    contentWidth: document.documentElement.scrollWidth,
+    overflowing: [...document.querySelectorAll('body *')]
+      .filter(element => element.getClientRects().length && element.getBoundingClientRect().right > innerWidth)
+      .map(element => ({ id: element.id, tag: element.tagName, class: element.className })),
+  }))
+  expect(layout.contentWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.width)
 }
 
 test('setup and QR pairing have labelled controls, persistent errors and accessible contrast', async ({ context }) => {
@@ -94,6 +101,12 @@ test('expanded policies reflow at 320 CSS pixels with WCAG text spacing and 200 
     for (const [element, size] of sizes) element.style.setProperty('font-size', `${size * 2}px`, 'important')
   })
   await expectNoOverflow(page)
+  // Platform fallback fonts have different metrics. Arial reproduces the
+  // Linux header overflow; wider Verdana also checks user font overrides.
+  for (const font of ['Arial', 'Verdana']) {
+    await page.addStyleTag({ content: `* { font-family: '${font}' !important; }` })
+    await expectNoOverflow(page)
+  }
   await expect(page.locator('#disconnect-btn')).toBeVisible()
   await expect(page.locator('#add-site-action')).toBeVisible()
 })
