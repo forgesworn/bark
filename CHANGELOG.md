@@ -4,6 +4,35 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.15] - 2026-10-10
+
+### Added
+
+- Clearer approval review: signing identity with an expandable full public key,
+  literal note/article/reaction content, complete event/tag review, and warnings
+  for unrecognised event kinds. Decryption explains who receives the plaintext;
+  site trust explains the permissions granted.
+- Accessibility settings offer one, five or ten minutes for future approvals.
+  Remaining time is shown, with an announcement in the last thirty seconds.
+- Automated accessibility regressions for keyboard controls, contrast, labels,
+  focus restoration, small-window approval, text spacing and doubled text.
+  Remaining screen-reader and browser/device acceptance checks are documented.
+
+### Fixed
+
+- Signer/persona selection, policy actions and disclosures now use native
+  keyboard controls with accessible names and visible focus. Policy edits and
+  QR generation preserve keyboard focus; approval starts with visible focus
+  even in a short window. Enter on the request heading and Escape deny safely.
+- Improve popup contrast, field labels, relay/identity state text and
+  error/status announcements. Errors remain available for review, connecting
+  text no longer pulses, and translated pages declare their catalogue language.
+- Keep approval open for retry when decision delivery fails.
+- Scale queued requests and the page-side wait with the configured review time.
+  Admit subsequent requests to the worker queue while the first awaits approval.
+  Reject expired decisions and queued requests even when timers resume late,
+  without signing or saving site trust.
+
 ## [1.3.14] - 2026-10-08
 
 ### Fixed

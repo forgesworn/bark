@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Predlagani profil" },
   "deny": { "message": "Zavrni" },
   "allowOnce": { "message": "Dovoli enkrat" },
-  "trustSite": { "message": "Zaupaj strani" }
+  "trustSite": { "message": "Zaupaj strani" },
+  "documentLanguage": { "message": "sl", "description": "HTML language metadata for assistive technology." }
 }

@@ -16,12 +16,17 @@ export function t(key, substitutions) {
  *   data-i18n="key"              → textContent
  *   data-i18n-placeholder="key"  → placeholder attribute
  *   data-i18n-title="key"        → title attribute
+ *   data-i18n-aria-label="key"   → accessible name
  *
  * The HTML keeps its English text as authored, so a missing key (t returns
  * the key, which never equals the message) leaves the fallback intact.
  */
 export function localiseDocument(root = globalThis.document) {
   if (!root?.querySelectorAll) return
+  // This catalogue marker follows the extension's actual fallback language,
+  // rather than assuming that every browser UI locale has a translation.
+  const language = t('documentLanguage')
+  if (language !== 'documentLanguage') root.documentElement?.setAttribute('lang', language)
   for (const el of root.querySelectorAll('[data-i18n]')) {
     const message = t(el.dataset.i18n)
     if (message !== el.dataset.i18n) el.textContent = message
@@ -33,5 +38,9 @@ export function localiseDocument(root = globalThis.document) {
   for (const el of root.querySelectorAll('[data-i18n-title]')) {
     const message = t(el.dataset.i18nTitle)
     if (message !== el.dataset.i18nTitle) el.title = message
+  }
+  for (const el of root.querySelectorAll('[data-i18n-aria-label]')) {
+    const message = t(el.dataset.i18nAriaLabel)
+    if (message !== el.dataset.i18nAriaLabel) el.setAttribute('aria-label', message)
   }
 }

@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Προτεινόμενο προφίλ" },
   "deny": { "message": "Απόρριψη" },
   "allowOnce": { "message": "Αποδοχή μία φορά" },
-  "trustSite": { "message": "Εμπιστοσύνη στον ιστότοπο" }
+  "trustSite": { "message": "Εμπιστοσύνη στον ιστότοπο" },
+  "documentLanguage": { "message": "el", "description": "HTML language metadata for assistive technology." }
 }

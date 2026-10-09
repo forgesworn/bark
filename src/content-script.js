@@ -37,6 +37,7 @@ function runtimeSendMessage(payload) {
 
 const APPROVAL_NOTICE_HOST_ID = 'bark-approval-notice-host'
 const pendingApprovalNotices = new Set()
+const approvalQueueReleases = new Map()
 let approvalNoticeHost = null
 
 function removeApprovalNoticeIfIdle() {
@@ -168,6 +169,14 @@ if (extensionApi.runtime?.onMessage) {
   extensionApi.runtime.onMessage.addListener((message) => {
     if (message?.type !== 'bark-approval-pending') return
     if (!Number.isInteger(message.requestId) || message.requestId <= 0) return
+    // Once the worker has admitted a request to its approval queue, let the
+    // next page request reach it too. Waiting for the user's whole decision
+    // here would leave later requests on their short provider deadlines.
+    approvalQueueReleases.get(message.requestId)?.()
+    approvalQueueReleases.delete(message.requestId)
+    // Only presentation of the wait is extended. The background remains the
+    // authority for expiry, permission and the eventual signing decision.
+    window.postMessage({ type: 'bark-approval-wait', id: message.requestId, waitMs: message.waitMs }, window.location.origin)
     showApprovalNotice(message.requestId)
   })
 }
@@ -230,10 +239,11 @@ let isStale = false
 let sendQueue = Promise.resolve()
 
 function enqueueSend(payload) {
+  const admitted = new Promise(resolve => approvalQueueReleases.set(payload.pageRequestId, resolve))
   const p = sendQueue.then(() => sendToBackground(payload))
   // Swallow rejections so the queue itself never stalls.
-  sendQueue = p.catch(() => {})
-  return p
+  sendQueue = Promise.race([p.catch(() => {}), admitted])
+  return p.finally(() => approvalQueueReleases.delete(payload.pageRequestId))
 }
 
 async function sendToBackground(payload) {

@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Ehdotettu profiili" },
   "deny": { "message": "Kiellä" },
   "allowOnce": { "message": "Salli kerran" },
-  "trustSite": { "message": "Luota sivustoon" }
+  "trustSite": { "message": "Luota sivustoon" },
+  "documentLanguage": { "message": "fi", "description": "HTML language metadata for assistive technology." }
 }

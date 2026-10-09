@@ -126,7 +126,14 @@ That keeps the boundary clean:
 ## Site trust and approvals
 
 Bark asks before sharing identity, signing, or encrypting/decrypting for an
-unknown site. The approval popup can allow a request once or trust the site for
+unknown site. Approvals show the signing identity with an expandable full public
+key, literal note/article/reaction content, and the complete event including its
+tags. Unrecognised event kinds are marked for review. Previews do not fetch links
+or media; decryption requests explain that the website receives the plaintext.
+In **Accessibility**, choose one, five or ten minutes to review future requests.
+Approvals show their remaining time and announce a warning in the final thirty
+seconds. Expired requests cannot be approved or trusted.
+The approval popup can allow a request once or trust the site for
 routine future requests. Protected event kinds such as profile metadata,
 contacts, and relay lists continue to ask unless you add an explicit site kind
 override in the popup policy settings. Each site rule can also override

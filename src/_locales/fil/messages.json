@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Iminungkahing profile" },
   "deny": { "message": "Tanggihan" },
   "allowOnce": { "message": "Payagan Minsan" },
-  "trustSite": { "message": "Pagkatiwalaan ang Site" }
+  "trustSite": { "message": "Pagkatiwalaan ang Site" },
+  "documentLanguage": { "message": "fil", "description": "HTML language metadata for assistive technology." }
 }

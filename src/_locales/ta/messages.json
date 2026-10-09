@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "முன்மொழியப்பட்ட சுயவிவரம்" },
   "deny": { "message": "மறு" },
   "allowOnce": { "message": "ஒருமுறை அனுமதி" },
-  "trustSite": { "message": "தளத்தை நம்பு" }
+  "trustSite": { "message": "தளத்தை நம்பு" },
+  "documentLanguage": { "message": "ta", "description": "HTML language metadata for assistive technology." }
 }

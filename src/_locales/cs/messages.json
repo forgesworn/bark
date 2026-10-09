@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Navrhovaný profil" },
   "deny": { "message": "Zamítnout" },
   "allowOnce": { "message": "Povolit jednou" },
-  "trustSite": { "message": "Důvěřovat webu" }
+  "trustSite": { "message": "Důvěřovat webu" },
+  "documentLanguage": { "message": "cs", "description": "HTML language metadata for assistive technology." }
 }

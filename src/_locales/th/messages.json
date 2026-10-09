@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "โปรไฟล์ที่เสนอ" },
   "deny": { "message": "ปฏิเสธ" },
   "allowOnce": { "message": "อนุญาตครั้งเดียว" },
-  "trustSite": { "message": "เชื่อถือเว็บไซต์" }
+  "trustSite": { "message": "เชื่อถือเว็บไซต์" },
+  "documentLanguage": { "message": "th", "description": "HTML language metadata for assistive technology." }
 }

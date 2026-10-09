@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "擬發布的個人資料" },
   "deny": { "message": "拒絕" },
   "allowOnce": { "message": "允許一次" },
-  "trustSite": { "message": "信任網站" }
+  "trustSite": { "message": "信任網站" },
+  "documentLanguage": { "message": "zh-TW", "description": "HTML language metadata for assistive technology." }
 }

@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Предложен профил" },
   "deny": { "message": "Отхвърляне" },
   "allowOnce": { "message": "Еднократно разрешаване" },
-  "trustSite": { "message": "Доверяване на сайта" }
+  "trustSite": { "message": "Доверяване на сайта" },
+  "documentLanguage": { "message": "bg", "description": "HTML language metadata for assistive technology." }
 }

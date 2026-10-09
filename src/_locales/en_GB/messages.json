@@ -191,5 +191,6 @@
   "proposedProfile": { "message": "Proposed profile", "description": "Section label above the profile fields a site wants to publish." },
   "deny": { "message": "Deny", "description": "Approval window button rejecting the request." },
   "allowOnce": { "message": "Allow Once", "description": "Approval window button allowing this single request." },
-  "trustSite": { "message": "Trust Site", "description": "Approval window button trusting the site for future routine requests." }
+  "trustSite": { "message": "Trust Site", "description": "Approval window button trusting the site for future routine requests." },
+  "documentLanguage": { "message": "en-GB", "description": "HTML language metadata for assistive technology." }
 }

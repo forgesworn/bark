@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "प्रस्तावित प्रोफाइल" },
   "deny": { "message": "नाकारा" },
   "allowOnce": { "message": "एकदा परवानगी द्या" },
-  "trustSite": { "message": "साइटवर विश्वास ठेवा" }
+  "trustSite": { "message": "साइटवर विश्वास ठेवा" },
+  "documentLanguage": { "message": "mr", "description": "HTML language metadata for assistive technology." }
 }

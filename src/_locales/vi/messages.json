@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Hồ sơ đề xuất" },
   "deny": { "message": "Từ chối" },
   "allowOnce": { "message": "Cho phép một lần" },
-  "trustSite": { "message": "Tin cậy trang web" }
+  "trustSite": { "message": "Tin cậy trang web" },
+  "documentLanguage": { "message": "vi", "description": "HTML language metadata for assistive technology." }
 }

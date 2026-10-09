@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Piedāvātais profils" },
   "deny": { "message": "Noraidīt" },
   "allowOnce": { "message": "Atļaut vienreiz" },
-  "trustSite": { "message": "Uzticēties vietnei" }
+  "trustSite": { "message": "Uzticēties vietnei" },
+  "documentLanguage": { "message": "lv", "description": "HTML language metadata for assistive technology." }
 }

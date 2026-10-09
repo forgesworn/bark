@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Önerilen profil" },
   "deny": { "message": "Reddet" },
   "allowOnce": { "message": "Bir Kez İzin Ver" },
-  "trustSite": { "message": "Siteye Güven" }
+  "trustSite": { "message": "Siteye Güven" },
+  "documentLanguage": { "message": "tr", "description": "HTML language metadata for assistive technology." }
 }
