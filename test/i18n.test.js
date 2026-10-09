@@ -27,6 +27,14 @@ describe('locale catalogues', () => {
     expect(locales).toContain('en')
   })
 
+  it('declares the actual catalogue language for screen readers', () => {
+    for (const locale of locales) {
+      const language = loadLocale(locale).documentLanguage.message
+      expect(language).toBe(locale.replaceAll('_', '-'))
+      expect(Intl.getCanonicalLocales(language)).toHaveLength(1)
+    }
+  })
+
   it('has valid keys and non-empty messages everywhere', () => {
     for (const locale of locales) {
       const messages = loadLocale(locale)
@@ -67,7 +75,7 @@ describe('locale catalogues', () => {
     for (const file of ['popup.js', 'approve.js', 'content-script.js', 'popup.html', 'approve.html']) {
       const source = readFileSync(resolve(srcDir, file), 'utf8')
       for (const match of source.matchAll(/\bt\(\s*'([A-Za-z0-9_]+)'/g)) referenced.add(match[1])
-      for (const match of source.matchAll(/data-i18n(?:-placeholder|-title)?="([A-Za-z0-9_]+)"/g)) referenced.add(match[1])
+      for (const match of source.matchAll(/data-i18n(?:-placeholder|-title|-aria-label)?="([A-Za-z0-9_]+)"/g)) referenced.add(match[1])
     }
     referenced.add('extDescription') // manifest __MSG_extDescription__
     for (const key of referenced) {

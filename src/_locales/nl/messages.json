@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Voorgesteld profiel" },
   "deny": { "message": "Weigeren" },
   "allowOnce": { "message": "Eén keer toestaan" },
-  "trustSite": { "message": "Site vertrouwen" }
+  "trustSite": { "message": "Site vertrouwen" },
+  "documentLanguage": { "message": "nl", "description": "HTML language metadata for assistive technology." }
 }

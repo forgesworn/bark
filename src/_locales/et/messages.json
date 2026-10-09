@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Pakutud profiil" },
   "deny": { "message": "Keela" },
   "allowOnce": { "message": "Luba üks kord" },
-  "trustSite": { "message": "Usalda saiti" }
+  "trustSite": { "message": "Usalda saiti" },
+  "documentLanguage": { "message": "et", "description": "HTML language metadata for assistive technology." }
 }

@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Wasifu unaopendekezwa" },
   "deny": { "message": "Kataa" },
   "allowOnce": { "message": "Ruhusu Mara Moja" },
-  "trustSite": { "message": "Amini Tovuti" }
+  "trustSite": { "message": "Amini Tovuti" },
+  "documentLanguage": { "message": "sw", "description": "HTML language metadata for assistive technology." }
 }

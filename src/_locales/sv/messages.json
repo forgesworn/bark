@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Föreslagen profil" },
   "deny": { "message": "Neka" },
   "allowOnce": { "message": "Tillåt en gång" },
-  "trustSite": { "message": "Lita på webbplatsen" }
+  "trustSite": { "message": "Lita på webbplatsen" },
+  "documentLanguage": { "message": "sv", "description": "HTML language metadata for assistive technology." }
 }

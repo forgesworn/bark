@@ -1,3 +1,5 @@
+import { MAX_APPROVAL_WAIT_MS } from './approval-timing.js'
+
 ;(function () {
   if (window.nostr) return
 
@@ -9,10 +11,8 @@
   const pending = new Map()
   let idCounter = 0
 
-  /** Timeouts for NIP-07 requests (ms). A signEvent can traverse an approval
-   *  window (60s), a cold NIP-46 reconnect, and a hardware button press, and
-   *  concurrent requests queue behind each other — so it gets the longest
-   *  budget. Other methods stay above the approval + bunker request chain. */
+  // Normal calls remain bounded. An approval notification can reserve the
+  // user's longer review time without changing the background's authority.
   const SIGN_EVENT_TIMEOUT_MS = 180_000
   const REQUEST_TIMEOUT_MS = 120_000
 
@@ -20,15 +20,16 @@
     return new Promise((resolve, reject) => {
       const id = ++idCounter
       const timeoutMs = method === 'signEvent' ? SIGN_EVENT_TIMEOUT_MS : REQUEST_TIMEOUT_MS
-      const timeoutId = setTimeout(() => {
+      const expire = () => {
         if (!pending.has(id)) return
         pending.delete(id)
         const timeoutMessage = method === 'signEvent'
           ? 'Bark signEvent timed out. Open Bark and test signing.'
           : 'Bark request timed out.'
         reject(new Error(timeoutMessage))
-      }, timeoutMs)
-      pending.set(id, { resolve, reject, timeoutId })
+      }
+      const timeoutId = setTimeout(expire, timeoutMs)
+      pending.set(id, { resolve, reject, timeoutId, expire, approvalWaitReceived: false })
       debug('[bark:provider] →', method, 'id=' + id)
       window.postMessage({ type: 'bark-request', id, method, params }, window.location.origin)
     })
@@ -37,6 +38,15 @@
   window.addEventListener('message', (event) => {
     if (event.source !== window) return
     if (event.origin !== window.location.origin) return
+    if (event.data?.type === 'bark-approval-wait') {
+      const p = pending.get(event.data.id)
+      const waitMs = event.data.waitMs
+      if (!p || p.approvalWaitReceived || !Number.isFinite(waitMs) || waitMs <= 0 || waitMs > MAX_APPROVAL_WAIT_MS) return
+      p.approvalWaitReceived = true
+      clearTimeout(p.timeoutId)
+      p.timeoutId = setTimeout(p.expire, waitMs)
+      return
+    }
     if (event.data?.type !== 'bark-response') return
     const { id, result, error } = event.data
     debug('[bark:provider] ←', 'id=' + id, error ? 'error=' + error : 'result=', result)
@@ -67,6 +77,8 @@
 
     const close = document.createElement('button')
     close.textContent = '\u00D7'
+    close.setAttribute('aria-label', 'Dismiss Bark update notice')
+    banner.setAttribute('role', 'status')
     close.style.cssText = 'background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:0 4px;margin-left:12px;'
     close.addEventListener('click', () => banner.remove())
 

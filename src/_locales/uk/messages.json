@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Запропонований профіль" },
   "deny": { "message": "Відхилити" },
   "allowOnce": { "message": "Дозволити один раз" },
-  "trustSite": { "message": "Довіряти сайту" }
+  "trustSite": { "message": "Довіряти сайту" },
+  "documentLanguage": { "message": "uk", "description": "HTML language metadata for assistive technology." }
 }

@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Foreslått profil" },
   "deny": { "message": "Avslå" },
   "allowOnce": { "message": "Tillat én gang" },
-  "trustSite": { "message": "Stol på nettstedet" }
+  "trustSite": { "message": "Stol på nettstedet" },
+  "documentLanguage": { "message": "no", "description": "HTML language metadata for assistive technology." }
 }

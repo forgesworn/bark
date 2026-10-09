@@ -18,7 +18,7 @@
       /* No effect on desktop, where the popup sizes to the body. */
       max-width: 100%;
       min-height: 200px;
-      background: #1a1a2e;
+      background: #111a16;
       color: #e0e0e0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       font-size: 14px;
@@ -27,12 +27,13 @@
 
     /* ---- Header ---- */
     .header {
-      background: #16213e;
+      background: #19271f;
       padding: 14px 16px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 10px;
-      border-bottom: 1px solid #2a2a4a;
+      border-bottom: 1px solid #2e4736;
     }
 
     .header h1 {
@@ -50,7 +51,7 @@
     }
 
     .status-dot.connected {
-      background: #339933;
+      background: #a5ddb3;
     }
 
     /* ---- Screens ---- */
@@ -74,8 +75,8 @@
     #bunker-input {
       width: 100%;
       padding: 10px 12px;
-      background: #2a2a4a;
-      border: 1px solid #444;
+      background: #2e4736;
+      border: 1px solid #53745e;
       border-radius: 6px;
       color: #e0e0e0;
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
@@ -85,11 +86,11 @@
     }
 
     #bunker-input:focus {
-      border-color: #339933;
+      border-color: #a5ddb3;
     }
 
     #bunker-input::placeholder {
-      color: #666;
+      color: #b2c3b7;
     }
 
     /* ---- Buttons ---- */
@@ -106,21 +107,21 @@
     }
 
     .btn:hover {
-      opacity: 0.85;
+      box-shadow: inset 0 0 0 1px #a5ddb3;
     }
 
     .btn:active {
-      opacity: 0.7;
+      box-shadow: inset 0 0 0 2px #a5ddb3;
     }
 
     .btn:disabled {
-      opacity: 0.5;
+      opacity: 1;
       cursor: not-allowed;
     }
 
     .btn-primary {
-      background: #339933;
-      color: #fff;
+      background: #a5ddb3;
+      color: #102116;
     }
 
     .btn-secondary {
@@ -160,14 +161,14 @@
     /* ---- Main screen ---- */
     .section-label {
       font-size: 12px;
-      color: #888;
+      color: #b2c3b7;
       text-transform: uppercase;
       letter-spacing: 0.8px;
       margin-bottom: 6px;
     }
 
     .active-persona {
-      background: #16213e;
+      background: #19271f;
       border-radius: 8px;
       padding: 12px 14px;
       margin-bottom: 16px;
@@ -181,7 +182,7 @@
     .persona-npub {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
       font-size: 12px;
-      color: #666;
+      color: #b2c3b7;
       margin-top: 2px;
     }
 
@@ -204,7 +205,7 @@
 
     #active-npub {
       word-break: break-all;
-      color: #888;
+      color: #b2c3b7;
     }
 
     /* ---- Persona list ---- */
@@ -213,7 +214,7 @@
       overflow-y: auto;
       margin-bottom: 16px;
       border-radius: 8px;
-      border: 1px solid #2a2a4a;
+      border: 1px solid #2e4736;
     }
 
     .persona-list:empty {
@@ -223,7 +224,7 @@
     .persona-item {
       padding: 10px 14px;
       cursor: pointer;
-      border-bottom: 1px solid #2a2a4a;
+      border-bottom: 1px solid #2e4736;
       transition: background 0.1s;
     }
 
@@ -232,11 +233,11 @@
     }
 
     .persona-item:hover {
-      background: #2a2a4a;
+      background: #2e4736;
     }
 
     .persona-item.active {
-      background: #1a3a5a;
+      background: #213b2b;
     }
 
     .persona-item .persona-name {
@@ -257,8 +258,8 @@
     .derive-row input {
       flex: 1;
       padding: 9px 12px;
-      background: #2a2a4a;
-      border: 1px solid #444;
+      background: #2e4736;
+      border: 1px solid #53745e;
       border-radius: 6px;
       color: #e0e0e0;
       font-size: 13px;
@@ -266,11 +267,11 @@
     }
 
     .derive-row input:focus {
-      border-color: #339933;
+      border-color: #a5ddb3;
     }
 
     .derive-row input::placeholder {
-      color: #666;
+      color: #b2c3b7;
     }
 
     .derive-row .btn {
@@ -301,7 +302,7 @@
       display: none;
       text-align: center;
       font-size: 13px;
-      color: #888;
+      color: #b2c3b7;
       margin-top: 10px;
     }
 
@@ -316,7 +317,7 @@
 
     .connect-status.connecting {
       animation: pulse 1.5s ease-in-out infinite;
-      color: #339933;
+      color: #a5ddb3;
     }
 
     /* ---- Scrollbar ---- */
@@ -340,7 +341,7 @@
       text-transform: uppercase;
       letter-spacing: 0.6px;
       background: #1a3a2a;
-      color: #66cc66;
+      color: #a5ddb3;
       padding: 2px 6px;
       border-radius: 4px;
       margin-left: auto;
@@ -353,7 +354,7 @@
 
     .relay-summary {
       font-size: 12px;
-      color: #888;
+      color: #b2c3b7;
       cursor: pointer;
       user-select: none;
       display: flex;
@@ -387,7 +388,7 @@
       padding: 3px 0;
       font-size: 12px;
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      color: #999;
+      color: #b2c3b7;
     }
 
     .relay-dot {
@@ -399,7 +400,7 @@
     }
 
     .relay-dot.up {
-      background: #339933;
+      background: #a5ddb3;
     }
 
     /* ---- Signing health ---- */
@@ -425,7 +426,7 @@
       flex-shrink: 0;
     }
 
-    .sign-status-dot.ready { background: #339933; }
+    .sign-status-dot.ready { background: #a5ddb3; }
     .sign-status-dot.pending {
       background: #cc8833;
       animation: pulse 1.5s ease-in-out infinite;
@@ -444,7 +445,7 @@
 
     .sign-status-detail {
       font-size: 11px;
-      color: #888;
+      color: #b2c3b7;
       margin-top: 1px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -462,18 +463,18 @@
     .instance-card:hover { border-color: #444; }
     .instance-card.active { border-left: 3px solid #1a6b35; background: #0d1a12; }
     .instance-card .inst-name { font-weight: 600; font-size: 0.9rem; }
-    .instance-card .inst-npub { font-family: monospace; font-size: 0.72rem; opacity: 0.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-    .instance-card .inst-remove { background: none; border: none; color: #844; cursor: pointer; font-size: 1.1rem; padding: 2px 6px; opacity: 0.5; }
-    .instance-card .inst-remove:hover { opacity: 1; }
+    .instance-card .inst-npub { font-family: monospace; font-size: 0.72rem; opacity: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .instance-row .inst-remove { background: none; border: none; color: #ffb6b6; cursor: pointer; font-size: 1.1rem; padding: 2px 6px; opacity: 1; }
+    .instance-row .inst-remove:hover { opacity: 1; }
     .instance-card .inst-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .instance-card .inst-status.connected { background: #1a6b35; }
     .instance-card .inst-status.disconnected { background: #8b2020; }
-    .instance-card .inst-status.inactive { background: #555; }
+    .instance-card .inst-status.inactive { background: #a4b5a9; }
     /* ---- nostrconnect QR pairing ---- */
     .qr-divider {
       text-align: center;
       font-size: 0.75rem;
-      color: #666;
+      color: #b2c3b7;
       margin: 14px 0 10px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -483,18 +484,18 @@
       width: 100%;
       padding: 8px;
       background: #111;
-      border: 1px solid #333;
+      border: 1px solid #53745e;
       border-radius: 6px;
       color: #e0e0e0;
       font-family: monospace;
       font-size: 0.8rem;
       margin-bottom: 8px;
     }
-    #nostrconnect-section input:focus { outline: none; border-color: #555; }
+    #nostrconnect-section input:focus { outline: none; border-color: #a4b5a9; }
 
     .qr-perms-note {
       font-size: 0.72rem;
-      color: #888;
+      color: #b2c3b7;
       line-height: 1.4;
       margin-bottom: 8px;
     }
@@ -511,7 +512,7 @@
     .qr-uri {
       font-family: monospace;
       font-size: 0.68rem;
-      color: #888;
+      color: #b2c3b7;
       word-break: break-all;
       max-height: 56px;
       overflow-y: auto;
@@ -526,35 +527,35 @@
 
     .qr-status {
       font-size: 0.8rem;
-      color: #888;
+      color: #b2c3b7;
       text-align: center;
       min-height: 18px;
     }
-    .qr-status.ok { color: #339933; }
+    .qr-status.ok { color: #a5ddb3; }
     .qr-status.err { color: #cc4444; }
 
     #add-instance-section { margin-top: 8px; }
     #add-instance-section input {
-      width: 100%; padding: 8px; background: #111; border: 1px solid #333;
+      width: 100%; padding: 8px; background: #111; border: 1px solid #53745e;
       border-radius: 6px; color: #e0e0e0; font-family: monospace; font-size: 0.85rem;
       margin-bottom: 6px;
     }
-    #add-instance-section input:focus { outline: none; border-color: #555; }
+    #add-instance-section input:focus { outline: none; border-color: #a4b5a9; }
 
     /* ---- Standard bunker card ---- */
     .standard-bunker-card {
-      background: #1a1a2e;
-      border: 1px dashed #2a2a4a;
+      background: #111a16;
+      border: 1px dashed #2e4736;
       border-radius: 8px;
       padding: 14px;
       margin-bottom: 16px;
-      color: #666;
+      color: #b2c3b7;
       font-size: 13px;
       text-align: center;
     }
 
     .standard-bunker-card a {
-      color: #66cc66;
+      color: #a5ddb3;
       text-decoration: none;
     }
 
@@ -576,7 +577,7 @@
 
     .reconnect-msg {
       font-size: 13px;
-      color: #888;
+      color: #b2c3b7;
     }
 
     .reconnect-msg.active {
@@ -590,15 +591,15 @@
       border: none;
       border-radius: 4px;
       background: #1a3a2a;
-      color: #66cc66;
+      color: #a5ddb3;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    .btn-sm:hover { opacity: 0.85; }
+    .btn-sm:hover { box-shadow: inset 0 0 0 1px #a5ddb3; }
 
-    .btn-save { background: #1a3a2a; color: #66cc66; }
+    .btn-save { background: #1a3a2a; color: #a5ddb3; }
     .btn-add { background: #1a2a3a; color: #6699cc; }
 
     /* ---- Policy settings ---- */
@@ -608,7 +609,7 @@
 
     .policy-label {
       font-size: 11px;
-      color: #888;
+      color: #b2c3b7;
       margin-bottom: 4px;
     }
 
@@ -638,16 +639,16 @@
       font-weight: 600;
     }
 
-    .policy-action.allow { background: #1a3a2a; color: #66cc66; }
+    .policy-action.allow { background: #1a3a2a; color: #a5ddb3; }
     .policy-action.ask { background: #3a3a1a; color: #cccc66; }
-    .policy-action.deny { background: #3a1a1a; color: #cc6666; }
+    .policy-action.deny { background: #3a1a1a; color: #ffb6b6; }
 
     .policy-action.cyclable { cursor: pointer; }
     .policy-action.cyclable:hover { filter: brightness(1.35); }
 
     .site-expand {
       font-size: 9px;
-      color: #666;
+      color: #b2c3b7;
       margin-right: 4px;
       cursor: pointer;
       user-select: none;
@@ -664,7 +665,7 @@
 
     .site-kind-hint {
       font-size: 11px;
-      color: #555;
+      color: #a4b5a9;
       padding: 2px 0;
     }
 
@@ -684,16 +685,16 @@
       font-family: monospace;
       font-size: 11px;
     }
-    .site-kind-add input:focus { outline: none; border-color: #555; }
+    .site-kind-add input:focus { outline: none; border-color: #a4b5a9; }
 
     .policy-item .policy-remove {
       background: none;
       border: none;
-      color: #844;
+      color: #ffb6b6;
       cursor: pointer;
       font-size: 14px;
       padding: 0 4px;
-      opacity: 0.5;
+      opacity: 1;
     }
 
     .policy-item .policy-remove:hover { opacity: 1; }
@@ -707,7 +708,7 @@
     .policy-add-row input, .policy-add-row select {
       padding: 5px 8px;
       background: #111;
-      border: 1px solid #333;
+      border: 1px solid #53745e;
       border-radius: 4px;
       color: #e0e0e0;
       font-size: 12px;
@@ -716,9 +717,60 @@
     .policy-add-row select {
       background: #111;
     }
+
+    /* Native controls share visible focus, readable text and touch targets. */
+    body { color-scheme: dark; }
+    [hidden] { display: none !important; }
+    button { overflow-wrap: anywhere; }
+    .btn:disabled { opacity: 0.55; }
+    :focus-visible { outline: 2px solid #c5e8ce; outline-offset: 3px; }
+    button, input, select, summary { scroll-margin: 12px; }
+    .input-label { display: block; width: 100%; font-size: 12px; color: #b2c3b7; margin-bottom: 4px; }
+    .instance-row { display: flex; align-items: stretch; gap: 4px; }
+    .instance-card { flex: 1; min-width: 0; width: 100%; text-align: left; color: inherit; font: inherit; }
+    .instance-row .inst-remove { min-width: 32px; min-height: 32px; color: #ffb6b6; }
+    .instance-card .inst-npub { color: #b2c3b7; }
+    .inst-state { display: block; font-size: 11px; color: #b2c3b7; }
+    .persona-item { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid #2e4736; color: inherit; font: inherit; }
+    .persona-name, .persona-npub { display: block; overflow-wrap: anywhere; }
+    .relay-summary, .disclosure { width: 100%; min-height: 32px; padding: 4px 0; border: 0; background: transparent; color: #b2c3b7; text-align: left; font: inherit; font-size: 12px; cursor: pointer; }
+    .relay-item { flex-wrap: wrap; overflow-wrap: anywhere; }
+    .relay-state { font: inherit; }
+    .derive-row, .policy-add-row, .site-kind-add { flex-wrap: wrap; }
+    .derive-row input, .policy-add-row input, .policy-add-row select, .site-kind-add input, .site-kind-add select { min-width: 0; max-width: 100%; }
+    .derive-row input { width: 0; min-width: 100px; }
+    .policy-label { min-width: 0; overflow-wrap: anywhere; }
+    .policy-item { gap: 6px; flex-wrap: wrap; }
+    .policy-item .policy-label { flex: 1; }
+    .policy-item .policy-action { min-height: 32px; min-width: 44px; border: 0; cursor: pointer; }
+    .policy-item .policy-remove { min-height: 32px; min-width: 32px; color: #ffb6b6; }
+    .site-expand { flex: 1; min-width: 0; min-height: 32px; padding: 4px 0; border: 0; background: transparent; color: #b2c3b7; text-align: left; font: inherit; overflow-wrap: anywhere; }
+    .site-kind-add select { padding: 6px; border: 1px solid #53745e; border-radius: 4px; background: #111; color: #e0e0e0; }
+    .btn-sm { min-height: 32px; }
+    #accessibility-settings { padding: 12px 16px; border-bottom: 1px solid #2e4736; }
+    #accessibility-settings summary { min-height: 32px; cursor: pointer; }
+    #approval-timeout { width: 100%; padding: 8px; background: #111; color: #edf3ee; border: 1px solid #53745e; border-radius: 6px; }
+    .settings-hint { font-size: 12px; color: #b2c3b7; margin-top: 6px; }
+    #bunker-input:focus, .derive-row input:focus, #nostrconnect-section input:focus, #add-instance-section input:focus, .site-kind-add input:focus { outline: 2px solid #c5e8ce; outline-offset: 2px; }
+    .connect-status.connecting, .reconnect-msg.active { animation: none; }
+    .status-dot.reconnecting, .sign-status-dot.pending { animation: none; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
   </style>
 </head>
 <body>
+
+  <details id="accessibility-settings">
+    <summary data-i18n="accessibilitySettings">Accessibility</summary>
+    <label class="input-label" for="approval-timeout" data-i18n="approvalReviewTimeLabel">Time to review approvals</label>
+    <select id="approval-timeout" aria-describedby="approval-timeout-hint">
+      <option value="60000" data-i18n="approvalTimeOneMinute">1 minute</option>
+      <option value="300000" data-i18n="approvalTimeFiveMinutes">5 minutes</option>
+      <option value="600000" data-i18n="approvalTimeTenMinutes">10 minutes</option>
+    </select>
+    <p id="approval-timeout-hint" class="settings-hint" data-i18n="approvalReviewTimeHint">Choose before a website asks. Closing or denying a request still cancels it.</p>
+    <p id="accessibility-status" class="settings-hint" role="status" aria-atomic="true"></p>
+  </details>
+
 
   <!-- Per-site enablement card (Chromium opt-in injection builds only) -->
   <div id="site-card" style="display:none; margin: 10px 12px 0; padding: 10px 12px; background: #101a10; border: 1px solid #274427; border-radius: 8px;">
@@ -733,9 +785,9 @@
   </div>
 
   <!-- Identity import confirmation: shown when pairing/refresh adds or changes identities -->
-  <div id="import-confirm" style="display:none; margin: 10px 12px 0; padding: 12px; background: #2a1a1a; border: 1px solid #6a3a2a; border-radius: 8px;">
-    <div style="font-size:14px; font-weight:700; color:#f0c0a0; margin-bottom:6px;" data-i18n="confirmImportTitle">Confirm signer identities</div>
-    <div style="font-size:12px; color:#c0a090; margin-bottom:10px;" data-i18n="confirmImportHint">Compare each key with your signer device before confirming. An unexpected key means someone may be intercepting the connection.</div>
+  <div id="import-confirm" role="region" aria-labelledby="import-confirm-title" aria-describedby="import-confirm-hint" style="display:none; margin: 10px 12px 0; padding: 12px; background: #2a1a1a; border: 1px solid #6a3a2a; border-radius: 8px;">
+    <div id="import-confirm-title" style="font-size:14px; font-weight:700; color:#f0c0a0; margin-bottom:6px;" data-i18n="confirmImportTitle">Confirm signer identities</div>
+    <div id="import-confirm-hint" style="font-size:12px; color:#c0a090; margin-bottom:10px;" data-i18n="confirmImportHint">Compare each key with your signer device before confirming. An unexpected key means someone may be intercepting the connection.</div>
     <div id="import-confirm-list" style="margin-bottom:10px;"></div>
     <div style="display:flex; gap:8px;">
       <button id="import-confirm-yes" class="btn btn-primary" style="flex:1;" data-i18n="confirmImportYes">Confirm</button>
@@ -744,7 +796,7 @@
   </div>
 
   <!-- Confirmation dialog: replaces window.confirm(), which is app-modal -->
-  <dialog id="confirm-dialog">
+  <dialog id="confirm-dialog" aria-labelledby="confirm-dialog-msg">
     <p id="confirm-dialog-msg"></p>
     <div style="display:flex; gap:8px;">
       <button id="confirm-dialog-yes" class="btn btn-danger" style="flex:1;" data-i18n="confirmImportYes">Confirm</button>
@@ -759,25 +811,27 @@
     </div>
     <div style="padding: 16px;">
       <h2 style="margin-bottom: 8px;" data-i18n="addSigner">Add Signer</h2>
-      <p style="font-size: 0.82rem; opacity: 0.5; margin-bottom: 12px;" data-i18n="setupIntro">Enter a signer or bridge address, or paste a bunker URI.</p>
-      <input id="heartwood-address" type="text" placeholder="heartwood.local:3000 or bunker://..." spellcheck="false" autocomplete="off" style="width:100%; padding:8px; background:#111; border:1px solid #333; border-radius:6px; color:#e0e0e0; font-family:monospace; font-size:0.85rem; margin-bottom:8px;">
+      <p style="font-size: 0.82rem; color: #b2c3b7; margin-bottom: 12px;" data-i18n="setupIntro">Enter a signer or bridge address, or paste a bunker URI.</p>
+      <label class="input-label" for="heartwood-address" data-i18n="signerAddressLabel">Signer address</label>
+                <input id="heartwood-address" aria-describedby="pair-error" type="text" placeholder="heartwood.local:3000 or bunker://..." spellcheck="false" autocomplete="off" style="width:100%; padding:8px; background:#111; border:1px solid #53745e; border-radius:6px; color:#e0e0e0; font-family:monospace; font-size:0.85rem; margin-bottom:8px;">
       <button class="btn btn-primary" id="pair-btn" data-i18n="connect">Connect</button>
-      <div id="pair-error" class="msg msg-err hidden" style="margin-top:8px;"></div>
+      <div id="pair-error" role="alert" aria-atomic="true" class="msg msg-err hidden" style="margin-top:8px;"></div>
 
       <div id="nostrconnect-section">
         <div class="qr-divider" data-i18n="orPairByQr">or pair by QR</div>
         <button class="btn btn-secondary" id="qr-show-btn" data-i18n="pairByQrBtn">Pair by QR (nostrconnect)</button>
         <div id="qr-flow" style="display:none">
-          <input id="qr-relay-input" type="text" value="wss://relay.nsec.app" spellcheck="false" autocomplete="off" title="Relay(s) for the pairing handshake" data-i18n-title="qrRelayTitle">
+          <label class="input-label" for="qr-relay-input" data-i18n="pairingRelaysLabel">Pairing relays</label>
+                <input id="qr-relay-input" type="text" value="wss://relay.nsec.app" spellcheck="false" autocomplete="off" title="Relay(s) for the pairing handshake" data-i18n-title="qrRelayTitle">
           <div class="qr-perms-note" data-i18n="qrPermsNote">The QR asks your signer for the standard Bark surface up front — read pubkey, encryption, and the common event kinds including V4V gated content — so you approve once at pairing instead of adding kinds by hand later.</div>
           <button class="btn btn-primary" id="qr-start-btn" data-i18n="generateQr">Generate QR</button>
-          <div id="qr-code"></div>
-          <div id="qr-uri" class="qr-uri" style="display:none"></div>
+          <div id="qr-code" role="img" aria-label="Pairing QR code; the address is also shown below" data-i18n-aria-label="pairingQrDescription"></div>
+          <div id="qr-uri" class="qr-uri" tabindex="0" role="region" aria-label="Pairing address" data-i18n-aria-label="pairingAddress" style="display:none"></div>
           <div class="qr-actions" style="display:none">
             <button class="btn-sm btn-save" id="qr-copy-btn" data-i18n="copyUri">Copy URI</button>
             <button class="btn-sm" id="qr-cancel-btn" data-i18n="cancel">Cancel</button>
           </div>
-          <div id="qr-status" class="qr-status"></div>
+          <div id="qr-status" class="qr-status" role="status" aria-atomic="true"></div>
         </div>
       </div>
     </div>
@@ -786,21 +840,22 @@
   <!-- Main screen: shown when connected -->
   <div id="main-screen" class="screen">
     <div class="header">
-      <div id="status-dot" class="status-dot"></div>
+      <div id="status-dot" class="status-dot" aria-hidden="true"></div>
       <h1>Bark</h1>
       <span id="heartwood-badge" class="heartwood-badge" style="display:none">Heartwood</span>
     </div>
     <div style="padding: 16px;">
       <div id="instance-list" class="instance-list"></div>
       <div id="add-instance-section" style="display:none;">
-        <input id="add-address" type="text" placeholder="Add another signer..." spellcheck="false" autocomplete="off" data-i18n-placeholder="addAnotherSigner">
+        <label class="input-label" for="add-address" data-i18n="additionalSignerLabel">Additional signer address</label>
+                <input id="add-address" aria-describedby="pair-error" type="text" placeholder="Add another signer..." spellcheck="false" autocomplete="off" data-i18n-placeholder="addAnotherSigner">
         <button class="btn-sm btn-save" id="add-pair-btn" data-i18n="add">Add</button>
         <div id="qr-host-main"></div>
       </div>
       <button class="btn-sm btn-add" id="show-add-btn" style="margin-bottom:12px;" data-i18n="showAddSigner">+ Add Signer</button>
 
       <div id="reconnect-status" class="reconnect-status" style="display:none">
-        <div id="reconnect-msg" class="reconnect-msg"></div>
+        <div id="reconnect-msg" class="reconnect-msg" role="status" aria-atomic="true"></div>
         <button id="auth-url-btn" class="btn btn-primary" style="margin-top:8px;display:none" data-i18n="openApprovalPage">Open approval page</button>
         <button id="retry-btn" class="btn btn-primary" style="margin-top:8px;display:none" data-i18n="retry">Retry</button>
         <button id="reconnect-sapwood-btn" class="btn btn-secondary" style="margin-top:8px;display:none" data-i18n="unlockInSapwood">Unlock in Sapwood</button>
@@ -815,8 +870,8 @@
 
         <div id="sign-status-card" class="sign-status-card">
           <div class="sign-status-row">
-            <span id="sign-status-dot" class="sign-status-dot"></span>
-            <div class="sign-status-copy">
+            <span id="sign-status-dot" class="sign-status-dot" aria-hidden="true"></span>
+            <div class="sign-status-copy" role="status" aria-atomic="true">
               <div id="sign-status-text" class="sign-status-text" data-i18n="signingNotTested">Signing not tested</div>
               <div id="sign-status-detail" class="sign-status-detail" data-i18n="runSignTestHint">Run a sign test before using sites.</div>
             </div>
@@ -829,7 +884,7 @@
         </div>
 
         <div id="relay-info" class="relay-info">
-          <div class="relay-summary" id="relay-summary" data-i18n="zeroRelays">0 relays</div>
+          <button type="button" class="relay-summary" id="relay-summary" aria-expanded="false" aria-controls="relay-details" data-i18n="zeroRelays">0 relays</button>
           <div class="relay-details" id="relay-details"></div>
         </div>
 
@@ -838,7 +893,8 @@
           <div id="persona-list" class="persona-list"></div>
 
           <div id="derive-row" class="derive-row">
-            <input id="derive-input" type="text" placeholder="purpose name" spellcheck="false" data-i18n-placeholder="purposeNamePlaceholder">
+            <label class="input-label" for="derive-input" data-i18n="personaPurposeLabel">Persona purpose</label>
+                <input id="derive-input" type="text" placeholder="purpose name" spellcheck="false" data-i18n-placeholder="purposeNamePlaceholder">
             <button id="derive-btn" class="btn btn-primary" data-i18n="derive">Derive</button>
           </div>
         </div>
@@ -855,14 +911,15 @@
 
         <!-- Policy settings -->
         <div id="policy-section" style="margin-bottom: 16px;">
-          <div class="section-label" style="cursor: pointer; user-select: none;" id="policy-toggle">
-            <span data-i18n="signingPolicies">Signing Policies</span> <span id="policy-arrow" style="font-size: 8px;">&#9654;</span>
-          </div>
+          <button type="button" class="section-label disclosure" id="policy-toggle" aria-expanded="false" aria-controls="policy-content">
+            <span data-i18n="signingPolicies">Signing Policies</span> <span id="policy-arrow" aria-hidden="true" style="font-size: 8px;">&#9654;</span>
+          </button>
           <div id="policy-content" style="display: none;">
             <div class="policy-subsection">
               <div class="policy-label" data-i18n="protectedKinds">Protected kinds (ask before signing)</div>
               <div id="kind-rules-list" class="policy-list"></div>
               <div class="policy-add-row">
+                <label class="input-label" for="add-kind-input" data-i18n="protectedKindLabel">Protected event kind</label>
                 <input id="add-kind-input" type="number" placeholder="Kind number" min="0" max="65535" style="width: 80px;" data-i18n-placeholder="kindNumberPlaceholder">
                 <button id="add-kind-btn" class="btn-sm btn-save" data-i18n="add">Add</button>
               </div>
@@ -870,7 +927,7 @@
 
             <div class="policy-subsection">
               <label class="privacy-toggle-row" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input id="privacy-mode-toggle" type="checkbox" style="accent-color: #339933;">
+                <input id="privacy-mode-toggle" type="checkbox" style="accent-color: #a5ddb3;">
                 <span class="policy-label" style="margin: 0;" data-i18n="privacyMode">Privacy mode</span>
               </label>
               <div class="site-kind-hint" style="margin-top: 4px;" data-i18n="privacyModeHint">Hide Bark from every site except those with a site rule below</div>
@@ -880,7 +937,9 @@
               <div class="policy-label" data-i18n="siteRules">Site rules</div>
               <div id="site-rules-list" class="policy-list"></div>
               <div class="policy-add-row">
+                <label class="input-label" for="add-site-input" data-i18n="siteOriginLabel">Website origin</label>
                 <input id="add-site-input" type="text" placeholder="https://example.com" style="flex: 1;">
+                <label class="input-label" for="add-site-action" data-i18n="siteActionLabel">Default site policy</label>
                 <select id="add-site-action">
                   <option value="allow" data-i18n="optionAllow">Allow</option>
                   <option value="ask" data-i18n="optionAsk">Ask</option>
@@ -890,14 +949,14 @@
               </div>
             </div>
 
-            <button id="reset-policies-btn" class="btn-sm" style="margin-top: 8px; color: #888; background: none; border: 1px solid #333; width: 100%;" data-i18n="resetToDefaults">Reset to defaults</button>
+            <button id="reset-policies-btn" class="btn-sm" style="margin-top: 8px; color: #b2c3b7; background: none; border: 1px solid #53745e; width: 100%;" data-i18n="resetToDefaults">Reset to defaults</button>
           </div>
         </div>
 
         <button id="disconnect-btn" class="btn btn-danger" data-i18n="disconnect">Disconnect</button>
       </div>
 
-      <div id="error-msg" class="error-msg"></div>
+      <div id="error-msg" class="error-msg" role="alert" aria-atomic="true"></div>
     </div>
   </div>
 

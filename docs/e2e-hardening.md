@@ -40,7 +40,19 @@ Implemented smoke scenarios:
   `signEvent` through the real extension/provider path.
 - Approval popup smoke drives the real extension approval window and verifies
   deny, allow-once, trust-site persistence, trusted routine signing without a
-  second popup, and protected kind 0 re-approval.
+  second popup, and protected kind 0 re-approval. It also verifies the expanded
+  public key, literal content rendering without executing supplied HTML, full
+  event/tag review matching the signed payload, unknown-kind warnings, and
+  retry after a decision-delivery failure. The configurable ten-minute review
+  reaches the real background and provider. A simulated late worker timer
+  rejects an expired trust decision without signing or persisting permissions.
+  Concurrent requests reach the approval queue before the first is settled.
+- Accessibility tests render the packaged UI with deterministic extension API
+  and storage fixtures. They cover axe WCAG checks, keyboard signer/persona
+  selection, policy edits and focus restoration, labelled pairing controls,
+  confirmation focus, 320 CSS pixel reflow with increased spacing and doubled
+  text, visible initial approval focus, and deadline announcements/disabled
+  grants. See [Accessibility review](accessibility.md) for manual checks.
 - Optional live relay/signer smoke pairs Bark by direct storage seeding and
   verifies `getPublicKey`, `getRelays`, and `signEvent` against a real
   configured bunker URI.

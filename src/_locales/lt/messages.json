@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Siūlomas profilis" },
   "deny": { "message": "Atmesti" },
   "allowOnce": { "message": "Leisti kartą" },
-  "trustSite": { "message": "Pasitikėti svetaine" }
+  "trustSite": { "message": "Pasitikėti svetaine" },
+  "documentLanguage": { "message": "lt", "description": "HTML language metadata for assistive technology." }
 }

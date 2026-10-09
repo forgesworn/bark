@@ -5,6 +5,8 @@ import { nip19 } from 'nostr-tools'
 import { renderSVG } from 'uqr'
 import { DEFAULT_POLICIES, nextPolicyAction, normalisePolicies, TRUSTED_SITE_METHODS } from './policy.js'
 import { localiseDocument, t } from './i18n.js'
+import { rememberFocus } from './accessibility.js'
+import { normaliseApprovalTimeout } from './approval-timing.js'
 
 const callbackApi = globalThis.chrome
 const promiseApi = globalThis.browser && !globalThis.chrome ? globalThis.browser : null
@@ -315,15 +317,10 @@ function truncateNpub(hex) {
   return hex.slice(0, 8) + '...' + hex.slice(-8)
 }
 
-/** Show the error message div for 5 seconds. */
-let errorTimer = null
+/** Keep errors available until the next successful refresh. */
 function showError(msg) {
   errorMsg.textContent = msg
   errorMsg.classList.add('visible')
-  if (errorTimer) clearTimeout(errorTimer)
-  errorTimer = setTimeout(() => {
-    errorMsg.classList.remove('visible')
-  }, 5000)
 }
 
 /** Original parent of the shared QR pairing section (setup screen). */
@@ -366,12 +363,14 @@ async function requestPairingPermission(address) {
 
 /** Render the instance card list from storage. */
 async function renderInstances() {
+  const restoreFocus = rememberFocus(instanceListEl, heartwoodAddress)
   const { instances = [], activeInstanceId } = await storageGet([
     'instances', 'activeInstanceId',
   ])
 
   if (instances.length === 0) {
     showScreen(setupScreen)
+    restoreFocus()
     return false
   }
 
@@ -383,13 +382,16 @@ async function renderInstances() {
     const cardClass = isActive ? 'instance-card active' : 'instance-card'
     const npubShort = inst.npub ? inst.npub.slice(0, 20) + '...' : t('connectingEllipsis')
     const safeId = escapeHtml(inst.id)
-    return `<div class="${cardClass}" data-id="${safeId}">
-      <span class="inst-status ${statusClass}"></span>
-      <div style="flex:1; min-width:0;">
-        <div class="inst-name">${escapeHtml(inst.name)}</div>
-        <div class="inst-npub">${escapeHtml(npubShort)}</div>
-      </div>
-      <button class="inst-remove" data-id="${safeId}" title="${escapeHtml(t('remove'))}">&times;</button>
+    return `<div class="instance-row">
+      <button type="button" class="${cardClass}" data-id="${safeId}" data-focus-key="instance-${safeId}" aria-pressed="${isActive}">
+        <span class="inst-status ${statusClass}" aria-hidden="true"></span>
+        <span style="flex:1; min-width:0;">
+          <span class="inst-name">${escapeHtml(inst.name)}</span>
+          <span class="inst-npub" style="display:block">${escapeHtml(npubShort)}</span>
+          <span class="inst-state">${escapeHtml(isActive ? t('activeSigner') : t('otherSigner'))}</span>
+        </span>
+      </button>
+      <button type="button" class="inst-remove" data-id="${safeId}" data-focus-key="remove-instance-${safeId}" aria-label="${escapeHtml(t('removeSignerNamed', [inst.name]))}" title="${escapeHtml(t('remove'))}">&times;</button>
     </div>`
   }).join('')
 
@@ -410,6 +412,7 @@ async function renderInstances() {
     })
   })
 
+  restoreFocus()
   return true
 }
 
@@ -448,6 +451,7 @@ function showImportConfirmation(summary) {
   }
 
   importConfirm.style.display = ''
+  importConfirmNo.focus()
   return new Promise((resolve) => {
     const done = (accepted) => {
       importConfirm.style.display = 'none'
@@ -580,6 +584,7 @@ function resetQrFlow() {
 }
 
 async function startQrPairing() {
+  const moveFocus = document.activeElement === qrStartBtn
   resetQrFlow()
   qrStartBtn.disabled = true
   qrStartBtn.textContent = t('waitingEllipsis')
@@ -594,14 +599,17 @@ async function startQrPairing() {
     setQrStatus(resp?.error || t('couldNotStartPairing'), 'err')
     qrStartBtn.disabled = false
     qrStartBtn.textContent = t('generateQr')
+    if (moveFocus && [document.body, qrStartBtn].includes(document.activeElement)) qrStartBtn.focus()
     return
   }
 
   qrCode.innerHTML = renderSVG(resp.uri)
+  qrCode.querySelector('svg')?.setAttribute('aria-hidden', 'true')
   qrUri.textContent = resp.uri
   qrUri.style.display = ''
   qrActions.style.display = ''
   setQrStatus(t('scanWithSigner'))
+  if (moveFocus && [document.body, qrStartBtn].includes(document.activeElement)) qrUri.focus()
   pollQrStatus()
 }
 
@@ -641,10 +649,12 @@ async function pollQrStatus() {
 }
 
 async function cancelQrPairing() {
+  const moveFocus = qrFlow.contains(document.activeElement)
   await sendRuntimeMessage({ type: 'bark-nostrconnect-cancel' }).catch(() => {})
   resetQrFlow()
   qrFlow.style.display = 'none'
   qrShowBtn.style.display = ''
+  if (moveFocus) qrShowBtn.focus()
 }
 
 /** Move the shared QR section into the main screen's add-signer area. */
@@ -729,6 +739,7 @@ function renderRelays(relays) {
 
     const dot = document.createElement('div')
     dot.className = 'relay-dot' + (r.connected ? ' up' : '')
+    dot.setAttribute('aria-hidden', 'true')
     item.appendChild(dot)
 
     const url = document.createElement('span')
@@ -739,6 +750,10 @@ function renderRelays(relays) {
       url.textContent = r.url
     }
     item.appendChild(url)
+    const state = document.createElement('span')
+    state.className = 'relay-state'
+    state.textContent = r.connected ? t('relayConnected') : t('relayDisconnected')
+    item.appendChild(state)
 
     relayDetails.appendChild(item)
   }
@@ -753,6 +768,10 @@ function formatTime(ms) {
   }
 }
 
+function setText(element, value) {
+  if (element.textContent !== value) element.textContent = value
+}
+
 function renderSigningStatus(status) {
   const state = status.signingStatus || 'untested'
   signStatusDot.className = `sign-status-dot ${state}`
@@ -760,31 +779,31 @@ function renderSigningStatus(status) {
   sapwoodUnlock.style.display = state === 'error' && (status.isHeartwood || activeInstanceIsHeartwood) ? '' : 'none'
 
   if (state === 'ready') {
-    signStatusText.textContent = t('signingReady')
-    signStatusDetail.textContent = status.signingLastOkAt
+    setText(signStatusText, t('signingReady'))
+    setText(signStatusDetail, status.signingLastOkAt
       ? t('lastTested', [formatTime(status.signingLastOkAt)])
-      : t('signerReturnedValid')
-    signTestBtn.textContent = t('test')
+      : t('signerReturnedValid'))
+    setText(signTestBtn, t('test'))
     return
   }
 
   if (state === 'pending') {
-    signStatusText.textContent = t('waitingForSigner')
-    signStatusDetail.textContent = t('approveOnSigner')
-    signTestBtn.textContent = t('waitingBtn')
+    setText(signStatusText, t('waitingForSigner'))
+    setText(signStatusDetail, t('approveOnSigner'))
+    setText(signTestBtn, t('waitingBtn'))
     return
   }
 
   if (state === 'error') {
-    signStatusText.textContent = t('signingFailed')
-    signStatusDetail.textContent = status.signingLastError || t('runSignTestAgain')
-    signTestBtn.textContent = t('retry')
+    setText(signStatusText, t('signingFailed'))
+    setText(signStatusDetail, status.signingLastError || t('runSignTestAgain'))
+    setText(signTestBtn, t('retry'))
     return
   }
 
-  signStatusText.textContent = t('signingNotTested')
-  signStatusDetail.textContent = t('runSignTestHint')
-  signTestBtn.textContent = t('test')
+  setText(signStatusText, t('signingNotTested'))
+  setText(signStatusDetail, t('runSignTestHint'))
+  setText(signTestBtn, t('test'))
 }
 
 function identityPubkey(identity) {
@@ -863,6 +882,7 @@ async function refreshState() {
 
   // Connected — clear any retry state
   clearRetryState()
+  errorMsg.classList.remove('visible')
 
   // Query full status for relay info and Heartwood mode
   const status = await queryStatus()
@@ -925,6 +945,7 @@ async function refreshState() {
 
     // Render imported Heartwood bunkers first. Latest Heartwood exposes one
     // bunker URI per identity; selecting the persona means selecting that URI.
+    const restorePersonaFocus = rememberFocus(personaList, deriveInput)
     personaList.innerHTML = ''
 
     const renderedPubkeys = new Set()
@@ -936,15 +957,18 @@ async function refreshState() {
 
     for (const instance of sortedHeartwoodInstances) {
       renderedPubkeys.add(instance.heartwoodIdentityPubkey)
-      const item = document.createElement('div')
+      const item = document.createElement('button')
+      item.type = 'button'
+      item.dataset.focusKey = `persona-${instance.id}`
+      item.setAttribute('aria-pressed', String(instance.id === activeInstanceId))
       item.className = 'persona-item' + (instance.id === activeInstanceId ? ' active' : '')
 
-      const name = document.createElement('div')
+      const name = document.createElement('span')
       name.className = 'persona-name'
       name.textContent = instance.heartwoodIdentityLabel || instance.name || t('unnamed')
       item.appendChild(name)
 
-      const npub = document.createElement('div')
+      const npub = document.createElement('span')
       npub.className = 'persona-npub'
       npub.textContent = truncateNpub(instance.npub || instance.heartwoodIdentityPubkey)
       item.appendChild(npub)
@@ -962,15 +986,18 @@ async function refreshState() {
       const displayName = identityDisplayName(id)
       const switchTarget = id.personaName || id.name || id.purpose || id.npub || id.pubkey
       const isActive = pk === pubkey || targetInstance?.id === activeInstanceId
-      const item = document.createElement('div')
+      const item = document.createElement('button')
+      item.type = 'button'
+      item.dataset.focusKey = `persona-${pk}`
+      item.setAttribute('aria-pressed', String(isActive))
       item.className = 'persona-item' + (isActive ? ' active' : '')
 
-      const name = document.createElement('div')
+      const name = document.createElement('span')
       name.className = 'persona-name'
       name.textContent = displayName
       item.appendChild(name)
 
-      const npub = document.createElement('div')
+      const npub = document.createElement('span')
       npub.className = 'persona-npub'
       npub.textContent = truncateNpub(id.npub || pk)
       item.appendChild(npub)
@@ -981,19 +1008,20 @@ async function refreshState() {
       })
       personaList.appendChild(item)
     }
+    restorePersonaFocus()
   } else if (status.heartwoodProbePending) {
     // Still waiting on a one-time on-device approval for the Heartwood
     // capability probe: not yet known whether this is a Heartwood signer.
     personaSection.style.display = 'none'
     standardBunkerCard.style.display = 'none'
     heartwoodProbePendingCard.style.display = ''
-    activeName.textContent = t('defaultName')
+    activeName.textContent = t('approvalConnectedIdentity')
   } else {
     // Standard bunker mode — show greyed persona card
     personaSection.style.display = 'none'
     standardBunkerCard.style.display = ''
     heartwoodProbePendingCard.style.display = 'none'
-    activeName.textContent = t('defaultName')
+    activeName.textContent = t('approvalConnectedIdentity')
   }
 }
 
@@ -1111,19 +1139,23 @@ async function savePolicies(policies) {
 }
 
 /** Build a click-to-cycle action badge. onCycle(next) persists the change. */
-function makeActionBadge(action, onCycle) {
-  const badge = document.createElement('span')
+function makeActionBadge(action, onCycle, label) {
+  const badge = document.createElement('button')
+  badge.type = 'button'
+  badge.dataset.focusKey = `policy-${label}`
   badge.className = `policy-action cyclable ${escapeHtml(action)}`
   badge.textContent = actionLabel(action)
+  badge.setAttribute('aria-label', t('changePolicyFor', [label, actionLabel(action)]))
   badge.title = t('clickToChange')
   badge.addEventListener('click', (e) => {
     e.stopPropagation()
-    onCycle(nextPolicyAction(action))
+    Promise.resolve(onCycle(nextPolicyAction(action))).catch(err => showError(err.message))
   })
   return badge
 }
 
 function renderKindRules(policies) {
+  const restoreFocus = rememberFocus(kindRulesList, policyToggle)
   kindRulesList.innerHTML = ''
   const entries = Object.entries(policies.kindRules || {})
   if (entries.length === 0) {
@@ -1131,6 +1163,7 @@ function renderKindRules(policies) {
     placeholder.className = 'policy-placeholder'
     placeholder.textContent = t('noKindRules')
     kindRulesList.appendChild(placeholder)
+    restoreFocus()
     return
   }
   for (const [kind, action] of entries) {
@@ -1148,12 +1181,14 @@ function renderKindRules(policies) {
       current.kindRules[kind] = next
       await savePolicies(current)
       renderKindRules(current)
-    }))
+    }, name))
 
     const removeBtn = document.createElement('button')
     removeBtn.className = 'policy-remove'
     removeBtn.textContent = '×'
     removeBtn.dataset.kind = kind
+    removeBtn.dataset.focusKey = `remove-kind-${kind}`
+    removeBtn.setAttribute('aria-label', t('removeKindPolicy', [name]))
     removeBtn.addEventListener('click', async () => {
       const current = await loadPolicies()
       delete current.kindRules[kind]
@@ -1164,6 +1199,7 @@ function renderKindRules(policies) {
 
     kindRulesList.appendChild(item)
   }
+  restoreFocus()
 }
 
 /** Origins whose per-site kind override panel is expanded. */
@@ -1211,11 +1247,13 @@ function renderSiteKindPanel(origin, rule) {
       site[method] = next
       await savePolicies(current)
       renderSiteRules(current)
-    }))
+    }, t('siteMethodPolicy', [origin, method])))
 
     const removeBtn = document.createElement('button')
     removeBtn.className = 'policy-remove'
     removeBtn.textContent = '×'
+    removeBtn.dataset.focusKey = `remove-method-${origin}-${method}`
+    removeBtn.setAttribute('aria-label', t('removeMethodPolicy', [origin, method]))
     removeBtn.addEventListener('click', async () => {
       const current = await loadPolicies()
       const site = current.siteRules[origin]
@@ -1233,6 +1271,7 @@ function renderSiteKindPanel(origin, rule) {
     const addMethodRow = document.createElement('div')
     addMethodRow.className = 'site-kind-add'
     const select = document.createElement('select')
+    select.setAttribute('aria-label', t('addMethodPolicyFor', [origin]))
     for (const method of unsetMethods) {
       const option = document.createElement('option')
       option.value = method
@@ -1283,11 +1322,13 @@ function renderSiteKindPanel(origin, rule) {
       site.kindRules = { ...(site.kindRules || {}), [kind]: next }
       await savePolicies(current)
       renderSiteRules(current)
-    }))
+    }, t('siteKindPolicy', [origin, name])))
 
     const removeBtn = document.createElement('button')
     removeBtn.className = 'policy-remove'
     removeBtn.textContent = '×'
+    removeBtn.dataset.focusKey = `remove-site-kind-${origin}-${kind}`
+    removeBtn.setAttribute('aria-label', t('removeSiteKindPolicy', [origin, name]))
     removeBtn.addEventListener('click', async () => {
       const current = await loadPolicies()
       const site = current.siteRules[origin]
@@ -1305,6 +1346,7 @@ function renderSiteKindPanel(origin, rule) {
   const input = document.createElement('input')
   input.type = 'text'
   input.placeholder = t('kindNumberPlaceholder')
+  input.setAttribute('aria-label', t('addKindPolicyFor', [origin]))
   input.inputMode = 'numeric'
   const addBtn = document.createElement('button')
   addBtn.className = 'btn-sm btn-save'
@@ -1331,6 +1373,7 @@ function renderSiteKindPanel(origin, rule) {
 }
 
 function renderSiteRules(policies) {
+  const restoreFocus = rememberFocus(siteRulesList, policyToggle)
   siteRulesList.innerHTML = ''
   const entries = Object.entries(policies.siteRules || {})
   if (entries.length === 0) {
@@ -1338,12 +1381,13 @@ function renderSiteRules(policies) {
     placeholder.className = 'policy-placeholder'
     placeholder.textContent = t('noSiteRules')
     siteRulesList.appendChild(placeholder)
+    restoreFocus()
     return
   }
   for (const [origin, rule] of entries) {
     let hostname = origin
     try {
-      hostname = new URL(origin).hostname
+      hostname = new URL(origin).host
     } catch {
       // fall back to raw origin
     }
@@ -1351,18 +1395,18 @@ function renderSiteRules(policies) {
     const item = document.createElement('div')
     item.className = 'policy-item'
 
-    const expand = document.createElement('span')
+    const expand = document.createElement('button')
+    expand.type = 'button'
+    expand.dataset.focusKey = `expand-site-${origin}`
     expand.className = 'site-expand'
-    expand.textContent = expandedSites.has(origin) ? '▼' : '▶'
+    const arrow = document.createElement('span')
+    arrow.setAttribute('aria-hidden', 'true')
+    arrow.textContent = expandedSites.has(origin) ? '▼' : '▶'
+    expand.append(arrow, document.createTextNode(` ${hostname}`))
+    expand.setAttribute('aria-expanded', String(expandedSites.has(origin)))
+    expand.setAttribute('aria-label', t('sitePolicyDetails', [origin]))
+    expand.setAttribute('aria-controls', `site-policy-${encodeURIComponent(origin)}`)
     item.appendChild(expand)
-
-    const label = document.createElement('span')
-    label.className = 'policy-label'
-    label.title = origin
-    label.textContent = hostname
-    label.style.cursor = 'pointer'
-    label.style.flex = '1'
-    item.appendChild(label)
 
     const toggleExpand = () => {
       if (expandedSites.has(origin)) expandedSites.delete(origin)
@@ -1370,7 +1414,6 @@ function renderSiteRules(policies) {
       renderSiteRules(policies)
     }
     expand.addEventListener('click', toggleExpand)
-    label.addEventListener('click', toggleExpand)
 
     const displayAction = rule.signEvent || 'allow'
     item.appendChild(makeActionBadge(displayAction, async (next) => {
@@ -1380,12 +1423,14 @@ function renderSiteRules(policies) {
       for (const method of TRUSTED_SITE_METHODS) site[method] = next
       await savePolicies(current)
       renderSiteRules(current)
-    }))
+    }, t('sitePolicy', [origin])))
 
     const removeBtn = document.createElement('button')
     removeBtn.className = 'policy-remove'
     removeBtn.textContent = '×'
     removeBtn.dataset.origin = origin
+    removeBtn.dataset.focusKey = `remove-site-${origin}`
+    removeBtn.setAttribute('aria-label', t('removeSitePolicy', [origin]))
     removeBtn.addEventListener('click', async () => {
       const current = await loadPolicies()
       delete current.siteRules[origin]
@@ -1397,10 +1442,12 @@ function renderSiteRules(policies) {
 
     siteRulesList.appendChild(item)
 
-    if (expandedSites.has(origin)) {
-      siteRulesList.appendChild(renderSiteKindPanel(origin, rule))
-    }
+    const panel = renderSiteKindPanel(origin, rule)
+    panel.id = `site-policy-${encodeURIComponent(origin)}`
+    panel.hidden = !expandedSites.has(origin)
+    siteRulesList.appendChild(panel)
   }
+  restoreFocus()
 }
 
 async function renderPolicies() {
@@ -1445,6 +1492,7 @@ reconnectSapwoodBtn.addEventListener('click', openSapwood)
 // Toggle relay details
 relaySummary.addEventListener('click', () => {
   relayInfo.classList.toggle('expanded')
+  relaySummary.setAttribute('aria-expanded', String(relayInfo.classList.contains('expanded')))
 })
 
 deriveInput.addEventListener('keydown', (e) => {
@@ -1474,15 +1522,16 @@ if (showAddBtn) {
 qrShowBtn.addEventListener('click', () => {
   qrShowBtn.style.display = 'none'
   qrFlow.style.display = ''
+  qrRelayInput.focus()
 })
 qrStartBtn.addEventListener('click', startQrPairing)
 qrCancelBtn.addEventListener('click', cancelQrPairing)
 qrCopyBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(qrUri.textContent)
-    setQrStatus('URI copied.', 'ok')
+    setQrStatus(t('pairingAddressCopied'), 'ok')
   } catch {
-    setQrStatus('Copy failed.', 'err')
+    setQrStatus(t('pairingAddressCopyFailed'), 'err')
   }
 })
 
@@ -1500,6 +1549,7 @@ policyToggle.addEventListener('click', () => {
   const visible = policyContent.style.display !== 'none'
   policyContent.style.display = visible ? 'none' : ''
   policyArrow.innerHTML = visible ? '&#9654;' : '&#9660;'
+  policyToggle.setAttribute('aria-expanded', String(!visible))
 })
 
 // Add kind rule
@@ -1561,6 +1611,22 @@ resetPoliciesBtn.addEventListener('click', async () => {
 // ---------------------------------------------------------------------------
 // Initialise
 // ---------------------------------------------------------------------------
+
+const approvalTimeoutSelect = document.getElementById('approval-timeout')
+const accessibilityStatus = document.getElementById('accessibility-status')
+storageGet('accessibility').then(({ accessibility }) => {
+  approvalTimeoutSelect.value = String(normaliseApprovalTimeout(accessibility?.approvalTimeoutMs))
+}).catch(() => {})
+approvalTimeoutSelect.addEventListener('change', async () => {
+  try {
+    const { accessibility = {} } = await storageGet('accessibility')
+    const approvalTimeoutMs = normaliseApprovalTimeout(Number(approvalTimeoutSelect.value))
+    await storageSet({ accessibility: { ...accessibility, approvalTimeoutMs } })
+    accessibilityStatus.textContent = t('approvalReviewTimeSaved')
+  } catch {
+    accessibilityStatus.textContent = t('approvalReviewTimeSaveFailed')
+  }
+})
 
 renderInstances().then((hasInstances) => {
   if (hasInstances) return refreshState()

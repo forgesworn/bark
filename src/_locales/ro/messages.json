@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Profil propus" },
   "deny": { "message": "Refuză" },
   "allowOnce": { "message": "Permite o dată" },
-  "trustSite": { "message": "Acordă încredere site-ului" }
+  "trustSite": { "message": "Acordă încredere site-ului" },
+  "documentLanguage": { "message": "ro", "description": "HTML language metadata for assistive technology." }
 }

@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "제안된 프로필" },
   "deny": { "message": "거부" },
   "allowOnce": { "message": "한 번만 허용" },
-  "trustSite": { "message": "사이트 신뢰" }
+  "trustSite": { "message": "사이트 신뢰" },
+  "documentLanguage": { "message": "ko", "description": "HTML language metadata for assistive technology." }
 }

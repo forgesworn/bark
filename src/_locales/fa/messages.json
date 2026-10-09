@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "نمایهٔ پیشنهادی" },
   "deny": { "message": "رد" },
   "allowOnce": { "message": "یک بار اجازه بده" },
-  "trustSite": { "message": "به سایت اعتماد کن" }
+  "trustSite": { "message": "به سایت اعتماد کن" },
+  "documentLanguage": { "message": "fa", "description": "HTML language metadata for assistive technology." }
 }

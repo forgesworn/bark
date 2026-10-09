@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "Perfil propuesto" },
   "deny": { "message": "Denegar" },
   "allowOnce": { "message": "Permitir una vez" },
-  "trustSite": { "message": "Confiar en el sitio" }
+  "trustSite": { "message": "Confiar en el sitio" },
+  "documentLanguage": { "message": "es-419", "description": "HTML language metadata for assistive technology." }
 }

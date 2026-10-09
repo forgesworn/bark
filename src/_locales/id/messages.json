@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "Profil yang diusulkan" },
   "deny": { "message": "Tolak" },
   "allowOnce": { "message": "Izinkan Sekali" },
-  "trustSite": { "message": "Percayai Situs" }
+  "trustSite": { "message": "Percayai Situs" },
+  "documentLanguage": { "message": "id", "description": "HTML language metadata for assistive technology." }
 }

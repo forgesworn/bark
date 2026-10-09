@@ -179,5 +179,6 @@
   "proposedProfile": { "message": "የቀረበው መገለጫ" },
   "deny": { "message": "ከልክል" },
   "allowOnce": { "message": "አንዴ ፍቀድ" },
-  "trustSite": { "message": "ጣቢያውን እመን" }
+  "trustSite": { "message": "ጣቢያውን እመን" },
+  "documentLanguage": { "message": "am", "description": "HTML language metadata for assistive technology." }
 }

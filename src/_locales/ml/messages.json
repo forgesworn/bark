@@ -181,5 +181,6 @@
   "proposedProfile": { "message": "നിർദ്ദിഷ്ട പ്രൊഫൈൽ" },
   "deny": { "message": "നിഷേധിക്കുക" },
   "allowOnce": { "message": "ഒരിക്കൽ അനുവദിക്കുക" },
-  "trustSite": { "message": "സൈറ്റിനെ വിശ്വസിക്കുക" }
+  "trustSite": { "message": "സൈറ്റിനെ വിശ്വസിക്കുക" },
+  "documentLanguage": { "message": "ml", "description": "HTML language metadata for assistive technology." }
 }

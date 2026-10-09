@@ -3,6 +3,7 @@
 import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } from 'nostr-tools/nip46'
 import { nip19, SimplePool } from 'nostr-tools'
 import { disposeSigner, trackSignerRequests } from './signer-lifecycle.js'
+import { normaliseApprovalTimeout, approvalExpired, approvalQueueTimeout, APPROVAL_RESPONSE_GRACE_MS } from './approval-timing.js'
 import { generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
 import {
@@ -733,12 +734,6 @@ async function trustSite(origin) {
   })
 }
 
-/** Timeout for a displayed approval window (ms). */
-const APPROVAL_TIMEOUT_MS = 60_000
-
-/** Maximum time a request may wait in the queue before being displayed (ms). */
-const APPROVAL_QUEUE_TIMEOUT_MS = 180_000
-
 // ---------------------------------------------------------------------------
 // Approval system — pending requests awaiting user decision
 // ---------------------------------------------------------------------------
@@ -787,6 +782,7 @@ function notifyApprovalPending(details) {
         type: 'bark-approval-pending',
         requestId: details.pageRequestId,
         method: details.method,
+        waitMs: approvalQueueTimeout(details.approvalTimeoutMs) + details.approvalTimeoutMs + APPROVAL_RESPONSE_GRACE_MS,
       },
       options,
       () => { void chrome.runtime.lastError },
@@ -803,11 +799,12 @@ function notifyApprovalPending(details) {
  * one at a time instead of rejecting while another approval is pending.
  */
 function enqueueApproval(requestId, details) {
+  const queueTimeout = approvalQueueTimeout(details.approvalTimeoutMs)
   const timeoutId = setTimeout(() => {
     denyApproval(requestId, 'Approval timed out.')
-  }, APPROVAL_QUEUE_TIMEOUT_MS)
+  }, queueTimeout)
 
-  pendingApprovals.set(requestId, { ...details, timeoutId })
+  pendingApprovals.set(requestId, { ...details, timeoutId, expiresAt: Date.now() + queueTimeout })
   approvalQueue.push(requestId)
   updateApprovalBadge()
   notifyApprovalPending(details)
@@ -852,7 +849,7 @@ async function focusActiveApprovalForTab(tabId) {
 
 /**
  * Display the next queued approval window, if none is currently shown.
- * The 60-second attention timeout starts when the window opens.
+ * The user's configured review timeout starts when the surface opens.
  */
 async function openNextApproval() {
   if (activeApprovalId) return
@@ -860,12 +857,17 @@ async function openNextApproval() {
   if (!requestId) return
   const entry = pendingApprovals.get(requestId)
   if (!entry) return openNextApproval()
+  if (approvalExpired(entry)) {
+    denyApproval(requestId, 'Approval timed out.')
+    return openNextApproval()
+  }
 
   activeApprovalId = requestId
   clearTimeout(entry.timeoutId)
+  entry.expiresAt = Date.now() + entry.approvalTimeoutMs
   entry.timeoutId = setTimeout(() => {
     denyApproval(requestId, 'Approval timed out.')
-  }, APPROVAL_TIMEOUT_MS)
+  }, entry.approvalTimeoutMs)
 
   const url = chrome.runtime.getURL(`approve.html?requestId=${requestId}`)
   try {
@@ -879,7 +881,7 @@ async function openNextApproval() {
       url,
       type: 'popup',
       width: 420,
-      height: 520,
+      height: 720,
       focused: true,
     })
     const stored = pendingApprovals.get(requestId)
@@ -937,6 +939,12 @@ function denyApproval(requestId, reason) {
  * Allow a pending approval — execute the original request.
  */
 async function allowApproval(requestId, { rememberSite = false } = {}) {
+  // Check the deadline synchronously as well as the timer: a suspended worker
+  // must never approve an expired request when its timer resumes late.
+  if (approvalExpired(pendingApprovals.get(requestId))) {
+    denyApproval(requestId, 'Approval timed out.')
+    return
+  }
   const entry = settleApproval(requestId)
   if (!entry) return
 
@@ -2877,7 +2885,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
     if (message.type === 'bark-approval-query') {
       const entry = pendingApprovals.get(message.requestId)
-      if (!entry) {
+      if (approvalExpired(entry)) {
+        denyApproval(message.requestId, 'Approval timed out.')
         sendResponse(null)
         return true
       }
@@ -2888,12 +2897,20 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         personaName: entry.personaName,
         origin: entry.origin,
         canTrustSite: !!entry.origin,
+        expiresAt: entry.expiresAt,
+        approvalTimeoutMs: entry.approvalTimeoutMs,
       })
       return true
     }
 
     if (message.type === 'bark-approval-response') {
       const { requestId: rid, decision } = message
+      const entry = pendingApprovals.get(rid)
+      if (!entry || approvalExpired(entry)) {
+        denyApproval(rid, 'Approval timed out.')
+        sendResponse({ ok: false, error: 'Approval request expired or unavailable.' })
+        return true
+      }
       if (decision === 'allow' || decision === 'allow-once') {
         allowApproval(rid)
       } else if (decision === 'allow-site') {
@@ -2977,7 +2994,9 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             if (signer !== bunker) throw new Error('Signer connection changed; retry the request.')
             const { activeInstanceId: approvalInstanceId } = await chrome.storage.local.get('activeInstanceId')
 
+            const { accessibility } = await chrome.storage.local.get('accessibility')
             enqueueApproval(requestId, {
+              approvalTimeoutMs: normaliseApprovalTimeout(accessibility?.approvalTimeoutMs),
               method: message.method,
               params: message.params,
               // Preview the normalised event so it matches what handleMessage
