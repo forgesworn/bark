@@ -7,7 +7,7 @@ export function createPacedAmoFetch({ fetchImpl = fetch, sleep = ms => new Promi
     if (write && previousWrite !== null) await sleep(Math.max(0, 30_000 - (now() - previousWrite)))
     for (let attempt = 0; ; attempt++) {
       if (write) previousWrite = now()
-      const response = await fetchImpl(url, options)
+      const response = await fetchImpl(url, { ...options, signal: AbortSignal.timeout(60_000) })
       if (response.status !== 429 || attempt === 3) return response
       const header = response.headers.get('retry-after')
       const seconds = Number(header)

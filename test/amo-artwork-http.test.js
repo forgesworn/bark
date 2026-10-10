@@ -16,14 +16,16 @@ describe('AMO listing write pacing', () => {
   })
   it('honours Retry-After only for an explicit rejection', async () => {
     let calls = 0, time = 0
-    const waits = []
+    const waits = [], signals = []
     const client = createPacedAmoFetch({
-      fetchImpl: async () => ++calls === 1 ? new Response('', { status: 429, headers: { 'Retry-After': '72' } }) : new Response('{}'),
+      fetchImpl: async (_url, options) => { signals.push(options.signal); return ++calls === 1 ? new Response('', { status: 429, headers: { 'Retry-After': '72' } }) : new Response('{}') },
       now: () => time, sleep: async ms => { waits.push(ms); time += ms },
     })
     expect((await client('https://example.test', { method: 'POST' })).status).toBe(200)
     expect(calls).toBe(2)
     expect(waits).toEqual([72_000])
+    expect(signals[0]).not.toBe(signals[1])
+    expect(signals.every(signal => !signal.aborted)).toBe(true)
   })
   it('never replays a mutation whose network response was lost', async () => {
     let calls = 0

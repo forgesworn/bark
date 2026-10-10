@@ -20,7 +20,6 @@ if (apply) {
   async function request(suffix = '', method = 'GET', body) {
     const response = await pacedAmoFetch(api + suffix, {
       method, headers: { authorization: `JWT ${amoJwt(issuer, secret)}` }, body,
-      signal: AbortSignal.timeout(60_000),
     })
     if (!response.ok) throw new Error(`AMO ${method} ${suffix}: HTTP ${response.status}`)
     return response.status === 204 ? null : response.json()
