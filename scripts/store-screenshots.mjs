@@ -8,7 +8,7 @@
 // Output lands in docs/store-assets/.
 
 import { chromium } from '@playwright/test'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -80,16 +80,16 @@ async function compose(context, { name, headline, sub, raw, imageWidth = 500 }) 
       width: ${FRAME.width}px; height: ${FRAME.height}px;
       display: flex; align-items: center; gap: 56px;
       padding: 0 72px;
-      background: radial-gradient(1100px 640px at 72% -12%, #22371e, #0a0a12 62%);
+      background: radial-gradient(1100px 640px at 72% -12%, #123b32, #0b1713 62%);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      color: #eef4ee; overflow: hidden;
+      color: #faf7ed; overflow: hidden;
     }
     .copy { flex: 1; min-width: 0; }
     .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
     .brand img { width: 44px; height: 44px; }
-    .brand span { font-size: 24px; font-weight: 700; letter-spacing: 0.02em; color: #cfe3cf; }
+    .brand span { font-size: 24px; font-weight: 700; letter-spacing: 0.02em; color: #faf7ed; }
     h1 { font-size: 54px; line-height: 1.12; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 22px; }
-    p { font-size: 21px; line-height: 1.5; color: #9db89d; max-width: 460px; }
+    p { font-size: 21px; line-height: 1.5; color: #bdccbf; max-width: 460px; }
     .shot {
       flex: 0 0 auto; width: ${imageWidth}px;
       display: flex; align-items: center; justify-content: center;
@@ -209,6 +209,12 @@ try {
     await approval.waitForLoadState('domcontentloaded')
     await approval.waitForSelector('#content', { state: 'visible' })
     await rawStyle(approval, 420)
+    const approvalRaw = await rawShot(approval)
+    const hero = await context.newPage()
+    await hero.setViewportSize({ width: 600, height: 480 })
+    await hero.setContent(`<style>html,body{margin:0;width:600px;height:480px;background:#111a16}body{display:flex;align-items:center;justify-content:center}img{max-width:568px;max-height:448px;border-radius:12px}</style><img src="data:image/png;base64,${approvalRaw.toString('base64')}" alt="">`)
+    await hero.screenshot({ path: path.resolve(outDir, '../../site/assets/hero-approval.png'), scale: 'css' })
+    await hero.close()
     await compose(context, {
       name: '02-approval.png',
       headline: 'Nothing signs without your say',
@@ -238,8 +244,8 @@ try {
     await popup.waitForSelector('#connected-content', { state: 'visible', timeout: 20_000 })
     await popup.click('#policy-toggle')
     await popup.waitForSelector('#site-rules-list .policy-item')
-    await popup.locator('#site-rules-list .policy-label', { hasText: 'snort.social' }).click()
-    await popup.waitForSelector('.site-kind-panel')
+    await popup.locator('#site-rules-list .site-expand', { hasText: 'snort.social' }).click()
+    await popup.waitForSelector('.site-kind-panel:not([hidden])')
     await compose(context, {
       name: '03-policies.png',
       headline: 'Policy control down to method and kind',
@@ -320,13 +326,13 @@ try {
       body {
         width: 440px; height: 280px; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 10px;
-        background: radial-gradient(500px 300px at 50% -20%, #24381f, #0a0a12 70%);
+        background: radial-gradient(500px 300px at 50% -20%, #123b32, #0b1713 70%);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        color: #e0e0e0;
+        color: #faf7ed;
       }
       img { width: 96px; height: 96px; }
       h1 { font-size: 34px; letter-spacing: 0.02em; }
-      p { font-size: 14px; color: #9db89d; }
+      p { font-size: 14px; color: #bdccbf; }
     </style></head><body>
       <img src="data:image/png;base64,${iconB64}" alt="">
       <h1>Bark</h1>
@@ -346,17 +352,17 @@ try {
       body {
         width: 1400px; height: 560px;
         display: flex; align-items: center; gap: 64px; padding: 0 110px;
-        background: radial-gradient(1300px 700px at 78% -20%, #24381f, #0a0a12 62%);
+        background: radial-gradient(1300px 700px at 78% -20%, #123b32, #0b1713 62%);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        color: #eef4ee;
+        color: #faf7ed;
       }
       img.logo { width: 200px; height: 200px; flex: 0 0 auto; }
       h1 { font-size: 76px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 14px; }
-      p.tag { font-size: 30px; color: #9db89d; margin-bottom: 34px; }
+      p.tag { font-size: 30px; color: #bdccbf; margin-bottom: 34px; }
       .chips { display: flex; gap: 14px; flex-wrap: wrap; }
       .chips span {
-        font-size: 19px; color: #cfe3cf; background: rgba(51, 153, 51, 0.12);
-        border: 1px solid #2e4a2e; border-radius: 999px; padding: 9px 20px;
+        font-size: 19px; color: #faf7ed; background: rgba(111, 191, 139, 0.12);
+        border: 1px solid #53745e; border-radius: 999px; padding: 9px 20px;
       }
     </style></head><body>
       <img class="logo" src="data:image/png;base64,${iconB64}" alt="">
@@ -380,4 +386,7 @@ try {
   rmSync(userDataDir, { recursive: true, force: true })
 }
 
+for (const name of ['01-connected.png', '02-approval.png', '03-policies.png', '04-qr-pairing.png', '05-personas.png']) {
+  copyFileSync(path.join(outDir, name), path.resolve(outDir, '../../site/assets', name))
+}
 console.log('done —', outDir)

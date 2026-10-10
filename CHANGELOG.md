@@ -4,6 +4,23 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.16] - 2026-10-10
+
+### Changed
+
+- Replace the signal-wave icon with Browser gate: an ivory browser frame and
+  mint keyhole on a forest-green tile, with the ecosystem's fine gold ring.
+- Use the same editable SVG for the website and ecosystem map. Generate
+  extension and store PNGs from it, with a simplified 16-pixel toolbar icon.
+- Show the logo in the setup, connected and approval surfaces. Refresh the
+  store screenshots, promotional tiles and website approval image.
+- Document the brand palette and asset regeneration commands.
+
+### Fixed
+
+- Update store screenshot automation for the current accessible policy buttons
+  and wait for the expanded site's panel rather than a hidden sibling.
+
 ## [1.3.15] - 2026-10-10
 
 ### Added
