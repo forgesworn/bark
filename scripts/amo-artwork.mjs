@@ -1,6 +1,7 @@
 // Refresh AMO listing artwork from a published release tag. Dry-run by default.
 import { execFileSync } from 'node:child_process'
 import { amoJwt, normaliseVersion, requireEnv } from './store-lib.mjs'
+import { pacedAmoFetch } from './amo-artwork-http.mjs'
 const { tag } = normaliseVersion(process.argv[2] || '')
 const apply = process.argv.includes('--apply')
 execFileSync('git', ['merge-base', '--is-ancestor', tag, 'origin/main'])
@@ -17,7 +18,7 @@ if (apply) {
   const issuer = requireEnv('AMO_JWT_ISSUER'), secret = requireEnv('AMO_JWT_SECRET')
   const api = 'https://addons.mozilla.org/api/v5/addons/addon/bark-nostr/'
   async function request(suffix = '', method = 'GET', body) {
-    const response = await fetch(api + suffix, {
+    const response = await pacedAmoFetch(api + suffix, {
       method, headers: { authorization: `JWT ${amoJwt(issuer, secret)}` }, body,
       signal: AbortSignal.timeout(60_000),
     })
