@@ -5,6 +5,10 @@ on:
       version:
         description: Published stable release tag containing the artwork
         required: true
+      resume_previews:
+        description: Five accepted preview IDs in screenshot order, comma-separated; use 0 for missing (also skips reuploading the accepted icon)
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -14,7 +18,7 @@ jobs:
   artwork:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -28,6 +32,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.version }}
+          RESUME_PREVIEWS: ${{ inputs.resume_previews }}
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-        run: node scripts/amo-artwork.mjs "$RELEASE_TAG" --apply
+        run: node scripts/amo-artwork.mjs "$RELEASE_TAG" --resume-previews "$RESUME_PREVIEWS" --apply

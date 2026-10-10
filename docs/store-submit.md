@@ -153,3 +153,16 @@ until all replacements are uploaded and visible, and verifies the final list.
 It is separate from package submission and runs only when requested.
 Local validation without writes: `node scripts/amo-artwork.mjs v1.3.16`.
 Chrome promotional images still require the developer dashboard.
+
+AMO preview writes share its 3/minute, 10/hour and 24/day add-on submission
+quota. The artwork job paces writes and honours waits up to an hour. After a
+partial run, pass five IDs from the upload log in screenshot order, with `0`
+for missing images, to resume without reuploading accepted images or the icon:
+
+```bash
+gh workflow run store-artwork.yml --ref main -f version=v1.3.16 \
+  -f resume_previews=422629,422630,422631,0,0
+```
+
+Check the accepted IDs and their positions before resuming. Network failures
+are never retried automatically; daily quota exhaustion requires a later run.
