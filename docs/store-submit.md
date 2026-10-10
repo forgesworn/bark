@@ -138,3 +138,18 @@ Source and changelog-derived release notes are submitted with the package.
 See [releasing.md](releasing.md) for the full release process and Google's
 [GitHub authentication action](https://github.com/google-github-actions/auth)
 for the federation setup and supported token configuration.
+
+## Firefox listing artwork
+
+After a stable release is published, explicitly refresh its icon and five
+preview screenshots from the tagged `docs/store-assets/` files:
+
+```bash
+gh workflow run store-artwork.yml --ref main -f version=v1.3.16
+```
+
+This uses the existing GitHub AMO credentials, preserves the old previews
+until all replacements are uploaded and visible, and verifies the final list.
+It is separate from package submission and runs only when requested.
+Local validation without writes: `node scripts/amo-artwork.mjs v1.3.16`.
+Chrome promotional images still require the developer dashboard.
