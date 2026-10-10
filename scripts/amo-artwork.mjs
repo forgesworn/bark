@@ -4,6 +4,11 @@ import { amoJwt, normaliseVersion, requireEnv } from './store-lib.mjs'
 import { pacedAmoFetch } from './amo-artwork-http.mjs'
 const { tag } = normaliseVersion(process.argv[2] || '')
 const apply = process.argv.includes('--apply')
+const resumeIndex = process.argv.indexOf('--resume-previews')
+const resumeInput = resumeIndex === -1 ? '' : process.argv[resumeIndex + 1]
+if (resumeInput && !/^\d+(,\d+){4}$/.test(resumeInput)) throw new Error('Resume requires five comma-separated preview IDs; use 0 for missing images')
+const resumed = resumeInput ? resumeInput.split(',').map(Number) : [0,0,0,0,0]
+if (resumed.some(id => !Number.isSafeInteger(id)) || new Set(resumed.filter(Boolean)).size !== resumed.filter(Boolean).length) throw new Error('Invalid or repeated resume preview IDs')
 execFileSync('git', ['merge-base', '--is-ancestor', tag, 'origin/main'])
 const release = JSON.parse(execFileSync('gh', ['release', 'view', tag, '--json', 'isDraft,isPrerelease'], { encoding: 'utf8' }))
 if (release.isDraft || release.isPrerelease) throw new Error('Artwork requires a published stable release')
@@ -18,9 +23,9 @@ if (apply) {
   const issuer = requireEnv('AMO_JWT_ISSUER'), secret = requireEnv('AMO_JWT_SECRET')
   const api = 'https://addons.mozilla.org/api/v5/addons/addon/bark-nostr/'
   async function request(suffix = '', method = 'GET', body) {
-    const response = await pacedAmoFetch(api + suffix, {
+    const response = await pacedAmoFetch(api + suffix, () => ({
       method, headers: { authorization: `JWT ${amoJwt(issuer, secret)}` }, body,
-    })
+    }))
     if (!response.ok) throw new Error(`AMO ${method} ${suffix}: HTTP ${response.status}`)
     return response.status === 204 ? null : response.json()
   }
@@ -30,11 +35,17 @@ if (apply) {
     form.set(field, new Blob([bytes], { type: 'image/png' }), name)
     return form
   }
-  await request('', 'PATCH', imageForm(images[0], 'icon'))
-  console.log('AMO icon uploaded')
+  if (!resumed.some(Boolean)) {
+    await request('', 'PATCH', imageForm(images[0], 'icon'))
+    console.log('AMO icon uploaded')
+  }
+  for (const [position, id] of resumed.entries()) {
+    if (id && !before.previews.some(preview => preview.id === id && preview.position === position)) throw new Error('Resume preview does not belong to the expected position; no preview writes made')
+  }
   const created = []
   // Preserve all old previews until every replacement has been uploaded and read back.
   for (const [position, image] of images.slice(1).entries()) {
+    if (resumed[position]) { created.push(resumed[position]); console.log(`AMO preview ${position + 1} reused: ${resumed[position]}`); continue }
     const form = imageForm(image, 'image')
     form.set('position', String(position))
     const preview = await request('previews/', 'POST', form)
@@ -46,7 +57,9 @@ if (apply) {
   if (!created.every(id => refreshed.previews.some(preview => preview.id === id))) {
     throw new Error('Replacement previews not all visible; old previews preserved')
   }
-  for (const preview of before.previews) await request(`previews/${preview.id}/`, 'DELETE')
+  for (const preview of before.previews) {
+    if (!created.includes(preview.id)) await request(`previews/${preview.id}/`, 'DELETE')
+  }
   const final = await request()
   if (final.previews.length !== 5 || !created.every(id => final.previews.some(preview => preview.id === id))) {
     throw new Error('AMO preview verification failed')

@@ -27,6 +27,17 @@ describe('AMO listing write pacing', () => {
     expect(signals[0]).not.toBe(signals[1])
     expect(signals.every(signal => !signal.aborted)).toBe(true)
   })
+  it('refreshes request credentials after an hourly quota wait', async () => {
+    let calls = 0, credentials = 0
+    const waits = [], seen = []
+    const client = createPacedAmoFetch({
+      fetchImpl: async (_url, options) => { seen.push(options.headers.authorization); return ++calls === 1 ? new Response('', { status: 429, headers: { 'Retry-After': '1800' } }) : new Response('{}') },
+      sleep: async ms => { waits.push(ms) },
+    })
+    await client('https://example.test', () => ({ method: 'POST', headers: { authorization: `JWT ${++credentials}` } }))
+    expect(waits).toEqual([1_800_000])
+    expect(seen[0]).not.toBe(seen[1])
+  })
   it('never replays a mutation whose network response was lost', async () => {
     let calls = 0
     const client = createPacedAmoFetch({ fetchImpl: async () => { calls++; throw new Error('network') } })
