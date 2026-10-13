@@ -22,6 +22,7 @@ export const test = base.extend({
       channel: 'chromium',
       headless: true,
       args: [
+        '--enable-unsafe-extension-debugging',
         `--disable-extensions-except=${extensionPath}`,
         `--load-extension=${extensionPath}`,
       ],

@@ -8,6 +8,33 @@ const provider = buildSync({
   bundle: true, format: 'iife', write: false,
 }).outputFiles[0].text
 
+it('preserves the existing provider and ignores stale refresh errors only while the replacement bridge is ready', () => {
+  const handlers = []
+  const existing = { getPublicKey: vi.fn() }
+  const window = {
+    nostr: existing, location: { origin: 'https://app.example' },
+    addEventListener: (type, listener, capture) => handlers.push({ listener, capture }),
+    postMessage: vi.fn(),
+  }
+  runInNewContext(provider, { window })
+  expect(window.nostr).toBe(existing)
+  expect(handlers[0].capture).toBe(true)
+  expect(window.postMessage).toHaveBeenCalledWith({ type: 'bark-bridge-query' }, window.location.origin)
+  const message = data => {
+    const event = { source: window, origin: window.location.origin, data, stopImmediatePropagation: vi.fn() }
+    handlers[0].listener(event)
+    return event.stopImmediatePropagation
+  }
+  const stale = { type: 'bark-response', id: 1, error: 'Bark was updated. Please refresh the page.' }
+  expect(message(stale)).not.toHaveBeenCalled()
+  message({ type: 'bark-bridge-ready', token: 'replacement' })
+  message({ type: 'bark-bridge-invalidated', token: 'old' })
+  expect(message(stale)).toHaveBeenCalledOnce()
+  expect(message({ ...stale, error: 'Request denied by user.' })).not.toHaveBeenCalled()
+  message({ type: 'bark-bridge-invalidated', token: 'replacement' })
+  expect(message(stale)).not.toHaveBeenCalled()
+})
+
 it('rejects outstanding page requests when extension reload invalidates the bridge', async () => {
   const handlers = []
   const window = {

@@ -76,8 +76,8 @@ Bark is the protective outer layer of Heartwood, the ForgeSworn open-source hard
 |---|---|
 | `storage` | Persists signer connection details (bunker URI, client auth key), site policies, enabled-site list, and connection health locally. Nothing leaves the machine except NIP-46 relay traffic to the user's own signer. |
 | `scripting` | Registers the NIP-07 provider content scripts for origins the user explicitly enables from the popup, and injects them into the invoking tab so the site works without a reload. Bark does not read page content; it adds only the standard NIP-07 interface and a temporary, request-triggered approval notice. |
-| `activeTab` | Lets the popup show which site the user is on so they can enable Bark for it, and covers the immediate injection into that tab after they click Enable. No tab data is used beyond the origin shown to the user. |
-| Content scripts (curated list) | Baked-in matches for twelve well-known Nostr web clients plus localhost, so Bark works out of the box where most users need it. The Chromium manifest declares no host permissions at all, required or optional. |
+| `activeTab` | Lets the popup show which site the user is on so they can enable Bark for it. Covers immediate injection after they click Enable, and restoring Bark's bridge when they open the popup on a supported site after an update. No tab data is used beyond the origin shown to the user. |
+| Content scripts (curated list) | Baked-in matches for Nostr web clients, v4v.com and localhost, so Bark works out of the box where most users need it. The Chromium manifest declares no host permissions at all, required or optional. |
 
 (Firefox and Safari builds additionally declare optional http/https host
 permissions for the legacy HTTP pairing flow; Chromium omits them.)

@@ -175,3 +175,36 @@ and human-paced idle/reconnect signing. These tests use disposable profiles
 and synthetic loopback keys only. The physical Bark/Heartwood pairing and
 Wildbloom post-restore audit remain a separate acceptance gate until this
 candidate is loaded and exercised on the actual device.
+
+## Popup and open-page recovery — 13 October 2026
+
+`e2e/reconnect-lifecycle.spec.js` also checks that the popup shows its controls
+and connection progress during a seven-second handshake. A signer that never
+answers the optional Heartwood probe must still make the connected popup
+visible within two seconds and serve NIP-07 key/signing requests.
+
+`e2e/site-recovery.spec.js` uses disposable HTML at the v4v.com and www.v4v.com
+origins to verify document-start injection before the first website script.
+It reloads the unpacked extension with Chrome's `Extensions.loadUnpacked`,
+triggers the real extension action to obtain activeTab access, and runs the
+packaged popup in a background tab: headless Chromium has no toolbar popup
+surface. The existing page and provider object must survive, key retrieval
+and signing must work, and repeated popup openings must submit each signing
+request once. Readiness tokens suppress refresh errors from orphaned bridges;
+ordinary signer refusals and current-bridge invalidation remain visible.
+An explicitly enabled HTTP site also exercises readiness tokens outside a
+secure context, without reloading the document.
+
+The unit regressions cover late diagnostic replies after reset, ownership
+after the handshake mutex clears, and merging capability metadata into fresh
+signing evidence. Store publication and the installed Bark/physical Heartwood
+journey are separate from these local checks. These tests neither access a
+v4v account nor contact the user's signer.
+
+Local validation: `npm run verify:full` passed 274 unit tests and 24 Chromium
+checks; the configured live-signer smoke was skipped. The final HTTP-compatible
+readiness token was verified with `npm run build:all` and seven site/privacy
+checks, including the additional HTTP case (25 distinct browser checks in all).
+The dependency audit reported zero vulnerabilities. Local browser builds are
+retained in `dist/`, `dist-firefox/` and `dist-safari/`; test profiles and fixture
+servers are removed after each run. No release or store submission was made.

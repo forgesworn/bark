@@ -83,6 +83,50 @@ describe('connection ownership', () => {
 
 
 describe('handshake recovery', () => {
+  it('serves NIP-07 before optional relay and Heartwood probes finish', async () => {
+    const handshake = deferred(), capabilities = deferred()
+    const candidate = fakeSigner(handshake)
+    candidate.pool.relays.set('wss://relay.example', { connected: true })
+    candidate.pool.ensureRelay.mockReturnValue(new Promise(() => {}))
+    candidate.sendRequest.mockImplementation(method => method === 'connect' ? handshake.promise : capabilities.promise)
+    fromBunker.mockReturnValue(candidate)
+    const connecting = ensureConnected()
+    await vi.advanceTimersByTimeAsync(0)
+    handshake.resolve('ack')
+    expect(await connecting).toBe(candidate)
+    expect(await ensureConnected()).toBe(candidate)
+    expect(connectionState.status).toBe('connected')
+    expect(connectionState.heartwoodProbePending).toBe(true)
+    // The background probe remains owned by the signer after connectPromise
+    // clears, and merges into signing evidence written while it was pending.
+    const previousVerification = stored.instances[0].signingVerifiedAt
+    stored.instances[0].signingVerifiedAt = 500
+    capabilities.resolve('[]')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(connectionState.isHeartwood).toBe(true)
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({
+      instances: [expect.objectContaining({ isHeartwood: true, signingVerifiedAt: 500 })],
+    }))
+    stored.instances[0].signingVerifiedAt = previousVerification
+  })
+
+  it('ignores an optional probe reply after the connection is reset', async () => {
+    const handshake = deferred(), capabilities = deferred()
+    const candidate = fakeSigner(handshake)
+    candidate.sendRequest.mockImplementation(method => method === 'connect' ? handshake.promise : capabilities.promise)
+    fromBunker.mockReturnValue(candidate)
+    const connecting = ensureConnected()
+    await vi.advanceTimersByTimeAsync(0)
+    handshake.resolve('ack')
+    await connecting
+    await resetConnection()
+    capabilities.resolve('[]')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(connectionState.status).toBe('disconnected')
+    expect(connectionState.isHeartwood).toBe(false)
+    expect(connectionState.heartwoodProbePending).toBe(false)
+  })
+
   it('accepts a late first reply after the six-second retry boundary', async () => {
     const firstReply = deferred(), candidate = fakeSigner(firstReply)
     candidate.sendRequest.mockImplementation((method) => {
