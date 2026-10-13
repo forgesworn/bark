@@ -558,7 +558,7 @@ async function adoptNostrConnectSigner(newSigner, request) {
   }
 
   await chrome.storage.local.set({ instances, activeInstanceId: active.id })
-  await finaliseConnection(active, instances, bunkerUri, newSigner.bp.relays)
+  startConnectionDiagnostics(active, instances, bunkerUri, newSigner.bp.relays, newSigner)
 }
 
 export async function pairHeartwoodHttpAddress(address, {
@@ -1267,21 +1267,25 @@ async function enableSite(origin, tabId) {
   // towards the CWS in-depth-review trigger), so this normally fails there
   // and we fall back to a tab-scoped activeTab injection instead.
   let mode = 'persistent'
-  try {
-    await registerSiteScripts(origin)
-    const { enabledSites = [] } = await chrome.storage.local.get('enabledSites')
-    if (!enabledSites.includes(origin)) {
-      await chrome.storage.local.set({ enabledSites: [...enabledSites, origin] })
+  if (originCoveredByPatterns(origin, manifestMatchPatterns())) {
+    mode = 'built-in'
+  } else {
+    try {
+      await registerSiteScripts(origin)
+      const { enabledSites = [] } = await chrome.storage.local.get('enabledSites')
+      if (!enabledSites.includes(origin)) {
+        await chrome.storage.local.set({ enabledSites: [...enabledSites, origin] })
+      }
+    } catch {
+      mode = 'tab'
     }
-  } catch {
-    mode = 'tab'
   }
 
   // Make the current page work without a reload. activeTab covers the tab
   // the user invoked the popup on regardless of host grants.
   if (typeof tabId === 'number') {
     await chrome.scripting.executeScript({ target: { tabId }, files: ['content-script.js'] })
-    await chrome.scripting.executeScript({ target: { tabId }, files: ['provider.js'], world: 'MAIN' }).catch(() => {})
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['provider.js'], world: 'MAIN' })
   } else if (mode === 'tab') {
     throw new Error('Open the site tab and try again.')
   }
@@ -2020,14 +2024,25 @@ async function doConnect(originHint, isCurrent) {
     // A signer refusal needs user attention. Only silence or a failed relay
     // publication warrants unattended reconnects.
     if (err instanceof RequestTimeoutError || err instanceof AggregateError) scheduleReconnect()
-    await probeRelays(bp.relays)
+    probeRelays(bp.relays).catch(() => {})
     throw err
   }
 
   current()
-  await finaliseConnection(active, instances, bunkerUri, bp.relays, current)
-  current()
+  startConnectionDiagnostics(active, instances, bunkerUri, bp.relays, candidate)
   return candidate
+}
+
+// A successful handshake makes NIP-07 usable immediately. Relay health and
+// optional Heartwood methods must not hold up the popup or website requests.
+// Their ownership lasts for this signer, beyond the handshake's mutex.
+function startConnectionDiagnostics(active, instances, bunkerUri, relays, connectedSigner) {
+  const current = () => {
+    if (signer !== connectedSigner) throw new Error('Signer connection changed; retry the request.')
+  }
+  finaliseConnection(active, instances, bunkerUri, relays, current).catch((err) => {
+    debug('[bark:bg] connection diagnostics:', sanitiseError(err))
+  })
 }
 
 /**
@@ -2047,12 +2062,12 @@ export async function finaliseConnection(active, instances, bunkerUri, relays, c
   lastSocketActivityTime = Date.now()
   scheduleKeepAlive()
 
-  // Probe relay health
-  await probeRelays(relays)
-  current()
+  // Probe relay health independently of signer capability detection.
+  connectionState.relays = relays.map(url => ({ url, connected: false }))
+  probeRelays(relays).catch(() => {})
 
   // Detect Heartwood mode and approval status.
-  connectionState.heartwoodProbePending = false
+  connectionState.heartwoodProbePending = true
   let heartwoodIdentityList = []
   try {
     const raw = await withTimeout(
@@ -2064,9 +2079,11 @@ export async function finaliseConnection(active, instances, bunkerUri, relays, c
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) heartwoodIdentityList = parsed
     connectionState.isHeartwood = true
+    connectionState.heartwoodProbePending = false
   } catch (err) {
     current()
     const msg = String(err?.message || err || '')
+    connectionState.heartwoodProbePending = false
     // heartwood-esp32 firmware answers "unauthorised" for unbound clients;
     // older signers said "not approved".
     if (msg.includes('not approved') || msg.includes('unauthorised') || msg.includes('unauthorized')) {
@@ -2089,7 +2106,7 @@ export async function finaliseConnection(active, instances, bunkerUri, relays, c
   }
 
   if (connectionState.isHeartwood) {
-    await applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList)
+    await applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList, current)
   } else if (!connectionState.heartwoodProbePending) {
     await chrome.storage.local.set({ isHeartwood: false })
   }
@@ -2103,7 +2120,7 @@ export async function finaliseConnection(active, instances, bunkerUri, relays, c
  * instance and persisted storage. Shared by the initial probe and the
  * delayed continuation in awaitHeartwoodProbe().
  */
-async function applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList) {
+async function applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList, current = () => {}) {
   const targetPubkey = bunkerPubkey(bunkerUri)
   const matchedIdentity = heartwoodIdentityList.find(identity => identity?.pubkey === targetPubkey)
   const label = matchedIdentity ? identityLabel(matchedIdentity, 'master') : (active.heartwoodIdentityLabel || 'master')
@@ -2113,7 +2130,17 @@ async function applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIde
   active.heartwoodIdentityLabel = label
   active.heartwoodIdentityPubkey = targetPubkey || active.heartwoodIdentityPubkey
   if (active.name === 'bunker' && label && label !== 'master') active.name = label
-  await chrome.storage.local.set({ instances, isHeartwood: true })
+  // Signing may have completed while the optional probe was pending. Merge
+  // only capability metadata into fresh storage so its evidence is retained.
+  const { instances: latest = instances } = await chrome.storage.local.get('instances')
+  current()
+  const entry = latest.find(instance => instance.id === active.id)
+  if (entry) {
+    for (const key of ['isHeartwood', 'heartwoodBaseName', 'heartwoodIdentityLabel', 'heartwoodIdentityPubkey', 'name']) {
+      entry[key] = active[key]
+    }
+  }
+  await chrome.storage.local.set({ instances: latest, isHeartwood: true })
 }
 
 /**
@@ -2141,7 +2168,9 @@ async function awaitHeartwoodProbe(active, instances, bunkerUri) {
     } catch { /* malformed payload: still treat the response as success */ }
     connectionState.isHeartwood = true
     connectionState.heartwoodProbePending = false
-    await applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList)
+    await applyHeartwoodDetected(active, instances, bunkerUri, heartwoodIdentityList, () => {
+      if (signer !== probeSigner) throw new Error('Signer connection changed; retry the request.')
+    })
   } catch {
     if (signer !== probeSigner) return
     connectionState.heartwoodProbePending = false

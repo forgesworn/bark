@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 // only evaluates once).
 const storageSet = vi.fn().mockResolvedValue(undefined)
 vi.stubGlobal('chrome', {
-  storage: { local: { set: storageSet } },
+  storage: { local: { set: storageSet, get: vi.fn(async () => ({})) } },
 })
 
 const { finaliseConnection, __setSignerForTest, connectionState } = await import('../src/background.js')

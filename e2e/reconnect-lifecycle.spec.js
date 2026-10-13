@@ -2,6 +2,45 @@ import { test, expect } from './extension.fixture.js'
 import { callNostr, seedDeterministicSigner, withDeterministicNip46Signer, withTestPage,
   runtimeMessage, readExtensionStorage } from './nip46-test-helpers.js'
 
+test('popup shows controls while the signer handshake is still pending', async ({ context, extensionId }) => {
+  await withDeterministicNip46Signer(async remote => {
+    await seedDeterministicSigner({ context, extensionId, bunkerUri: remote.bunkerUri })
+    const popup = await context.newPage()
+    await popup.goto(`chrome-extension://${extensionId}/popup.html`)
+    await expect(popup.locator('#instance-list')).toBeVisible({ timeout: 1500 })
+    await expect(popup.locator('#show-add-btn')).toBeVisible({ timeout: 1500 })
+    await expect(popup.locator('#reconnect-msg')).toHaveText('connecting...', { timeout: 1500 })
+    await expect(popup.locator('#connected-content')).toBeHidden()
+    await expect(popup.locator('#connected-content')).toBeVisible({ timeout: 12_000 })
+    await runtimeMessage(context, extensionId, { type: 'bark-reset' })
+  }, { firstConnectDelayMs: 7000, ignoreLaterConnects: true })
+})
+
+test('popup and website use NIP-07 without waiting for optional capabilities', async ({ context, extensionId }) => {
+  await withDeterministicNip46Signer(async remote => {
+    await withTestPage(async url => {
+      await seedDeterministicSigner({ context, extensionId, origin: new URL(url).origin, bunkerUri: remote.bunkerUri })
+      const popup = await context.newPage()
+      await popup.goto(`chrome-extension://${extensionId}/popup.html`)
+      await expect(popup.locator('#connected-content')).toBeVisible({ timeout: 2000 })
+      const page = await context.newPage()
+      await page.goto(url)
+      expect(await callNostr(page, 'getPublicKey', undefined, 2000)).toBe(remote.pubkey)
+      let signed
+      try {
+        signed = await callNostr(page, 'signEvent', {
+          kind: 1, created_at: Math.floor(Date.now() / 1000), tags: [], content: 'while capability probe is pending',
+        }, 2000)
+      } catch (err) {
+        throw new Error(`${err.message}; signer methods: ${remote.methods.join(', ')}`)
+      }
+      expect(signed.pubkey).toBe(remote.pubkey)
+      await runtimeMessage(context, extensionId, { type: 'bark-reset' })
+      await expect.poll(() => remote.connections.size).toBe(0)
+    })
+  }, { ignoredMethods: ['heartwood_list_identities'] })
+})
+
 test('late handshake reply serves concurrent callers and releases sockets on reset', async ({ context, extensionId }) => {
   test.setTimeout(60_000)
   await withDeterministicNip46Signer(async remote => {

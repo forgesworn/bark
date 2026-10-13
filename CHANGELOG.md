@@ -4,6 +4,20 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.17] - 2026-10-13
+
+### Fixed
+
+- Enlarge the Browser gate mark for toolbar slots, with dedicated 16, 32 and
+  48-pixel artwork for standard and Retina displays.
+- Show popup connection progress immediately. Serve NIP-07 after the signer
+  handshake while optional relay and Heartwood capability checks continue.
+- Inject NIP-07 at document start on v4v.com and www.v4v.com. Opening Bark
+  restores the bridge on an already-open supported tab after an update,
+  preserving the page's signer object and suppressing orphaned refresh errors.
+- Reuse live page bridges to prevent duplicate signing requests, and keep
+  delayed capability results from overwriting newer signing evidence or UI.
+
 ## [1.3.16] - 2026-10-10
 
 ### Changed

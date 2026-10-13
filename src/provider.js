@@ -1,7 +1,28 @@
 import { MAX_APPROVAL_WAIT_MS } from './approval-timing.js'
 
 ;(function () {
-  if (window.nostr) return
+  // An extension update leaves the old page API and its message listener
+  // alive. Once a replacement bridge confirms readiness, suppress refresh
+  // errors from orphaned bridges before they reach that existing listener.
+  if (!window.__barkBridgeGuard) {
+    let readyToken = null
+    window.addEventListener('message', (event) => {
+      if (event.source !== window || event.origin !== window.location.origin) return
+      if (event.data?.type === 'bark-bridge-ready' && typeof event.data.token === 'string') {
+        readyToken = event.data.token
+      } else if (event.data?.type === 'bark-bridge-invalidated' && event.data.token === readyToken) {
+        readyToken = null
+      } else if (readyToken && event.data?.type === 'bark-response' &&
+          event.data.error === 'Bark was updated. Please refresh the page.') {
+        event.stopImmediatePropagation()
+      }
+    }, true)
+    window.__barkBridgeGuard = true
+  }
+  if (window.nostr) {
+    window.postMessage({ type: 'bark-bridge-query' }, window.location.origin)
+    return
+  }
 
   const DEBUG = false
   function debug(...args) {

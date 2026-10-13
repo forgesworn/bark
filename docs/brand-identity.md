@@ -19,8 +19,10 @@ Keep the square proportions and built-in clear space. Use the complete tile
 on light and dark backgrounds. Use a separate “Bark” wordmark beside it.
 
 Run `npm run brand:build` in Bark to regenerate extension PNGs, site assets
-and the store icon. At 16px the ring and two small browser dots are omitted
-for clarity; the browser frame and keyhole remain unchanged.
+and the store icon. Toolbar PNGs at 16, 32 and 48px use
+`src/icons/bark-toolbar.svg`: a larger browser frame and keyhole, a mint edge,
+and no decorative ring or dots. This keeps the mark legible at 1x, 2x and 3x
+display scale. Site and store artwork uses the complete canonical tile.
 Run `npm run build:all`, then `node scripts/store-screenshots.mjs` to refresh
 the store screenshots and promotional artwork. The screenshot script also refreshes
 `site/assets/` and the website approval image. Run `npm run map` in forgesworn.dev after

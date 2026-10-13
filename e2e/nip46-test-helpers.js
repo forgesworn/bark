@@ -249,7 +249,8 @@ export class DeterministicNip46Signer {
    * requests are recorded in `droppedMethods` so a test can assert the
    * client never sent one.
    */
-  constructor({ strictParams = false, firstConnectDelayMs = 0, ignoreLaterConnects = false, connectError = null } = {}) {
+  constructor({ strictParams = false, firstConnectDelayMs = 0, ignoreLaterConnects = false, connectError = null, ignoredMethods = [] } = {}) {
+    this.ignoredMethods = new Set(ignoredMethods)
     this.firstConnectDelayMs = firstConnectDelayMs
     this.ignoreLaterConnects = ignoreLaterConnects
     this.connectError = connectError
@@ -349,6 +350,7 @@ export class DeterministicNip46Signer {
     this.requests.push(request)
 
     if (!this.replyEnabled) return
+    if (this.ignoredMethods.has(request.method)) return
     if (request.method === 'connect') {
       const count = this.methods.filter(method => method === 'connect').length
       if (count > 1 && this.ignoreLaterConnects) return

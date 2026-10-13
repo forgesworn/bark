@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bark",
-  "version": "1.3.16",
+  "version": "1.3.17",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "permissions": [
@@ -44,6 +44,8 @@
         "https://satellite.earth/*",
         "https://www.satellite.earth/*",
         "https://kithmoot.forgesworn.dev/*",
+        "https://v4v.com/*",
+        "https://www.v4v.com/*",
         "http://localhost/*",
         "http://127.0.0.1/*"
       ],
@@ -80,6 +82,8 @@
         "https://satellite.earth/*",
         "https://www.satellite.earth/*",
         "https://kithmoot.forgesworn.dev/*",
+        "https://v4v.com/*",
+        "https://www.v4v.com/*",
         "http://localhost/*",
         "http://127.0.0.1/*"
       ],
@@ -94,12 +98,14 @@
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/bark-16.png",
+      "32": "icons/bark-32.png",
       "48": "icons/bark-48.png",
       "128": "icons/bark-128.png"
     }
   },
   "icons": {
     "16": "icons/bark-16.png",
+    "32": "icons/bark-32.png",
     "48": "icons/bark-48.png",
     "128": "icons/bark-128.png"
   }

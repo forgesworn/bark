@@ -204,8 +204,15 @@ async function initSiteCard() {
   if (!origin) return
 
   const status = await sendRuntimeMessage({ type: 'bark-site-status', origin }).catch(() => null)
-  // Curated and broad-injection builds need no card; only the long tail does.
-  if (!status?.supported || status.builtIn) return
+  if (!status?.supported) return
+  if (status.builtIn) {
+    // Opening the action grants activeTab. Restore the bridge on tabs loaded
+    // before Bark was installed/updated, while keeping the site's existing API.
+    if (callbackApi?.scripting && typeof tab?.id === 'number') {
+      await sendRuntimeMessage({ type: 'bark-site-enable', origin, tabId: tab.id }).catch(() => {})
+    }
+    return
+  }
 
   const renderState = (enabled) => {
     siteCard.style.display = ''
@@ -842,11 +849,32 @@ async function refreshHeartwoodIdentityInstances(options = {}) {
 // Core state refresh
 // ---------------------------------------------------------------------------
 
+let refreshInFlight = false
+let refreshRevision = 0
+let renderedHeartwoodMode = null
+
 async function refreshState() {
+  const revision = ++refreshRevision
+  const isCurrent = () => revision === refreshRevision
+  refreshInFlight = true
+  try {
+    if (retryTimer) {
+      clearTimeout(retryTimer)
+      retryTimer = null
+    }
+    showReconnecting(t('connectingEllipsis'), true)
+    await refreshConnectedState(isCurrent)
+  } finally {
+    if (isCurrent()) refreshInFlight = false
+  }
+}
+
+async function refreshConnectedState(isCurrent) {
   let pubkey
   try {
     pubkey = await rpc('getPublicKey')
   } catch (err) {
+    if (!isCurrent()) return
     if (err.message.includes('No bunker URI') || err.message.includes('No Heartwood instance')) {
       showScreen(setupScreen)
       clearRetryState()
@@ -854,6 +882,7 @@ async function refreshState() {
     }
     // Check if we're awaiting approval rather than truly disconnected
     const status = await queryStatus()
+    if (!isCurrent()) return
     if (status.status === 'awaiting-approval') {
       showScreen(mainScreen)
       showReconnecting(
@@ -879,6 +908,7 @@ async function refreshState() {
     await scheduleRetry(Boolean(status.isHeartwood) || activeInstanceIsHeartwood, reason)
     return
   }
+  if (!isCurrent()) return
 
   // Connected — clear any retry state
   clearRetryState()
@@ -886,6 +916,8 @@ async function refreshState() {
 
   // Query full status for relay info and Heartwood mode
   const status = await queryStatus()
+  if (!isCurrent()) return
+  renderedHeartwoodMode = `${Boolean(status.isHeartwood)}:${Boolean(status.heartwoodProbePending)}`
 
   showScreen(mainScreen)
   reconnectStatus.style.display = 'none'
@@ -919,6 +951,7 @@ async function refreshState() {
       'instances',
       'activeInstanceId',
     ])
+    if (!isCurrent()) return
     const activeInstance = instances.find(instance => instance.id === activeInstanceId)
     const heartwoodInstances = instances.filter((instance) => (
       instance.isHeartwood &&
@@ -934,8 +967,9 @@ async function refreshState() {
       const result = await rpc('heartwood_list_identities')
       if (Array.isArray(result)) identities = result
     } catch (err) {
-      showError(t('couldNotLoadPersonas', [err.message]))
+      if (isCurrent()) showError(t('couldNotLoadPersonas', [err.message]))
     }
+    if (!isCurrent()) return
 
     const activeMatch = identities.find((id) => {
       return identityPubkey(id) === pubkey
@@ -1637,5 +1671,16 @@ renderInstances().then((hasInstances) => {
 setInterval(async () => {
   if (!mainScreen.classList.contains('active')) return
   const status = await queryStatus()
+  if (refreshInFlight && connectedContent.style.display === 'none') {
+    showReconnecting(status.lastError || t('connectingEllipsis'), status.status !== 'awaiting-approval', status.authUrl)
+    renderRelays(status.relays)
+    return
+  }
+  if (!refreshInFlight && status.status === 'connected' &&
+      renderedHeartwoodMode !== `${Boolean(status.isHeartwood)}:${Boolean(status.heartwoodProbePending)}`) {
+    refreshState().catch(err => showError(err.message))
+    return
+  }
+  renderRelays(status.relays)
   renderSigningStatus(status)
 }, 2500)

@@ -1,66 +1,82 @@
 import { isOriginExposed } from './policy.js'
 import { t } from './i18n.js'
 
-const extensionApi = globalThis.chrome || globalThis.browser
-
-function runtimeGetURL(path) {
-  return extensionApi.runtime.getURL(path)
-}
-
-function storageGet(keys) {
-  if (globalThis.chrome?.storage?.local?.get) {
-    return new Promise((resolve) => {
-      globalThis.chrome.storage.local.get(keys, (items) => resolve(items || {}))
-    })
+;(function installBridge() {
+  // The popup can restore this bridge in an already-open tab. A live bridge
+  // must be reused: duplicate listeners would submit signing requests twice.
+  const previous = globalThis.__barkBridge
+  if (previous) {
+    try {
+      previous.runtime.getManifest()
+      return
+    } catch { /* extension update invalidated the previous context */ }
+    previous.dispose()
   }
-  if (globalThis.browser?.storage?.local?.get) return globalThis.browser.storage.local.get(keys)
-  return Promise.resolve({})
-}
 
-function runtimeSendMessage(payload) {
-  if (globalThis.chrome?.runtime?.sendMessage) {
-    return new Promise((resolve, reject) => {
-      globalThis.chrome.runtime.sendMessage(payload, (result) => {
-        const err = globalThis.chrome.runtime.lastError
-        if (err) reject(new Error(err.message))
-        else resolve(result)
+  const extensionApi = globalThis.chrome || globalThis.browser
+  let disposed = false
+  // getRandomValues also works on explicitly enabled http origins, where
+  // the secure-context-only randomUUID API is unavailable.
+  const bridgeToken = Array.from(crypto.getRandomValues(new Uint32Array(4)), value => value.toString(16)).join('-')
+
+  function runtimeGetURL(path) {
+    return extensionApi.runtime.getURL(path)
+  }
+
+  function storageGet(keys) {
+    if (globalThis.chrome?.storage?.local?.get) {
+      return new Promise((resolve) => {
+        globalThis.chrome.storage.local.get(keys, (items) => resolve(items || {}))
       })
-    })
+    }
+    if (globalThis.browser?.storage?.local?.get) return globalThis.browser.storage.local.get(keys)
+    return Promise.resolve({})
   }
-  if (globalThis.browser?.runtime?.sendMessage) return globalThis.browser.runtime.sendMessage(payload)
-  return Promise.reject(new Error('Extension runtime unavailable.'))
-}
 
-// ---------------------------------------------------------------------------
-// In-page approval attention
-// ---------------------------------------------------------------------------
+  function runtimeSendMessage(payload) {
+    if (globalThis.chrome?.runtime?.sendMessage) {
+      return new Promise((resolve, reject) => {
+        globalThis.chrome.runtime.sendMessage(payload, (result) => {
+          const err = globalThis.chrome.runtime.lastError
+          if (err) reject(new Error(err.message))
+          else resolve(result)
+        })
+      })
+    }
+    if (globalThis.browser?.runtime?.sendMessage) return globalThis.browser.runtime.sendMessage(payload)
+    return Promise.reject(new Error('Extension runtime unavailable.'))
+  }
 
-const APPROVAL_NOTICE_HOST_ID = 'bark-approval-notice-host'
-const pendingApprovalNotices = new Set()
-const approvalQueueReleases = new Map()
-let approvalNoticeHost = null
+  // ---------------------------------------------------------------------------
+  // In-page approval attention
+  // ---------------------------------------------------------------------------
 
-function removeApprovalNoticeIfIdle() {
-  if (pendingApprovalNotices.size > 0) return
-  approvalNoticeHost?.remove()
-  approvalNoticeHost = null
-}
+  const APPROVAL_NOTICE_HOST_ID = 'bark-approval-notice-host'
+  const pendingApprovalNotices = new Set()
+  const approvalQueueReleases = new Map()
+  let approvalNoticeHost = null
 
-function clearApprovalNotice(requestId) {
-  pendingApprovalNotices.delete(requestId)
-  removeApprovalNoticeIfIdle()
-}
+  function removeApprovalNoticeIfIdle() {
+    if (pendingApprovalNotices.size > 0) return
+    approvalNoticeHost?.remove()
+    approvalNoticeHost = null
+  }
 
-function showApprovalNotice(requestId) {
-  pendingApprovalNotices.add(requestId)
-  if (approvalNoticeHost?.isConnected) return
+  function clearApprovalNotice(requestId) {
+    pendingApprovalNotices.delete(requestId)
+    removeApprovalNoticeIfIdle()
+  }
 
-  const host = document.createElement('div')
-  host.id = APPROVAL_NOTICE_HOST_ID
-  const shadow = host.attachShadow({ mode: 'open' })
+  function showApprovalNotice(requestId) {
+    pendingApprovalNotices.add(requestId)
+    if (approvalNoticeHost?.isConnected) return
 
-  const style = document.createElement('style')
-  style.textContent = `
+    const host = document.createElement('div')
+    host.id = APPROVAL_NOTICE_HOST_ID
+    const shadow = host.attachShadow({ mode: 'open' })
+
+    const style = document.createElement('style')
+    style.textContent = `
     :host {
       all: initial !important;
       position: fixed !important;
@@ -122,51 +138,51 @@ function showApprovalNotice(requestId) {
       font-size: 12px;
     }
     .status:empty { display: none; }
-  `
+    `
 
-  const notice = document.createElement('section')
-  notice.className = 'notice'
-  notice.setAttribute('role', 'status')
-  notice.setAttribute('aria-live', 'assertive')
+    const notice = document.createElement('section')
+    notice.className = 'notice'
+    notice.setAttribute('role', 'status')
+    notice.setAttribute('aria-live', 'assertive')
 
-  const brand = document.createElement('div')
-  brand.className = 'brand'
-  brand.textContent = 'BARK'
+    const brand = document.createElement('div')
+    brand.className = 'brand'
+    brand.textContent = 'BARK'
 
-  const title = document.createElement('h2')
-  title.textContent = t('approvalNoticeTitle')
+    const title = document.createElement('h2')
+    title.textContent = t('approvalNoticeTitle')
 
-  const body = document.createElement('p')
-  body.textContent = t('approvalNoticeBody')
+    const body = document.createElement('p')
+    body.textContent = t('approvalNoticeBody')
 
-  const review = document.createElement('button')
-  review.type = 'button'
-  review.textContent = t('approvalNoticeReview')
+    const review = document.createElement('button')
+    review.type = 'button'
+    review.textContent = t('approvalNoticeReview')
 
-  const status = document.createElement('p')
-  status.className = 'status'
+    const status = document.createElement('p')
+    status.className = 'status'
 
-  review.addEventListener('click', async () => {
-    review.disabled = true
-    status.textContent = ''
-    try {
-      const result = await runtimeSendMessage({ type: 'bark-focus-approval' })
-      if (!result?.ok) status.textContent = t('approvalNoticeFallback')
-    } catch {
-      status.textContent = t('approvalNoticeFallback')
-    } finally {
-      review.disabled = false
-    }
-  })
+    review.addEventListener('click', async () => {
+      review.disabled = true
+      status.textContent = ''
+      try {
+        const result = await runtimeSendMessage({ type: 'bark-focus-approval' })
+        if (!result?.ok) status.textContent = t('approvalNoticeFallback')
+      } catch {
+        status.textContent = t('approvalNoticeFallback')
+      } finally {
+        review.disabled = false
+      }
+    })
 
-  notice.append(brand, title, body, review, status)
-  shadow.append(style, notice)
-  approvalNoticeHost = host
-  ;(document.body || document.documentElement).appendChild(host)
-}
+    notice.append(brand, title, body, review, status)
+    shadow.append(style, notice)
+    approvalNoticeHost = host
+    ;(document.body || document.documentElement).appendChild(host)
+  }
 
-if (extensionApi.runtime?.onMessage) {
-  extensionApi.runtime.onMessage.addListener((message) => {
+  const onRuntimeMessage = (message) => {
+    if (disposed) return
     if (message?.type !== 'bark-approval-pending') return
     if (!Number.isInteger(message.requestId) || message.requestId <= 0) return
     // Once the worker has admitted a request to its approval queue, let the
@@ -178,173 +194,202 @@ if (extensionApi.runtime?.onMessage) {
     // authority for expiry, permission and the eventual signing decision.
     window.postMessage({ type: 'bark-approval-wait', id: message.requestId, waitMs: message.waitMs }, window.location.origin)
     showApprovalNotice(message.requestId)
-  })
-}
-
-// Chromium and Firefox (128+) inject provider.js declaratively via a
-// MAIN-world content script in the manifest, which removes the race where
-// page scripts run before window.nostr exists. Safari builds fall back to
-// script-tag injection (the define is set per build target by esbuild).
-const INJECT_PROVIDER = typeof __BARK_INJECT_PROVIDER__ === 'undefined' || __BARK_INJECT_PROVIDER__
-
-// Privacy mode: when enabled, window.nostr is exposed only to origins the
-// user has a site rule for. The verdict is computed here from storage (no
-// service worker wake-up) and travels to the MAIN-world provider via
-// postMessage. Dropping requests below is the real enforcement point —
-// deleting window.nostr alone would not stop a page that synthesises
-// bark-request messages by hand. On a storage failure we fail open: privacy
-// mode off is the default state, and a transient error must not kill NIP-07.
-//
-// The verdict is a promise, not a boolean, because reading it takes a trip
-// through chrome.storage. Both content scripts run at document_start, so a
-// page script can post a bark-request before that read resolves — a mutable
-// "hidden" flag still reading its permissive default at that moment would
-// forward the request (and pop an approval window) on an origin the user has
-// hidden. The request handler awaits this instead, so early requests queue
-// until the verdict is known rather than racing it.
-async function applyExposure() {
-  let exposed = true
-  try {
-    const { privacy, policies } = await storageGet(['privacy', 'policies'])
-    exposed = isOriginExposed(policies, Boolean(privacy?.enabled), window.location.origin)
-  } catch { /* fail open */ }
-  if (INJECT_PROVIDER) {
-    if (!exposed) return exposed
-    const script = document.createElement('script')
-    script.src = runtimeGetURL('provider.js')
-    script.onload = () => script.remove()
-    ;(document.head || document.documentElement).appendChild(script)
-  } else if (!exposed) {
-    window.postMessage({ type: 'bark-expose', exposed: false }, window.location.origin)
   }
-  return exposed
-}
+  if (extensionApi.runtime?.onMessage) {
+    extensionApi.runtime.onMessage.addListener(onRuntimeMessage)
+  }
 
-const exposureVerdict = applyExposure()
+  // Chromium and Firefox (128+) inject provider.js declaratively via a
+  // MAIN-world content script in the manifest, which removes the race where
+  // page scripts run before window.nostr exists. Safari builds fall back to
+  // script-tag injection (the define is set per build target by esbuild).
+  const INJECT_PROVIDER = typeof __BARK_INJECT_PROVIDER__ === 'undefined' || __BARK_INJECT_PROVIDER__
 
-const DEBUG = false
-function debug(...args) {
-  if (DEBUG) console.debug(...args)
-}
-
-let isStale = false
-
-/**
- * Serialise messages to the background service worker. MV3 workers die after
- * ~30s of inactivity; the first sendMessage wakes them but may fail or resolve
- * with undefined before the onMessage listener is registered. A queue ensures
- * a second message isn't dispatched while the first is still retrying through
- * the wake-up window.
- */
-let sendQueue = Promise.resolve()
-
-function enqueueSend(payload) {
-  const admitted = new Promise(resolve => approvalQueueReleases.set(payload.pageRequestId, resolve))
-  const p = sendQueue.then(() => sendToBackground(payload))
-  // Swallow rejections so the queue itself never stalls.
-  sendQueue = Promise.race([p.catch(() => {}), admitted])
-  return p.finally(() => approvalQueueReleases.delete(payload.pageRequestId))
-}
-
-async function sendToBackground(payload) {
-  const MAX_RETRIES = 8
-  const RETRY_DELAY = 750
-
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+  // Privacy mode: when enabled, window.nostr is exposed only to origins the
+  // user has a site rule for. The verdict is computed here from storage (no
+  // service worker wake-up) and travels to the MAIN-world provider via
+  // postMessage. Dropping requests below is the real enforcement point —
+  // deleting window.nostr alone would not stop a page that synthesises
+  // bark-request messages by hand. On a storage failure we fail open: privacy
+  // mode off is the default state, and a transient error must not kill NIP-07.
+  //
+  // The verdict is a promise, not a boolean, because reading it takes a trip
+  // through chrome.storage. Both content scripts run at document_start, so a
+  // page script can post a bark-request before that read resolves — a mutable
+  // "hidden" flag still reading its permissive default at that moment would
+  // forward the request (and pop an approval window) on an origin the user has
+  // hidden. The request handler awaits this instead, so early requests queue
+  // until the verdict is known rather than racing it.
+  async function applyExposure() {
+    let exposed = true
     try {
-      const result = await runtimeSendMessage(payload)
-
-      // undefined means no listener handled the message — worker is alive
-      // but not yet initialised. Retry after a short delay.
-      if (result === undefined && attempt < MAX_RETRIES - 1) {
-        debug('[bark:content] ✗ undefined response for', payload.method, '— retrying')
-        await new Promise(r => setTimeout(r, RETRY_DELAY))
-        continue
-      }
-
-      debug('[bark:content] ← bg responded', payload.method, result)
-      return result
-    } catch (err) {
-      const msg = String(err?.message || '')
-      debug('[bark:content] ✗ sendMessage failed:', msg)
-
-      // Genuine invalidation — extension was updated/reloaded. No retry.
-      if (msg.includes('context invalidated')) throw err
-
-      // Service worker waking up — retry after a short delay. "message port
-      // closed" is Chrome's wording when the worker is woken by the message
-      // but torn down before it responds — the first call after idle.
-      const isWakeupError = msg.includes('does not exist') ||
-        msg.includes('Receiving end does not exist') ||
-        msg.includes('Could not establish connection') ||
-        msg.includes('message port closed')
-      if (isWakeupError && attempt < MAX_RETRIES - 1) {
-        debug('[bark:content] retrying after', RETRY_DELAY, 'ms (service worker waking)')
-        await new Promise(r => setTimeout(r, RETRY_DELAY))
-        continue
-      }
-
-      throw err
+      const { privacy, policies } = await storageGet(['privacy', 'policies'])
+      exposed = isOriginExposed(policies, Boolean(privacy?.enabled), window.location.origin)
+    } catch { /* fail open */ }
+    if (disposed) return false
+    if (INJECT_PROVIDER) {
+      if (!exposed) return exposed
+      const script = document.createElement('script')
+      script.src = runtimeGetURL('provider.js')
+      script.onload = () => script.remove()
+      ;(document.head || document.documentElement).appendChild(script)
+    } else if (!exposed) {
+      window.postMessage({ type: 'bark-expose', exposed: false }, window.location.origin)
     }
-  }
-}
-
-window.addEventListener('message', async (event) => {
-  // Only accept messages from the same window, not from iframes or other origins.
-  if (event.source !== window) return
-  if (event.origin !== window.location.origin) return
-  if (event.data?.type !== 'bark-request') return
-
-  const { id, method, params } = event.data
-
-  // Validate id is a positive integer to prevent spoofed/replayed responses.
-  if (typeof id !== 'number' || id <= 0 || !Number.isInteger(id)) return
-
-  // Validate method is a non-empty string.
-  if (typeof method !== 'string' || method.length === 0) return
-
-  // Hidden origins get silence, not an error — an error would itself be a
-  // fingerprint that Bark is installed. Awaiting the verdict (rather than
-  // reading a flag that may not be set yet) is what makes a request arriving
-  // in the first milliseconds after document_start subject to the same check
-  // as every later one.
-  if (!(await exposureVerdict)) return
-
-  debug('[bark:content] → bg', method, 'id=' + id)
-
-  if (isStale) {
-    window.postMessage(
-      { type: 'bark-response', id, error: 'Bark was updated. Please refresh the page.' },
-      window.location.origin,
-    )
-    return
+    return exposed
   }
 
-  try {
-    const result = await enqueueSend({ type: 'bark-request', method, params, pageRequestId: id })
-    // Background sends errors as {error: 'msg'} via sendResponse — unwrap them.
-    if (result && result.error) {
-      window.postMessage({ type: 'bark-response', id, error: result.error }, window.location.origin)
-    } else {
-      window.postMessage({ type: 'bark-response', id, result }, window.location.origin)
+  const exposureVerdict = applyExposure()
+  function announceBridge(exposed) {
+    if (exposed && !disposed) {
+      window.postMessage({ type: 'bark-bridge-ready', token: bridgeToken }, window.location.origin)
     }
-  } catch (err) {
-    const msg = String(err?.message || '')
-    // Only "context invalidated" is genuinely permanent — the extension was
-    // reloaded/updated and this content script is orphaned.
-    if (msg.includes('context invalidated')) {
-      isStale = true
+  }
+  exposureVerdict.then(announceBridge)
+
+  const DEBUG = false
+  function debug(...args) {
+    if (DEBUG) console.debug(...args)
+  }
+
+  let isStale = false
+
+  /**
+   * Serialise messages to the background service worker. MV3 workers die after
+   * ~30s of inactivity; the first sendMessage wakes them but may fail or resolve
+   * with undefined before the onMessage listener is registered. A queue ensures
+   * a second message isn't dispatched while the first is still retrying through
+   * the wake-up window.
+   */
+  let sendQueue = Promise.resolve()
+
+  function enqueueSend(payload) {
+    const admitted = new Promise(resolve => approvalQueueReleases.set(payload.pageRequestId, resolve))
+    const p = sendQueue.then(() => sendToBackground(payload))
+    // Swallow rejections so the queue itself never stalls.
+    sendQueue = Promise.race([p.catch(() => {}), admitted])
+    return p.finally(() => approvalQueueReleases.delete(payload.pageRequestId))
+  }
+
+  async function sendToBackground(payload) {
+    const MAX_RETRIES = 8
+    const RETRY_DELAY = 750
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const result = await runtimeSendMessage(payload)
+
+        // undefined means no listener handled the message — worker is alive
+        // but not yet initialised. Retry after a short delay.
+        if (result === undefined && attempt < MAX_RETRIES - 1) {
+          debug('[bark:content] ✗ undefined response for', payload.method, '— retrying')
+          await new Promise(r => setTimeout(r, RETRY_DELAY))
+          continue
+        }
+
+        debug('[bark:content] ← bg responded', payload.method, result)
+        return result
+      } catch (err) {
+        const msg = String(err?.message || '')
+        debug('[bark:content] ✗ sendMessage failed:', msg)
+
+        // Genuine invalidation — extension was updated/reloaded. No retry.
+        if (msg.includes('context invalidated')) throw err
+
+        // Service worker waking up — retry after a short delay. "message port
+        // closed" is Chrome's wording when the worker is woken by the message
+        // but torn down before it responds — the first call after idle.
+        const isWakeupError = msg.includes('does not exist') ||
+          msg.includes('Receiving end does not exist') ||
+          msg.includes('Could not establish connection') ||
+          msg.includes('message port closed')
+        if (isWakeupError && attempt < MAX_RETRIES - 1) {
+          debug('[bark:content] retrying after', RETRY_DELAY, 'ms (service worker waking)')
+          await new Promise(r => setTimeout(r, RETRY_DELAY))
+          continue
+        }
+
+        throw err
+      }
+    }
+  }
+
+  const onPageRequest = async (event) => {
+    if (disposed) return
+    // Only accept messages from the same window, not from iframes or other origins.
+    if (event.source !== window) return
+    if (event.origin !== window.location.origin) return
+    if (event.data?.type === 'bark-bridge-query') {
+      announceBridge(await exposureVerdict)
+      return
+    }
+    if (event.data?.type !== 'bark-request') return
+
+    const { id, method, params } = event.data
+
+    // Validate id is a positive integer to prevent spoofed/replayed responses.
+    if (typeof id !== 'number' || id <= 0 || !Number.isInteger(id)) return
+
+    // Validate method is a non-empty string.
+    if (typeof method !== 'string' || method.length === 0) return
+
+    // Hidden origins get silence, not an error — an error would itself be a
+    // fingerprint that Bark is installed. Awaiting the verdict (rather than
+    // reading a flag that may not be set yet) is what makes a request arriving
+    // in the first milliseconds after document_start subject to the same check
+    // as every later one.
+    if (!(await exposureVerdict)) return
+
+    debug('[bark:content] → bg', method, 'id=' + id)
+
+    if (isStale) {
       window.postMessage(
         { type: 'bark-response', id, error: 'Bark was updated. Please refresh the page.' },
         window.location.origin,
       )
-    } else {
-      window.postMessage(
-        { type: 'bark-response', id, error: 'Service worker unavailable. Try again.' },
-        window.location.origin,
-      )
+      return
     }
-  } finally {
-    clearApprovalNotice(id)
+
+    try {
+      const result = await enqueueSend({ type: 'bark-request', method, params, pageRequestId: id })
+      if (disposed) return
+      // Background sends errors as {error: 'msg'} via sendResponse — unwrap them.
+      if (result && result.error) {
+        window.postMessage({ type: 'bark-response', id, error: result.error }, window.location.origin)
+      } else {
+        window.postMessage({ type: 'bark-response', id, result }, window.location.origin)
+      }
+    } catch (err) {
+      if (disposed) return
+      const msg = String(err?.message || '')
+      // Only "context invalidated" is genuinely permanent — the extension was
+      // reloaded/updated and this content script is orphaned.
+      if (msg.includes('context invalidated')) {
+        isStale = true
+        window.removeEventListener('message', onPageRequest)
+        window.postMessage({ type: 'bark-bridge-invalidated', token: bridgeToken }, window.location.origin)
+        window.postMessage(
+          { type: 'bark-response', id, error: 'Bark was updated. Please refresh the page.' },
+          window.location.origin,
+        )
+      } else {
+        window.postMessage(
+          { type: 'bark-response', id, error: 'Service worker unavailable. Try again.' },
+          window.location.origin,
+        )
+      }
+    } finally {
+      clearApprovalNotice(id)
+    }
   }
-})
+  window.addEventListener('message', onPageRequest)
+  globalThis.__barkBridge = {
+    runtime: extensionApi.runtime,
+    dispose() {
+      disposed = true
+      window.removeEventListener('message', onPageRequest)
+      try { extensionApi.runtime.onMessage?.removeListener(onRuntimeMessage) } catch { /* invalidated */ }
+      approvalNoticeHost?.remove()
+    },
+  }
+})()
