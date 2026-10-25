@@ -35,7 +35,7 @@ test('typed page provisioning uses fresh one-shot approval and exact numeric enc
         expect(request.params).toEqual([target, 7, expected.nonce, expected.expiresAt])
         // Fixed public test scalar, exact Heartwood v1 inner record; no hardware derivation claim.
         const record = JSON.stringify({ v: 1, p: signer.pubkey, d: target, rz: child, u: 'rendezvous', i: 7, n: expected.nonce, e: expected.expiresAt, k: Buffer.from(new Uint8Array(32).fill(4)).toString('base64url') })
-        const c = encrypt(record, getConversationKey(signer.secretKey, target))
+        const c = encrypt(record, getConversationKey(new Uint8Array(32).fill(4), target))
         raw = JSON.stringify({ v: 1, p: signer.pubkey, d: target, rz: child, u: 'rendezvous', i: 7, n: expected.nonce, e: expected.expiresAt, c }, null, 1)
         return { result: raw }
       }
@@ -63,9 +63,11 @@ test('typed page provisioning uses fresh one-shot approval and exact numeric enc
       await expect(allowed.approval.locator('#trust-section')).toBeHidden()
       await decide(allowed.approval, 'Allow Once')
       expect(await allowed.result).toEqual({ ok: true, result: raw })
-      const unsealed = JSON.parse(decrypt(JSON.parse(raw).c, getConversationKey(new Uint8Array(32).fill(3), signer.pubkey)))
+      const unsealed = JSON.parse(decrypt(JSON.parse(raw).c, getConversationKey(new Uint8Array(32).fill(3), child)))
       expect(unsealed).toEqual({ v: 1, p: signer.pubkey, d: target, rz: child, u: 'rendezvous', i: 7, n: expected.nonce, e: expected.expiresAt, k: Buffer.from(new Uint8Array(32).fill(4)).toString('base64url') })
       expect(getPublicKey(Buffer.from(unsealed.k, 'base64url'))).toBe(child)
+      // Firmware encrypts this inner record as the child, not as the issuer.
+      expect(() => decrypt(JSON.parse(raw).c, getConversationKey(new Uint8Array(32).fill(3), signer.pubkey))).toThrow()
       expect(signer.methods.filter(method => method === 'heartwood_provision_rendezvous')).toHaveLength(1)
       // The previous grant is consumed: the very same caller and parameters ask again.
       const again = await begin(context, page, expected)
