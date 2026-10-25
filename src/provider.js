@@ -120,6 +120,7 @@ import { MAX_APPROVAL_WAIT_MS } from './approval-timing.js'
       async decrypt(pubkey, ciphertext) { return call('nip44.decrypt', { pubkey, ciphertext }) },
     },
     heartwood: {
+      async provisionRendezvousV1(request) { return call('heartwood_provision_rendezvous', request) },
       async switch(target) { return call('heartwood_switch', { target }) },
       async listIdentities() { return call('heartwood_list_identities') },
       async derivePersona(name, index = 0) { return call('heartwood_derive_persona', { name, index }) },

@@ -1,5 +1,6 @@
 // Background service worker — handles NIP-46 relay communication with Heartwood.
 
+import { PROVISION_METHOD, validateProvisionRequest, provisionArgs, validateProvisionResponse, isProvisionOrigin } from './rendezvous-provision.js'
 import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } from 'nostr-tools/nip46'
 import { nip19, SimplePool } from 'nostr-tools'
 import { disposeSigner, trackSignerRequests } from './signer-lifecycle.js'
@@ -11,6 +12,7 @@ import {
   evaluatePolicy,
   DEFAULT_POLICIES,
   normalisePolicies,
+  isOriginExposed,
 } from './policy.js'
 
 const chrome = globalThis.browser || globalThis.chrome
@@ -718,7 +720,9 @@ async function loadPolicies() {
  */
 export async function checkApproval(method, params, origin) {
   const policies = await loadPolicies()
-  return evaluatePolicy(policies, method, params, origin)
+  const decision = evaluatePolicy(policies, method, params, origin)
+  if (method === PROVISION_METHOD) return decision === 'deny' ? 'deny' : 'ask'
+  return decision
 }
 
 async function trustSite(origin) {
@@ -740,6 +744,7 @@ async function trustSite(origin) {
 
 /** @type {Map<string, { method: string, params: any, event?: object, pubkey: string, personaName: string, origin: string, instanceId?: string, tabId?: number, frameId?: number, pageRequestId?: number, sendResponse: Function, timeoutId: number, windowId?: number }>} */
 const pendingApprovals = new Map()
+const activeProvisionRequests = new Set()
 
 /** @type {string[]} FIFO of requestIds waiting for their approval window. */
 const approvalQueue = []
@@ -949,7 +954,7 @@ async function allowApproval(requestId, { rememberSite = false } = {}) {
   if (!entry) return
 
   // Verify the active instance hasn't changed since the approval was created
-  if (entry.instanceId) {
+  if (entry.instanceId && entry.method !== PROVISION_METHOD) {
     const { activeInstanceId } = await chrome.storage.local.get('activeInstanceId')
     if (entry.instanceId !== activeInstanceId) {
       entry.sendResponse({ error: 'Active identity changed. Please retry.' })
@@ -958,6 +963,14 @@ async function allowApproval(requestId, { rememberSite = false } = {}) {
   }
 
   try {
+    if (entry.method === PROVISION_METHOD) {
+      if (rememberSite) throw new Error('Request denied: provisioning permits one-time approval only.')
+      await assertProvisionCurrent(entry)
+      const raw = await withBunkerRequestTimeout(entry.provisionSigner.sendRequest(PROVISION_METHOD, provisionArgs(entry.params)), PROVISION_METHOD, entry.provisionSigner)
+      await assertProvisionCurrent(entry)
+      entry.sendResponse(validateProvisionResponse(raw, entry.params))
+      return
+    }
     const result = await handleMessage(entry.method, entry.params, entry.origin)
     if (rememberSite) {
       try {
@@ -968,8 +981,79 @@ async function allowApproval(requestId, { rememberSite = false } = {}) {
     }
     entry.sendResponse(result)
   } catch (err) {
-    entry.sendResponse({ error: sanitiseError(err) })
+    entry.sendResponse({ error: entry.method === PROVISION_METHOD ? 'Rendezvous provisioning failed or identity changed. Please retry.' : sanitiseError(err) })
   }
+}
+
+// A provisioning approval belongs to one selected connection and account, not a site grant.
+function provisionSelection(storage) {
+  const selected = storage.instances?.find(instance => instance.id === storage.activeInstanceId)
+  return JSON.stringify([storage.activeInstanceId, selected?.bunkerUri, selected?.clientSecret, selected?.heartwoodIdentityPubkey])
+}
+
+async function assertProvisionCurrent(entry) {
+  validateProvisionRequest(entry.params)
+  const current = () => {
+    if (entry.provisionLifetime.cancelled || entry.provisionEpoch !== provisionEpoch || signer !== entry.provisionSigner) throw new Error('Active identity changed. Please retry.')
+  }
+  current()
+  const checkStorage = async () => {
+    const storage = await chrome.storage.local.get(['activeInstanceId', 'instances', 'privacy', 'policies'])
+    current()
+    if (entry.provisionSelection !== provisionSelection(storage) ||
+        !isOriginExposed(storage.policies, Boolean(storage.privacy?.enabled), entry.origin) ||
+        evaluatePolicy(storage.policies, PROVISION_METHOD, entry.params, entry.origin) === 'deny') {
+      throw new Error('Request denied or active identity changed. Please retry.')
+    }
+  }
+  await checkStorage()
+  // Bypass BunkerSigner's cachedPubKey: a remote account can change independently.
+  const identity = await withBunkerRequestTimeout(entry.provisionSigner.sendRequest('get_public_key', []), 'getPublicKey', entry.provisionSigner)
+  current()
+  if (identity !== entry.params.expectedPersona) throw new Error('Active identity changed. Please retry.')
+  await checkStorage()
+  validateProvisionRequest(entry.params)
+}
+
+async function queueProvision(message, sender, sendResponse) {
+  let lifetime
+  try {
+    const params = validateProvisionRequest(message.params) // Before policy, connection or prompt.
+    const epoch = provisionEpoch
+    const origin = originFromSender(sender)
+    if (isInternalSender(sender, chrome.runtime.getURL('')) || !isProvisionOrigin(origin)) throw new Error('Invalid request origin.')
+    lifetime = { tabId: sender.tab?.id, cancelled: false }
+    activeProvisionRequests.add(lifetime)
+    const respond = value => { activeProvisionRequests.delete(lifetime); sendResponse(value) }
+    if (await checkApproval(PROVISION_METHOD, params, origin) === 'deny') throw new Error('Request denied by policy.')
+    const before = await chrome.storage.local.get(['activeInstanceId', 'instances'])
+    if (!before.activeInstanceId) throw new Error('Active identity changed. Please retry.')
+    const bunker = await ensureConnected(origin)
+    const entry = {
+      approvalTimeoutMs: normaliseApprovalTimeout((await chrome.storage.local.get('accessibility')).accessibility?.approvalTimeoutMs),
+      method: PROVISION_METHOD, params, origin, pubkey: params.expectedPersona, personaName: 'default',
+      instanceId: before.activeInstanceId, provisionSigner: bunker, provisionEpoch: epoch, provisionLifetime: lifetime,
+      provisionSelection: provisionSelection(before), tabId: sender.tab?.id, frameId: sender.frameId,
+      pageRequestId: message.pageRequestId, sendResponse: respond,
+    }
+    await assertProvisionCurrent(entry)
+    enqueueApproval(`approval-${crypto.randomUUID()}`, entry)
+  } catch {
+    activeProvisionRequests.delete(lifetime)
+    // Remote errors are untrusted and might contain sensitive response material.
+    sendResponse({ error: 'Rendezvous provisioning unavailable, invalid, denied or identity changed.' })
+  }
+}
+
+if (chrome?.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return
+    if (changes.activeInstanceId && changes.activeInstanceId.oldValue !== changes.activeInstanceId.newValue) provisionEpoch++
+    if (changes.instances) {
+      const bindings = rows => JSON.stringify((rows || []).map(row => [row.id, row.bunkerUri, row.clientSecret, row.heartwoodIdentityPubkey]))
+      if (bindings(changes.instances.oldValue) !== bindings(changes.instances.newValue)) provisionEpoch++
+    }
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -1409,9 +1493,11 @@ function patchSignerPublishFailures(bunkerSigner) {
 
 /** @type {BunkerSigner|null} */
 let signer = null
+let provisionEpoch = 0
 
 /** Exported for testing: inject a fake signer without going through doConnect(). */
 export function __setSignerForTest(fakeSigner) {
+  provisionEpoch++
   signer = fakeSigner
 }
 
@@ -2181,6 +2267,7 @@ async function awaitHeartwoodProbe(active, instances, bunkerUri) {
  * Tear down the current connection (used by bark-reset).
  */
 export async function resetConnection({ clearSigning = true } = {}) {
+  provisionEpoch++
   cancelReconnect()
   cancelKeepAlive()
   primePromise = null
@@ -2265,6 +2352,8 @@ async function withTimeout(promise, timeoutMs, label) {
  * @returns {Promise<*>}
  */
 async function handleMessage(method, params, originHint) {
+  if (method === PROVISION_METHOD) throw new Error('Request denied: provisioning requires a fresh website approval.')
+  if (method === 'heartwood_switch') provisionEpoch++
   // Validate method is a string.
   if (typeof method !== 'string' || method.length === 0 || method.length > 64) {
     throw new Error('Invalid method.')
@@ -2522,8 +2611,11 @@ if (typeof chrome !== 'undefined' && chrome.windows?.onRemoved) {
 // surface carry approvalTabId, so this never matches a requesting page's tab.
 if (typeof chrome !== 'undefined' && chrome.tabs?.onRemoved) {
   chrome.tabs.onRemoved.addListener((tabId) => {
+    for (const lifetime of activeProvisionRequests) {
+      if (lifetime.tabId === tabId) lifetime.cancelled = true
+    }
     for (const [requestId, entry] of pendingApprovals) {
-      if (entry.approvalTabId === tabId) {
+      if (entry.approvalTabId === tabId || (entry.method === PROVISION_METHOD && entry.tabId === tabId)) {
         denyApproval(requestId, 'Request denied by user.')
         break
       }
@@ -2552,6 +2644,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       debug('[bark:bg] rejected privileged message from content script:', message.type)
       return
     }
+
+    if (['bark-pair', 'bark-reset', 'bark-switch', 'bark-remove', 'bark-nostrconnect-start', 'bark-heartwood-import-confirm'].includes(message.type)) provisionEpoch++
 
     if (message.type === 'bark-status') {
       sendResponse({ ...connectionState })
@@ -2925,7 +3019,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         pubkey: entry.pubkey,
         personaName: entry.personaName,
         origin: entry.origin,
-        canTrustSite: !!entry.origin,
+        canTrustSite: !!entry.origin && entry.method !== PROVISION_METHOD,
+        provision: entry.method === PROVISION_METHOD ? entry.params : null,
         expiresAt: entry.expiresAt,
         approvalTimeoutMs: entry.approvalTimeoutMs,
       })
@@ -2942,6 +3037,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       }
       if (decision === 'allow' || decision === 'allow-once') {
         allowApproval(rid)
+      } else if (decision === 'allow-site' && entry.method === PROVISION_METHOD) {
+        denyApproval(rid, 'Request denied: provisioning permits one-time approval only.')
       } else if (decision === 'allow-site') {
         allowApproval(rid, { rememberSite: true })
       } else {
@@ -2971,6 +3068,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     if (message.type === 'bark-request') {
       debug('[bark:bg] ← request', message.method, 'from', sender.tab ? 'tab' : 'extension');
       (async () => {
+        if (message.method === PROVISION_METHOD) {
+          await queueProvision(message, sender, sendResponse)
+          return
+        }
         // Extension-internal requests (popup, or extension pages opened in a
         // tab) bypass policy checks.
         if (isInternalSender(sender, chrome.runtime.getURL(''))) {

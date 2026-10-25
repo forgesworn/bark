@@ -273,5 +273,19 @@
   "addMethodPolicyFor": {"message": "Method to add for $origin$", "placeholders": {"origin": {"content": "$1"}}},
   "addKindPolicyFor": {"message": "Event kind to add for $origin$", "placeholders": {"origin": {"content": "$1"}}},
   "sitePolicyDetails": {"message": "Policy details for $site$", "placeholders": {"site": {"content": "$1"}}},
-  "documentLanguage": { "message": "en", "description": "HTML language metadata for assistive technology." }
+  "documentLanguage": { "message": "en", "description": "HTML language metadata for assistive technology." },
+  "provisionRendezvousTitle": {
+    "message": "Provision rendezvous child?"
+  },
+  "wantsProvisionRendezvous": {
+    "message": "$ORIGIN$ requests one encrypted rendezvous child for this target device.",
+    "placeholders": {
+      "origin": {
+        "content": "$1"
+      }
+    }
+  },
+  "provisionRendezvousHint": {
+    "message": "Check the full identity, target device, index and expiry above. This approval is for this request only. Bark cannot decrypt the child."
+  }
 }

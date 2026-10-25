@@ -39,6 +39,7 @@ export const DEFAULT_POLICIES = {
     heartwood_derive: 'ask',
     heartwood_derive_persona: 'ask',
     heartwood_switch: 'ask',
+    heartwood_provision_rendezvous: 'ask',
   },
   kindRules: {
     '0': 'ask',     // profile metadata

@@ -214,6 +214,13 @@ async function init() {
     if (kind === 0 && details.event.content) {
       renderProfileFields(details.event.content)
     }
+  } else if (details.method === 'heartwood_provision_rendezvous' && details.provision) {
+    title.textContent = t('provisionRendezvousTitle')
+    originText.innerHTML = t('wantsProvisionRendezvous', [boldOrigin])
+    requestContent.textContent = JSON.stringify(details.provision, null, 2)
+    requestPreview.style.display = ''
+    requestHint.textContent = t('provisionRendezvousHint')
+    requestHint.style.display = ''
   } else if (details.method === 'getPublicKey') {
     title.textContent = t('shareIdentityTitle')
     originText.innerHTML = t('wantsPublicKey', [boldOrigin])
