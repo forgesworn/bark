@@ -97,6 +97,17 @@ export function makeInstanceId(name, bunkerUri) {
   return `${safeInstanceName(name)}-${bunkerPubkeyPrefix(bunkerUri)}`
 }
 
+/** Direct bunker secrets may rotate or select different accounts behind the
+ * same transport key. Keep exact URI identity; never let an id collision
+ * select another URI's stale connection or silently replace another persona. */
+export function directBunkerInstanceId(instances, name, bunkerUri, unique = () => crypto.randomUUID()) {
+  const existing = instances.find(instance => instance.bunkerUri === bunkerUri)
+  const base = makeInstanceId(name, bunkerUri)
+  let id = existing?.id || base
+  while (instances.some(instance => instance !== existing && instance.id === id)) id = `${base}-${unique()}`
+  return id
+}
+
 function identityLabel(identity, fallback = 'heartwood') {
   const candidates = [
     identity?.label,
@@ -2767,7 +2778,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             ? hexToBytes(existing.clientSecret)
             : generateSecretKey()
 
-          const id = makeInstanceId(instanceName, bunkerUri)
+          const id = directBunkerInstanceId(instances, instanceName, bunkerUri)
 
           if (existing) {
             existing.bunkerUri = bunkerUri
