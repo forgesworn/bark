@@ -147,6 +147,23 @@ when the browser or window manager opened it out of sight.
 
 When connected to a Heartwood signer, Bark uses custom NIP-46 RPC methods for persona management. These are sent via `BunkerSigner.sendRequest()` over standard NIP-46 relay communication.
 
+### `window.nostr.heartwood.provisionRendezvousV1(request)`
+
+An optional bounded rendezvous-child hand-off for compatible Heartwood firmware:
+`request` has exactly `{v: 1, expectedPersona, targetDevice, index, nonce, expiresAt}`.
+Both public keys are lowercase 64-character x-only hex keys; `index` is a numeric
+uint32, `nonce` is canonical unpadded base64url for 16 bytes, and `expiresAt` is
+an integer Unix time in the next 600 seconds. The page retains its own target
+transport key; Bark never returns its connection secret or decrypts the child.
+
+Every call requires a fresh origin-bound **Allow Once** approval, including on
+trusted sites. Bark checks the selected account and connection before dispatch
+and before returning the unchanged encrypted envelope JSON string (at most
+8192 characters). Account or connection changes, a denied policy, a hidden origin, or requesting-tab
+closure hold the result. The wire operation is only
+`heartwood_provision_rendezvous([targetDevice, index, nonce, expiresAt])`, with
+numeric index and expiry. This does not expose generic RPC or grant MLS membership.
+
 ### `heartwood_list_identities`
 
 Returns all derived identities on the device.

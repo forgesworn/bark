@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, approvalSurfaceKind, normaliseNostrConnectRelays, buildNostrConnectRequest, nostrConnectRequestedPerms, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod, classifyHeartwoodImport, summariseHeartwoodImport, resolveImportedActiveId, importHeartwoodIdentities } from '../src/background.js'
+import { parseMethod, isValidHexPubkey, isValidBunkerUri, isValidPurpose, normaliseSignEventTemplate, sanitiseError, buildHeartwoodArgs, checkApproval, migrateStorage, makeInstanceId, directBunkerInstanceId, normaliseAddress, appNameFromOrigin, buildConnectMetadata, buildConnectParams, originFromSender, isRelayPublishFailure, buildSignerHealthEvent, safeInstanceName, normaliseHeartwoodIdentity, normaliseHeartwoodIdentities, buildHeartwoodIdentityInstances, isUnsupportedHeartwoodProbeError, approvalBadgeText, approvalSurfaceKind, normaliseNostrConnectRelays, buildNostrConnectRequest, nostrConnectRequestedPerms, DEFAULT_NOSTRCONNECT_RELAYS, isInternalSender, isSenderAllowedForMessage, originToMatchPattern, originCoveredByPatterns, explainOversizeSigningFailure, eventContentBytes, LARGE_EVENT_HINT_BYTES, rebuildCompactSignedEvent, looksLikeUnknownMethod, classifyHeartwoodImport, summariseHeartwoodImport, resolveImportedActiveId, importHeartwoodIdentities } from '../src/background.js'
 
 describe('parseMethod', () => {
   it('parses getPublicKey', () => {
@@ -532,6 +532,32 @@ describe('approvalBadgeText', () => {
   it('caps the display at 9+', () => {
     expect(approvalBadgeText(10)).toBe('9+')
     expect(approvalBadgeText(42)).toBe('9+')
+  })
+})
+
+describe('direct bunker pairing ids', () => {
+  const target = 'ab'.repeat(32)
+  const first = `bunker://${target}?relay=wss://relay.example&secret=first-synthetic-capability`
+  const rotated = `bunker://${target}?relay=wss://relay.example&secret=second-synthetic-capability`
+  it('keeps a rotated or second-account URI distinct from an existing transport identity', () => {
+    const old = { id: makeInstanceId('bunker', first), bunkerUri: first }
+    const id = directBunkerInstanceId([old], 'bunker', rotated, () => 'fresh')
+    expect(id).not.toBe(old.id)
+    const instances = [old, { id, bunkerUri: rotated }]
+    expect(instances.find(instance => instance.id === id)?.bunkerUri).toBe(rotated)
+    expect(old.bunkerUri).toBe(first)
+  })
+  it('repairs the selected exact URI when earlier pairing left duplicate ids', () => {
+    const id = makeInstanceId('bunker', first)
+    const original = { id, bunkerUri: first }, selected = { id, bunkerUri: rotated }
+    const repaired = directBunkerInstanceId([original, selected], 'bunker', rotated, () => 'repaired')
+    expect(repaired).not.toBe(original.id)
+    expect(original.id).toBe(id)
+    expect(selected.id).toBe(id) // planning is non-mutating
+  })
+  it('retains the existing exact-URI id when it is already unique', () => {
+    const old = { id: 'existing-unique-instance', bunkerUri: rotated }
+    expect(directBunkerInstanceId([old], 'bunker', rotated, () => { throw new Error('unused') })).toBe(old.id)
   })
 })
 
