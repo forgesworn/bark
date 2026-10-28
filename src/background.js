@@ -3,6 +3,7 @@
 import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } from 'nostr-tools/nip46'
 import { nip19, SimplePool } from 'nostr-tools'
 import { disposeSigner, trackSignerRequests } from './signer-lifecycle.js'
+import { prepareCryptoApproval } from './crypto-approval.js'
 import { normaliseApprovalTimeout, approvalExpired, approvalQueueTimeout, APPROVAL_RESPONSE_GRACE_MS } from './approval-timing.js'
 import { generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
@@ -2922,6 +2923,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       sendResponse({
         method: entry.method,
         event: entry.event || null,
+        crypto: entry.crypto || null,
         pubkey: entry.pubkey,
         personaName: entry.personaName,
         origin: entry.origin,
@@ -3004,6 +3006,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
           const requestId = `approval-${crypto.randomUUID()}`
 
           try {
+            const cryptoApproval = prepareCryptoApproval(message.method, message.params)
             const bunker = await ensureConnected(origin)
             const pubkey = await withBunkerRequestTimeout(bunker.getPublicKey(), 'getPublicKey', bunker)
 
@@ -3027,7 +3030,8 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
             enqueueApproval(requestId, {
               approvalTimeoutMs: normaliseApprovalTimeout(accessibility?.approvalTimeoutMs),
               method: message.method,
-              params: message.params,
+              params: cryptoApproval ? cryptoApproval.params : message.params,
+              crypto: cryptoApproval?.preview,
               // Preview the normalised event so it matches what handleMessage
               // will actually sign. Throws here (caught below) reject an invalid
               // template up front instead of after a pointless approval dialog.
