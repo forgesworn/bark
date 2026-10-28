@@ -287,5 +287,13 @@
   },
   "provisionRendezvousHint": {
     "message": "Check the full identity, target device, index and expiry above. This approval is for this request only. Bark cannot decrypt the child."
-  }
+  },
+  "cryptoPeerLabel": {"message": "Other party's public key"},
+  "cryptoPeerFull": {"message": "Show full peer public key"},
+  "cryptoInputPrivate": {"message": "Input may be sensitive. Open Request details only when you want to review it."},
+  "cryptoRequestDetails": {"message": "Request details"},
+  "cryptoPlaintext": {"message": "Plaintext to encrypt"},
+  "cryptoCiphertext": {"message": "Ciphertext to decrypt"},
+  "cryptoCompleteInput": {"message": "Complete input: $bytes$ UTF-8 bytes.", "placeholders": {"bytes": {"content": "$1"}}},
+  "cryptoIncompleteInput": {"message": "Incomplete preview: showing $shown$ of $total$ UTF-8 bytes. The full input will be used if you allow this request.", "placeholders": {"shown": {"content": "$1"}, "total": {"content": "$2"}}}
 }

@@ -240,6 +240,23 @@
       </details>
     </div>
 
+    <section id="crypto-request" style="display:none" aria-labelledby="crypto-peer-label">
+      <div id="crypto-peer-label" class="section-label" data-i18n="cryptoPeerLabel">Other party's public key</div>
+      <code id="crypto-peer-short" class="persona-npub"></code>
+      <details id="crypto-peer-details">
+        <summary data-i18n="cryptoPeerFull">Show full peer public key</summary>
+        <code id="crypto-peer-key" style="overflow-wrap:anywhere"></code>
+      </details>
+      <p class="request-hint" data-i18n="cryptoInputPrivate">Input may be sensitive. Open Request details only when you want to review it.</p>
+      <details id="crypto-input-details">
+        <summary data-i18n="cryptoRequestDetails">Request details</summary>
+        <div id="crypto-method" class="section-label"></div>
+        <div id="crypto-input-label" class="section-label"></div>
+        <p id="crypto-input-status" class="request-hint" role="status"></p>
+        <pre id="crypto-input-text" class="request-content" tabindex="0" style="unicode-bidi:plaintext;direction:ltr"></pre>
+      </details>
+    </section>
+
     <div id="request-warning" class="request-hint request-warning" style="display:none" data-i18n="approvalUnknownKind">Bark has no description for this event kind. Review the full event before allowing it.</div>
 
     <div id="request-preview" class="request-preview" style="display:none">

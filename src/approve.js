@@ -257,6 +257,22 @@ async function init() {
     originText.innerHTML = t('wantsCallMethod', [boldOrigin, '<code>' + escapeHtml(details.method) + '</code>'])
   }
 
+  // Only an explicit crypto DTO reaches these text-only fields. Input remains
+  // collapsed; opening it never loads content or changes the approval decision.
+  if (details.crypto) {
+    const preview = details.crypto
+    document.getElementById('crypto-request').style.display = ''
+    document.getElementById('crypto-peer-short').textContent = truncate(preview.peerPubkey)
+    document.getElementById('crypto-peer-key').textContent = preview.peerPubkey
+    document.getElementById('crypto-method').textContent = preview.method
+    document.getElementById('crypto-input-label').textContent = t(preview.inputType === 'plaintext' ? 'cryptoPlaintext' : 'cryptoCiphertext')
+    document.getElementById('crypto-input-text').textContent = preview.inputPreview
+    document.getElementById('crypto-input-text').dataset.complete = String(preview.complete)
+    document.getElementById('crypto-input-status').textContent = preview.complete
+      ? t('cryptoCompleteInput', [String(preview.inputBytes)])
+      : t('cryptoIncompleteInput', [String(preview.previewBytes), String(preview.inputBytes)])
+  }
+
   // Persona info
   personaName.textContent = details.personaName && details.personaName !== 'default'
     ? details.personaName : t('approvalConnectedIdentity')
