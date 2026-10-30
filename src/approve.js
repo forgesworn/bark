@@ -186,9 +186,20 @@ async function init() {
     10002: t('approveKindRelays'),
     22242: t('approveKindRelayAuth'),
     30023: t('approveKindArticle'),
-    // V4V gated content (Pulsewire); kind numbers provisional until NIP review.
+    // ForgeSworn's own kinds: V4V (kind numbers provisional until NIP review)
+    // and KithMoot, so a request reads as what it is rather than a number.
+    1311: t('approveKindLiveChat'),
+    21236: t('approveKindSignIn'),
     27117: t('approveKindGatedDeposit'),
+    27118: t('approveKindGatedUngate'),
+    27201: t('approveKindLibraryAuth'),
+    27202: t('approveKindSalesAuth'),
+    30003: t('approveKindBookmarkSet'),
+    30315: t('approveKindMusicStatus'),
     30808: t('approveKindGatedContent'),
+    20460: t('approveKindDeviceCredential'),
+    21350: t('approveKindDeviceRevocation'),
+    27541: t('approveKindGroupGrant'),
   }
 
   // Substitutions carry pre-escaped markup for the origin; the message
