@@ -4,6 +4,7 @@ import { BunkerSigner, parseBunkerInput, createNostrConnectURI, toBunkerURL } fr
 import { nip19, SimplePool } from 'nostr-tools'
 import { disposeSigner, trackSignerRequests } from './signer-lifecycle.js'
 import { prepareCryptoApproval } from './crypto-approval.js'
+import { createRelayRefusals, describeRelayRefusals, REFUSAL_MESSAGE_PREFIX } from './relay-refusals.js'
 import { normaliseApprovalTimeout, approvalExpired, approvalQueueTimeout, APPROVAL_RESPONSE_GRACE_MS } from './approval-timing.js'
 import { generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools/pure'
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
@@ -1387,6 +1388,9 @@ function makeChallenge() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
+/** Latest refusal per relay, so a timeout can say which relay turned a request away. */
+export const relayRefusals = createRelayRefusals()
+
 function patchSignerPublishFailures(bunkerSigner) {
   trackSignerRequests(bunkerSigner)
   const pool = bunkerSigner?.pool
@@ -1395,13 +1399,32 @@ function patchSignerPublishFailures(bunkerSigner) {
   const publish = pool.publish.bind(pool)
   Object.defineProperty(pool, '__barkPublishPatched', { value: true, configurable: true })
   pool.publish = (relays, event, params) => {
-    return publish(relays, event, params).map((promise) => {
+    return publish(relays, event, params).map((promise, i) => {
+      const url = relays[i]
       return Promise.resolve(promise).then((reason) => {
         if (isRelayPublishFailure(reason)) throw new Error(reason)
+        relayRefusals.accepted(url)
         return reason
+      }, (err) => {
+        // OK false from the relay (banned, rate-limited, auth-required...).
+        relayRefusals.refused(url, err)
+        throw err
       })
     })
   }
+}
+
+/** The signer's relay URLs, for matching refusals to the request that timed out. */
+function signerRelayUrls(requestSigner) {
+  const relays = requestSigner?.bp?.relays
+  return Array.isArray(relays) ? relays : []
+}
+
+/** Replace a bare timeout or publish failure with the relay refusal behind it, if any. */
+export function explainWithRelayRefusals(err, relayUrls, refusals = relayRefusals) {
+  if (!(err instanceof RequestTimeoutError || err instanceof AggregateError)) return err
+  const message = describeRelayRefusals(refusals.recent(relayUrls))
+  return message ? new RelayRefusedError(message) : err
 }
 
 // ---------------------------------------------------------------------------
@@ -2021,12 +2044,13 @@ async function doConnect(originHint, isCurrent) {
     current()
     signer = null
     connectionState.status = 'disconnected'
-    connectionState.lastError = sanitiseError(err)
+    const explained = explainWithRelayRefusals(err, bp.relays)
+    connectionState.lastError = sanitiseError(explained)
     // A signer refusal needs user attention. Only silence or a failed relay
     // publication warrants unattended reconnects.
     if (err instanceof RequestTimeoutError || err instanceof AggregateError) scheduleReconnect()
     probeRelays(bp.relays).catch(() => {})
-    throw err
+    throw explained
   }
 
   current()
@@ -2217,8 +2241,9 @@ export async function withBunkerRequestTimeout(promise, label, requestSigner = s
     const result = await withTimeout(promise, BUNKER_REQUEST_TIMEOUT_MS, label)
     if (signer !== requestSigner) throw new Error('Signer connection changed; retry the request.')
     return result
-  } catch (err) {
-    if ((err instanceof RequestTimeoutError || err instanceof AggregateError) && signer === requestSigner) {
+  } catch (caught) {
+    const err = explainWithRelayRefusals(caught, signerRelayUrls(requestSigner))
+    if ((caught instanceof RequestTimeoutError || caught instanceof AggregateError) && signer === requestSigner) {
       if (connectionState.signingStatus === 'pending') {
         setSigningState('error', { signingLastError: sanitiseError(err), signingProbeReason: null })
       }
@@ -2234,7 +2259,8 @@ export async function withBunkerRequestTimeout(promise, label, requestSigner = s
   }
 }
 
-class RequestTimeoutError extends Error {}
+export class RequestTimeoutError extends Error {}
+export class RelayRefusedError extends Error {}
 
 async function withTimeout(promise, timeoutMs, label) {
   let timer
@@ -2453,6 +2479,7 @@ const SAFE_ERROR_PREFIXES = [
   'Pairing timed out',
   'Bunker URI must',
   'Connection timed out',
+  REFUSAL_MESSAGE_PREFIX,
   'Invalid method',
   'Invalid request origin',
   'signEvent requires',

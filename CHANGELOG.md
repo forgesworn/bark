@@ -4,6 +4,13 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- Explain a signer timeout when a relay refused the request. If the relay
+  your signer listens on bans or rate-limits your network address (common on
+  shared VPN servers), Bark now names the relay and its reason and suggests
+  another network, instead of a bare timeout.
+
 ## [1.3.17] - 2026-10-13
 
 ### Fixed
