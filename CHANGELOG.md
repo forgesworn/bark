@@ -4,6 +4,8 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.18] - 2026-11-01
+
 ### Fixed
 
 - Explain a signer timeout when a relay refused the request. If the relay
