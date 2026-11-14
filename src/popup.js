@@ -2,7 +2,7 @@
 
 import { sendRuntimeMessageWithDeadline, isSignerRefusal } from './runtime-message.js'
 import { nip19 } from 'nostr-tools'
-import { renderSVG } from 'uqr'
+import { renderQrSvg } from './qr-svg.js'
 import { DEFAULT_POLICIES, nextPolicyAction, normalisePolicies, TRUSTED_SITE_METHODS } from './policy.js'
 import { localiseDocument, t } from './i18n.js'
 import { rememberFocus } from './accessibility.js'
@@ -610,7 +610,7 @@ async function startQrPairing() {
     return
   }
 
-  qrCode.innerHTML = renderSVG(resp.uri)
+  qrCode.innerHTML = renderQrSvg(resp.uri)
   qrCode.querySelector('svg')?.setAttribute('aria-hidden', 'true')
   qrUri.textContent = resp.uri
   qrUri.style.display = ''
