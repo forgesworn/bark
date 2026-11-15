@@ -4,6 +4,13 @@ All notable changes to Bark are documented here.
 
 ## [Unreleased]
 
+## [1.3.19] - 2026-11-15
+
+### Changed
+
+- Use QR 0.2.0 to generate signing links with optimal mixed-mode encoding,
+  reducing symbol size where the link content allows it.
+
 ## [1.3.18] - 2026-11-01
 
 ### Fixed
