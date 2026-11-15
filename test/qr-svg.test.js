@@ -6,7 +6,8 @@ import { renderQrSvg } from '../src/qr-svg.js'
 // no quiet zone, mask 2) produced for it by the encoder the popup used before
 // @forgesworn/qr, so codeword and error correction placement is checked module
 // for module. The two encoders choose different masks on their own (both
-// valid), so the mask is pinned for that comparison.
+// valid). Pin byte mode and the mask to preserve that independent vector;
+// the popup uses automatic segmentation, which can choose a different grid.
 const URI = 'nostrconnect://abababababababababababababababababababababababababababababababab?relay=wss%3A%2F%2Frelay.example.com&secret=00112233445566778899aabbccddeeff&name=Bark&url=https%3A%2F%2Fgithub.com%2Fforgesworn%2Fbark&perms=sign_event%3A1%2Cnip44_encrypt'
 
 const EXPECTED = [
@@ -71,7 +72,7 @@ const EXPECTED = [
 
 describe('renderQrSvg', () => {
   it('lays out the same modules as the previous encoder at level L', () => {
-    const qr = encode(URI, { ecc: 'L', mask: 2 })
+    const qr = encode(URI, { mode: 'byte', ecc: 'L', mask: 2 })
     const rows = []
     for (let y = 0; y < qr.size; y++) {
       rows.push(Array.from(qr.modules.subarray(y * qr.size, (y + 1) * qr.size), (m) => (m ? '#' : '.')).join(''))
@@ -81,7 +82,7 @@ describe('renderQrSvg', () => {
 
   it('draws black on white with a one module border and reads back as the same text', () => {
     const svg = renderQrSvg(URI)
-    const size = EXPECTED.length
+    const size = encode(URI, { ecc: 'L' }).size
     const side = size + 2
     expect(svg).toContain(`viewBox="0 0 ${side} ${side}"`)
     expect(svg).toContain(`<rect width="${side}" height="${side}" fill="#fff"/>`)
