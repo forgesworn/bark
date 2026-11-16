@@ -51,7 +51,7 @@
     "axe-core": "^4.14.0",
     "esbuild": "^0.28.2",
     "vitest": "^5.1.0",
-    "ws": "^8.22.2"
+    "ws": "^8.23.0"
   },
   "dependencies": {
     "@forgesworn/qr": "0.2.0",
