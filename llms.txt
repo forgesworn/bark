@@ -4,6 +4,13 @@
 > NIP-07 (`window.nostr`) and bridges all signing to a remote NIP-46 signer.
 > No keys in the browser.
 
+## ForgeSworn ecosystem
+
+- [ForgeSworn library guide](https://forgesworn.dev/llms.txt): Find related libraries, tools and integration guides by task and runtime.
+- [ForgeSworn on GitHub](https://github.com/forgesworn): Browse the organisation’s public repositories.
+- [Project source](https://github.com/forgesworn/bark): Canonical source repository, documentation and release information.
+- [heartwood](https://github.com/forgesworn/heartwood): Pair the extension with a keyless bridge to a hardware signer.
+
 ## What Bark does
 
 Bark provides the standard `window.nostr` interface that Nostr web apps expect:
