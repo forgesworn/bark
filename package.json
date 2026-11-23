@@ -54,7 +54,7 @@
     "ws": "^8.23.0"
   },
   "dependencies": {
-    "@forgesworn/qr": "0.2.0",
+    "@forgesworn/qr": "0.3.16",
     "nostr-tools": "^2.24.1"
   }
 }
